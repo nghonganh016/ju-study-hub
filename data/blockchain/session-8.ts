@@ -5,7 +5,7 @@ export const session8: Chapter = {
   title: "Session 8 — Smart Contract Security",
   description:
     "Smart contract security: vulnerability classes, reentrancy, access control, oracle manipulation, secure-development lifecycle, Slither, and Lab 8.",
-  revision: "2026-10-06",
+  revision: 0,
   questions: [
     {
       id: "bc-s8-q01",
