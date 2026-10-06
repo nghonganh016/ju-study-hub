@@ -164,11 +164,11 @@ export const session3: Chapter = {
             "options": [
                 {
                     "id": "a",
-                    "text": "Biết m, khó tìm H(m)"
+                    "text": "Biết $m$, khó tìm $H(m)$"
                 },
                 {
                     "id": "b",
-                    "text": "Biết h, khó tìm m sao cho H(m)=h"
+                    "text": "Biết $h$, khó tìm $m$ sao cho $H(m)=h$"
                 },
                 {
                     "id": "c",
@@ -189,7 +189,7 @@ export const session3: Chapter = {
             "options": [
                 {
                     "id": "a",
-                    "text": "Với m_1 cho trước, khó tìm m_2≠ m_1 có cùng hash"
+                    "text": "Với $m_1$ cho trước, khó tìm $m_2 \\neq m_1$ có cùng hash"
                 },
                 {
                     "id": "b",
@@ -205,7 +205,7 @@ export const session3: Chapter = {
                 }
             ],
             "correctOptionId": "a",
-            "explanation": "Kháng tiền ảnh thứ hai: đầu vào m₁ đã được cố định; cần tìm m₂ khác nó nhưng có cùng giá trị băm.",
+            "explanation": "Kháng tiền ảnh thứ hai: đầu vào $m_1$ đã được cố định; cần tìm $m_2 \\neq m_1$ nhưng có cùng giá trị băm.",
             "source": "https://csrc.nist.gov/projects/hash-functions"
         },
         {
@@ -218,7 +218,7 @@ export const session3: Chapter = {
                 },
                 {
                     "id": "b",
-                    "text": "Khó tìm bất kỳ m_1≠ m_2 sao cho H(m_1)=H(m_2)"
+                    "text": "Khó tìm bất kỳ $m_1 \\neq m_2$ sao cho $H(m_1) = H(m_2)$"
                 },
                 {
                     "id": "c",
@@ -255,7 +255,7 @@ export const session3: Chapter = {
                 }
             ],
             "correctOptionId": "b",
-            "explanation": "Đầu vào nhiều hơn 2^256 đầu ra có thể có, nên va chạm phải tồn tại. An toàn mật mã đòi hỏi khó tìm được chúng.",
+            "explanation": "Đầu vào nhiều hơn $2^{256}$ đầu ra có thể có, nên va chạm phải tồn tại. An toàn mật mã đòi hỏi khó tìm được chúng.",
             "source": "https://nvlpubs.nist.gov/nistpubs/Legacy/SP/nistspecialpublication800-107r1.pdf"
         },
         {
@@ -264,23 +264,23 @@ export const session3: Chapter = {
             "options": [
                 {
                     "id": "a",
-                    "text": "2^32"
+                    "text": "$2^{32}$"
                 },
                 {
                     "id": "b",
-                    "text": "2^64"
+                    "text": "$2^{64}$"
                 },
                 {
                     "id": "c",
-                    "text": "2^128"
+                    "text": "$2^{128}$"
                 },
                 {
                     "id": "d",
-                    "text": "2^256"
+                    "text": "$2^{256}$"
                 }
             ],
             "correctOptionId": "d",
-            "explanation": "Với hàm băm lý tưởng 256 bit, tìm tiền ảnh bằng thử vét cạn có độ khó cỡ 2^256 phép thử cổ điển.",
+            "explanation": "Với hàm băm lý tưởng 256 bit, tìm tiền ảnh bằng thử vét cạn có độ khó cỡ $2^{256}$ phép thử cổ điển.",
             "source": "https://csrc.nist.gov/projects/hash-functions"
         },
         {
@@ -289,28 +289,28 @@ export const session3: Chapter = {
             "options": [
                 {
                     "id": "a",
-                    "text": "2^64"
+                    "text": "$2^{64}$"
                 },
                 {
                     "id": "b",
-                    "text": "2^128"
+                    "text": "$2^{128}$"
                 },
                 {
                     "id": "c",
-                    "text": "2^192"
+                    "text": "$2^{192}$"
                 },
                 {
                     "id": "d",
-                    "text": "2^256"
+                    "text": "$2^{256}$"
                 }
             ],
             "correctOptionId": "b",
-            "explanation": "Tìm một cặp va chạm lý tưởng chỉ cần cỡ 2^(256/2) = 2^128 phép thử, thấp hơn tìm tiền ảnh cụ thể.",
+            "explanation": "Tìm một cặp va chạm lý tưởng chỉ cần cỡ $2^{(256/2)} = 2^{128}$ phép thử, thấp hơn tìm tiền ảnh cụ thể.",
             "source": "https://csrc.nist.gov/projects/hash-functions"
         },
         {
             "id": "bc-session3-q013",
-            "prompt": "Vì sao collision attack có độ phức tạp khoảng 2^128 thay vì 2^256?",
+            "prompt": "Vì sao collision attack có độ phức tạp khoảng $2^{128}$ thay vì $2^{256}$?",
             "options": [
                 {
                     "id": "a",
@@ -330,7 +330,7 @@ export const session3: Chapter = {
                 }
             ],
             "correctOptionId": "b",
-            "explanation": "Sau q giá trị băm có khoảng q²/2 cặp để so sánh. Vì thế ngưỡng va chạm xuất hiện ở q cỡ √(2^256) = 2^128.",
+            "explanation": "Sau q giá trị băm có khoảng $q^2/2$ cặp để so sánh. Vì thế ngưỡng va chạm xuất hiện ở q cỡ $\\sqrt{2^{256}} = 2^{128}$.",
             "source": "https://nvlpubs.nist.gov/nistpubs/Legacy/SP/nistspecialpublication800-107r1.pdf"
         },
         {
