@@ -1,0 +1,280 @@
+/* Shared only by the quiz: paper, ink and game controls stay out of other pages. */
+.desk {
+    --ink: #3f4565;
+    --muted: #666781;
+    --paper: #fff8e9;
+    --line: #c9bea9;
+    --accent: #596cad;
+    position: relative;
+    isolation: isolate;
+    min-height: 100vh;
+    padding: 36px 20px;
+    color: var(--ink);
+    background-color: #98a8d2;
+    background-image:
+        radial-gradient(ellipse at 12% 5%, #fff8e9a6, transparent 56%),
+        radial-gradient(ellipse at 95% 90%, #b2abc080, transparent 60%),
+        radial-gradient(circle, #fff8e947 1px, transparent 1.5px),
+        linear-gradient(125deg, #bac5df, #98a8d2 65%, #b2abc0);
+    background-size: auto, auto, 28px 28px, auto;
+}
+
+.book {
+    position: relative;
+    isolation: isolate;
+    max-width: 768px;
+    margin: 0 auto;
+    padding: 24px;
+    border: 1px solid #c7b79d;
+    border-radius: 12px 22px 17px 9px / 9px 13px 23px 17px;
+    /* Fine crossed fibres stay behind the text; no image or extra layout box. */
+    background-color: var(--paper);
+    background-image:
+        repeating-linear-gradient(8deg, #8d755f04 0 1px, transparent 1px 4px),
+        repeating-linear-gradient(98deg, #8d755f03 0 1px, transparent 1px 5px),
+        linear-gradient(100deg, #ffffff66, transparent 20%, transparent 80%, #f7ebcf80);
+    box-shadow:
+        inset 2px 0 4px #ffffffb3,
+        inset -3px -2px 6px #d9c7a333,
+        1px 2px 0 #d9c9ac,
+        0 4px 0 #fff8e9,
+        2px 5px 0 #d6c3a1,
+        1px 7px 0 #f7ebcf,
+        3px 8px 0 #c7b799,
+        0 0 0 7px #8996b9,
+        3px 11px 0 8px #737f9f,
+        5px 13px 0 8px #63708d,
+        8px 19px 12px 4px #46517026,
+        18px 30px 40px 4px #46517033;
+}
+
+/* SVG ornaments sit at the page edges without taking up content space. */
+.bookTape {
+    position: absolute;
+    top: -12px;
+    left: 32px;
+    width: 94px;
+    height: auto;
+    transform: rotate(-7deg);
+    filter: drop-shadow(0 2px 1px #8d755f18);
+}
+.paperTab {
+    position: absolute;
+    top: -20px;
+    right: 36px;
+    width: 54px;
+    height: auto;
+    transform: rotate(4deg);
+    filter: drop-shadow(1px 2px 1px #46517021);
+}
+
+.header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.backLink { font-size: 14px; color: var(--accent); text-underline-offset: 4px; }
+.backLink:hover { text-decoration: underline; }
+
+.title { margin-top: 12px; font-size: 24px; font-weight: 700; line-height: 1.3; }
+.spread { position: relative; display: grid; align-items: start; gap: 24px; margin-top: 16px; }
+.questionCount {
+    padding: 0 8px;
+    border-left: 3px solid #ad7699;
+    color: #6b506b;
+    background: #eedce5;
+    font-weight: 600;
+}
+.questionCount, .action, .resultScore {
+    font-family: var(--font-baloo), sans-serif;
+}
+.muted { color: var(--muted); }
+.option {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 12px 16px;
+    border: 1px solid var(--line);
+    border-radius: 16px;
+    background: #fffdf6;
+    box-shadow: 0 2px 0 #e8deca;
+    cursor: pointer;
+}
+.option:has(input:enabled):hover { border-color: #8896be; background: #f1f0fa; }
+.option:has(input:checked) { border-color: var(--accent); background: #ebeaf7; box-shadow: 0 2px 0 #b8bed8; }
+.option:has(input:disabled) { cursor: default; }
+.radio { margin-top: 4px; accent-color: var(--accent); flex-shrink: 0; }
+.letter { margin-right: 8px; font-weight: 700; color: var(--accent); }
+
+.action {
+    padding: 8px 16px;
+    border: 1px solid #43558d;
+    border-radius: 16px;
+    background: var(--accent);
+    color: #fff;
+    font-weight: 600;
+    box-shadow: 0 3px 0 #394774;
+    cursor: pointer;
+}
+.action:enabled:hover { background: #485b98; }
+.action:enabled:active { transform: translateY(2px); box-shadow: 0 1px 0 #394774; }
+.action:disabled { background: #e1dce7; border-color: #c3bbcc; color: #70677d; box-shadow: none; cursor: not-allowed; }
+.desk :is(button, a):focus-visible,
+.option:has(input:focus-visible) { outline: 3px solid #88547a; outline-offset: 3px; }
+
+.feedback {
+    margin-top: 12px;
+    padding: 12px;
+    border: 1px solid #d6c291;
+    border-left: 4px solid #bc9c5c;
+    background: #f8edcd;
+    border-radius: 2px 8px 8px 2px;
+    font-size: 14px;
+}
+.sidebar {
+    position: relative;
+    padding: 12px;
+    border: 1px solid #d3c4a8;
+    border-radius: 4px 10px 10px 4px;
+    background: #f5ecd9;
+    box-shadow: 2px 3px 0 #dfd2b9;
+}
+.bookmark {
+    position: absolute;
+    top: -20px;
+    right: 16px;
+    width: 24px;
+    height: auto;
+    filter: drop-shadow(1px 2px 1px #46517021);
+}
+.navTitle {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 14px;
+    font-weight: 700;
+}
+.star { color: #987347; font-size: 18px; line-height: 20px; }
+.pageControls, .questionControls { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-top: 8px; font-size: 12px; }
+.pageButton { padding: 4px 8px; border: 1px solid var(--line); border-radius: 8px; color: var(--accent); background: #fffaee; cursor: pointer; }
+.pageButton:enabled:hover { background: #ebeaf7; }
+.pageButton:disabled { opacity: .45; cursor: not-allowed; }
+.questionGrid { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); grid-template-rows: repeat(5, 44px); gap: 8px; margin-top: 8px; }
+.progress { display: block; width: 100%; height: 6px; margin-top: 8px; appearance: none; border: 0; border-radius: 4px; background: #dfd2b9; }
+.progress::-webkit-progress-bar { background: #dfd2b9; border-radius: 4px; }
+.progress::-webkit-progress-value { background: var(--accent); border-radius: 4px; }
+.progress::-moz-progress-bar { background: var(--accent); border-radius: 4px; }
+.tile {
+    display: flex;
+    min-height: 44px;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    border: 1px solid #bcb096;
+    border-radius: 12px;
+    background: #fffaee;
+    color: #645e58;
+    font-size: 14px;
+    font-weight: 600;
+    box-shadow: 0 2px 0 #cfc1a4;
+    cursor: pointer;
+}
+.tile:hover { filter: brightness(.97); }
+.tile:active { transform: translateY(1px); }
+.tile[aria-current="step"] { outline: 2px solid #88547a; outline-offset: 2px; }
+.tile[aria-current="step"]:focus-visible { outline-width: 3px; outline-offset: 3px; }
+.draft { background: #f6e6b4; border-color: #b4954f; color: #6c521b; }
+.correct { background: #d6e9d9; border-color: #7b9f84; color: #305c3f; }
+.incorrect { background: #f1d5db; border-color: #b68593; color: #813c50; }
+.legend { margin-top: 12px; display: grid; grid-template-columns: 1fr 1fr; gap: 4px 8px; font-size: 12px; color: var(--muted); }
+.hint { margin-top: 8px; font-size: 12px; line-height: 1.6; color: var(--muted); }
+.result {
+    max-width: 640px;
+    margin: 28px auto 8px;
+    padding: 24px;
+    border: 1px dashed #ac9470;
+    background: #f9efda;
+    border-radius: 6px;
+    text-align: center;
+}
+.resultScore { font-weight: 700; color: var(--accent); }
+
+@media (min-width: 1024px) {
+    .book { max-width: 1120px; }
+    .book::after {
+        content: "";
+        position: absolute;
+        top: 0;
+        bottom: 0;
+        right: 270px;
+        width: 36px;
+        border-radius: 45% 30% 35% 40% / 2% 3% 3% 2%;
+        background: linear-gradient(90deg, transparent, #8d755f0d 20%, #8d755f33 43%, #8d755f59 49%, #fffdf4d9 55%, #f7ebcf66 76%, transparent);
+        z-index: -1;
+        pointer-events: none;
+    }
+    .spread { grid-template-columns: minmax(0, 1fr) 240px; gap: 48px; }
+    .spread::before {
+        content: "";
+        position: absolute;
+        right: 248px;
+        top: 48px;
+        width: 30px;
+        height: 10px;
+        border: 1px solid #9b8e74;
+        border-radius: 8px;
+        background: linear-gradient(#b6a48a, #fff8e9 40%, #c3ae8e 65%, #9c886c);
+        box-shadow: 0 2px 2px #8d755f33,
+            0 140px 0 -1px #c5b99f, 0 140px 0 0 #9b8e74,
+            0 280px 0 -1px #c5b99f, 0 280px 0 0 #9b8e74;
+        pointer-events: none;
+    }
+    .title { max-width: calc(100% - 280px); }
+}
+
+/* A tucked note and a pencil belong to the desk, not the interactive notebook.
+   Show them only when the outer margins have room. Negative z-index keeps
+   decoration beneath the book; pointer-events preserves every click target. */
+@media (min-width: 1280px) {
+    .desk::before {
+        content: "";
+        position: absolute;
+        top: 110px;
+        left: max(26px, calc(50% - 610px));
+        width: 110px;
+        height: 150px;
+        border: 1px solid #c6b5bc;
+        border-radius: 3px 6px 4px 2px;
+        background: repeating-linear-gradient(transparent 0 23px, #8d755f12 23px 24px), #e4d3dd;
+        box-shadow: 2px 4px 7px #46517021;
+        transform: rotate(-11deg);
+        z-index: -1;
+        pointer-events: none;
+    }
+    .desk::after {
+        content: "";
+        position: absolute;
+        top: min(640px, calc(100% - 96px));
+        right: max(22px, calc(50% - 637px));
+        width: 116px;
+        height: 9px;
+        border: 1px solid #8d755f66;
+        border-radius: 2px 50% 50% 2px;
+        background: linear-gradient(90deg, #e4d3dd 0 12%, #8d755f 12% 15%, transparent 15% 87%, #e6d2ab 87% 97%, #465170 97%),
+            linear-gradient(#d2ccdf 0 35%, #b2abc0 35% 72%, #958aab 72%);
+        box-shadow: 0 3px 4px #46517026;
+        transform: rotate(-32deg);
+        z-index: -1;
+        pointer-events: none;
+    }
+}
+
+@media (max-width: 639px) {
+    .desk { padding: 28px 16px; }
+    .book { padding: 20px 16px; }
+    .title { font-size: 20px; }
+    .option { padding: 12px; }
+}
