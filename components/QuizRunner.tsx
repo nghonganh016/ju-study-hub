@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import styles from "@/components/QuizNotebook.module.css";
 
 import QuizQuestion from "@/components/QuizQuestion";
@@ -11,12 +11,81 @@ import type { Question } from "@/types/quiz";
 
 type Answer = { optionId: string; isSubmitted: boolean };
 
-export default function QuizRunner({ questions }: { questions: Question[] }) {
+function isRecord(value: unknown): value is Record<string, unknown> {
+    return typeof value === "object" && value !== null && !Array.isArray(value);
+}
+
+function restoreProgress(raw: string | null, questions: Question[]) {
+    const answers: Record<string, Answer> = {};
+    let currentIndex = 0;
+    try {
+        const saved: unknown = JSON.parse(raw ?? "null");
+        if (!isRecord(saved) || saved.version !== 1) return { currentIndex, answers };
+        currentIndex = Math.max(0, questions.findIndex((item) => item.id === saved.currentQuestionId));
+        if (isRecord(saved.answers)) {
+            for (const question of questions) {
+                if (!Object.hasOwn(saved.answers, question.id)) continue;
+                const answer = saved.answers[question.id];
+                if (isRecord(answer) && typeof answer.optionId === "string"
+                    && typeof answer.isSubmitted === "boolean"
+                    && question.options.some((option) => option.id === answer.optionId)) {
+                    answers[question.id] = { optionId: answer.optionId, isSubmitted: answer.isSubmitted };
+                }
+            }
+        }
+    } catch {
+        // Malformed or outdated storage must not prevent studying.
+    }
+    return { currentIndex, answers };
+}
+
+export default function QuizRunner({ chapterId, questions }: { chapterId: string; questions: Question[] }) {
+    const storageKey = `ju-study-hub:quiz-progress:blockchain:${chapterId}`;
+    const [restoredKey, setRestoredKey] = useState<string | null>(null);
     const [currentIndex, setCurrentIndex] = useState(0);
     // Draft selections and graded answers survive navigation between questions.
     const [answers, setAnswers] = useState<Record<string, Answer>>({});
     const [showProgress, setShowProgress] = useState(false);
     const [navigatorPage, setNavigatorPage] = useState(0);
+
+    useEffect(() => {
+        let cancelled = false;
+        // Defer restoration until after mount; cancel the first Strict Mode setup.
+        queueMicrotask(() => {
+            if (cancelled) return;
+            let raw: string | null = null;
+            try {
+                raw = window.localStorage.getItem(storageKey);
+            } catch {
+                // Storage may be blocked; the quiz still works in memory.
+            }
+            const restored = restoreProgress(raw, questions);
+            setCurrentIndex(restored.currentIndex);
+            setAnswers(restored.answers);
+            setNavigatorPage(Math.floor(restored.currentIndex / QUESTIONS_PER_PAGE));
+            setRestoredKey(storageKey);
+        });
+        return () => { cancelled = true; };
+    }, [storageKey, questions]);
+
+    useEffect(() => {
+        // Initial effects (including Strict Mode replays) cannot overwrite saved data.
+        if (restoredKey !== storageKey) return;
+        try {
+            if (currentIndex === 0 && Object.keys(answers).length === 0) {
+                window.localStorage.removeItem(storageKey);
+            } else {
+                window.localStorage.setItem(storageKey, JSON.stringify({
+                    version: 1,
+                    currentQuestionId: questions[currentIndex]?.id ?? null,
+                    answers,
+                }));
+            }
+        } catch {
+            // Storage unavailable or full: keep the current in-memory progress.
+        }
+    }, [answers, currentIndex, questions, restoredKey, storageKey]);
+
     const question = questions[currentIndex];
     const statuses: QuestionStatus[] = questions.map((item) => {
         const answer = answers[item.id];
@@ -53,6 +122,11 @@ export default function QuizRunner({ questions }: { questions: Question[] }) {
     }
 
     function handleRestart() {
+        try {
+            window.localStorage.removeItem(storageKey);
+        } catch {
+            // Reset the quiz even when browser storage is unavailable.
+        }
         handleNavigate(0);
         setAnswers({});
         setShowProgress(false);

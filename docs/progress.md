@@ -282,3 +282,15 @@
 - Giới hạn: Kiểm qua địa chỉ LAN trên máy hiện tại, chưa thao tác trên thiết bị vật lý thứ hai. Thay đổi áp dụng cho next dev. Nếu đổi địa chỉ mạng khi server đang chạy, cần khởi động lại để đọc IP mới.
 - Ju kiểm tra: Trên máy khác cùng mạng, mở http://192.168.1.237:3000, tải lại trang rồi chọn/chấm/chuyển câu. Nếu terminal cũ chưa tự khởi động lại, dừng bằng Ctrl+C rồi chạy npm run dev.
 - Trạng thái: Đã sửa và kiểm tra tương tác LAN, chờ Ju xác nhận từ thiết bị khác. Không thực hiện tính năng tiếp theo.
+
+## 06/10/2026: Lưu tiến trình quiz bằng localStorage
+
+- components/QuizRunner.tsx: Lưu riêng theo khóa ju-study-hub:quiz-progress:blockchain:<chapterId>. Dữ liệu phiên bản 1 gồm currentQuestionId và answers với optionId/isSubmitted. Giữ lựa chọn nháp, đáp án đã chấm và câu đang xem; nhóm điều hướng được tính lại từ câu đó. Không lưu màn hình tiến độ/kết quả.
+- app/quiz/blockchain/[chapterId]/page.tsx: Truyền chapterId vào QuizRunner, giữ key theo chapter để mỗi bài có vòng đời trạng thái riêng. Không sửa giao diện, nội dung hoặc các component hiển thị.
+- Chỉ đọc localStorage sau khi component được gắn vào trình duyệt. Cờ restoredKey chỉ bật cùng với dữ liệu đã khôi phục; hiệu ứng lưu bỏ qua trạng thái ban đầu. Hủy tác vụ khôi phục cũ khi React Strict Mode chạy lại hiệu ứng. Làm lại xóa đúng khóa, trở về câu 1/nhóm đầu, xóa đáp án; trạng thái rỗng không tạo lại bản lưu.
+- Bỏ qua JSON hỏng, phiên bản không hỗ trợ, đáp án sai kiểu, ID câu/lựa chọn đã bị xóa. Câu đang xem không còn tồn tại thì về câu 1 nhưng vẫn giữ các đáp án hợp lệ. Bắt lỗi localStorage bị chặn hoặc đầy để quiz tiếp tục chạy trong bộ nhớ.
+- Đã thử npm run lint và npm run build nhưng môi trường không có npm. Chạy trực tiếp node node_modules/eslint/bin/eslint.js: đạt. node node_modules/typescript/bin/tsc --noEmit --incremental false: đạt. Build Turbopack bị Access is denied khi tạo tiến trình xử lý CSS; node node_modules/next/dist/bin/next build --webpack chạy ngoài sandbox để tải Google Fonts: đạt đầy đủ, mã thoát 0. Không sửa cấu hình build hoặc phông chữ.
+- Kiểm tra bằng Node trên mã QuizRunner thực tế đã biên dịch, với mô phỏng vòng đời hook: chặn ghi trước khôi phục kể cả khi lặp hiệu ứng Strict Mode, khôi phục câu 27/nhóm 2, đúng/sai/nháp, khóa đáp án, mở lại component, không lưu showProgress, làm lại không ảnh hưởng khóa khác, dữ liệu lỗi/cũ, storage bị chặn, render không có window. Tất cả đạt. Đây là kiểm tra mô phỏng, chưa kiểm tra trình duyệt thật hoặc đóng/mở trình duyệt trong lượt này.
+- Ju kiểm tra: Chấm đúng/sai và chọn nháp rồi tải lại; chọn câu thuộc nhóm sau rồi rời trang/quay lại và đóng/mở trình duyệt; đổi session để kiểm tra độc lập; hoàn thành một bài rồi Làm lại bài và tải lại để thấy câu 1 trống, bài khác giữ nguyên.
+- Giới hạn: Dữ liệu chỉ thuộc trình duyệt và địa chỉ web hiện tại; localhost và IP LAN có kho lưu riêng. Không đồng bộ giữa các tab/thiết bị. Nếu storage bị chặn thì chỉ giữ tiến trình trong bộ nhớ. ID còn nguyên nhưng nội dung đổi vẫn giữ lựa chọn, trạng thái đúng/sai tính theo dữ liệu hiện tại.
+- Trạng thái: Hoàn thành triển khai, chờ Ju kiểm tra thủ công. Không chuyển sang tính năng tiếp theo.
