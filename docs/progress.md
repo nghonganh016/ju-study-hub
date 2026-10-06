@@ -294,3 +294,18 @@
 - Ju kiểm tra: Chấm đúng/sai và chọn nháp rồi tải lại; chọn câu thuộc nhóm sau rồi rời trang/quay lại và đóng/mở trình duyệt; đổi session để kiểm tra độc lập; hoàn thành một bài rồi Làm lại bài và tải lại để thấy câu 1 trống, bài khác giữ nguyên.
 - Giới hạn: Dữ liệu chỉ thuộc trình duyệt và địa chỉ web hiện tại; localhost và IP LAN có kho lưu riêng. Không đồng bộ giữa các tab/thiết bị. Nếu storage bị chặn thì chỉ giữ tiến trình trong bộ nhớ. ID còn nguyên nhưng nội dung đổi vẫn giữ lựa chọn, trạng thái đúng/sai tính theo dữ liệu hiện tại.
 - Trạng thái: Hoàn thành triển khai, chờ Ju kiểm tra thủ công. Không chuyển sang tính năng tiếp theo.
+
+## 07/10/2026: Hiển thị công thức quiz bằng KaTeX
+
+- Thêm katex 0.16.47, react-katex 3.1.0 và @types/react-katex; package.json/package-lock.json cập nhật bằng npm. Dùng cùng dòng KaTeX mà react-katex phụ thuộc để CSS và bộ dựng công thức khớp nhau.
+- components/MathText.tsx: Component nhận text, ưu tiên khối $$...$$, nhận $...$ trên một dòng với nội dung sát dấu mở/đóng và không có chữ số ngay sau dấu đóng. Dấu \$ là dấu đô la thường. Không tự suy luận lệnh LaTeX không có dấu bao. Công thức lỗi dùng renderError trả lại chuỗi gốc bằng React, không tự chèn HTML.
+- components/QuizQuestion.tsx: Dùng MathText cho prompt, option.text và explanation. Giữ điều khiển radio/chấm điểm/nguồn. Thêm min-w-0 để nội dung toán không ép rộng phần chứa; đổi đoạn giải thích từ p sang div để chứa được công thức khối.
+- app/layout.tsx: Nạp CSS KaTeX toàn cục. app/globals.css: Chỉ thêm CSS vùng công thức khối cuộn ngang, viền focus và văn bản lỗi. Dùng MathML mặc định của KaTeX phục vụ công cụ hỗ trợ đọc.
+- app/dev/math/page.tsx: Trang mẫu chỉ mở khi NODE_ENV=development, có đủ năm ví dụ yêu cầu, dấu tiền tệ, lỗi công thức và công thức dài. Không thay câu hỏi thật. tests/math-text.test.mjs: Kiểm tra renderer React/KaTeX thật bằng Node và TypeScript sẵn có, không thêm bộ công cụ kiểm thử.
+- Đã kiểm tra: npm run lint đạt; node --test tests/math-text.test.mjs đạt 4 nhóm, gồm năm mẫu toán, tiền tệ/dấu không đóng, công thức lỗi/HTML thô và toàn bộ văn bản quiz hiện có. npm run build gặp lỗi Turbopack tạo tiến trình CSS (Access is denied), npm run build -- --webpack đạt đầy đủ, mã thoát 0. npm được tải vào thư mục tạm vì môi trường không có lệnh npm sẵn; không đổi script build dự án.
+- Trình duyệt: Xem trang mẫu thật, công thức phân số/tổng/xác suất/nhiều dòng hiển thị, lỗi giữ nguyên chữ và không có lỗi console. 390x844: clientWidth=scrollWidth=390, khối dài có scrollWidth=474 trong vùng rộng 333; xem ảnh không tràn trang. 1366x768: đo clientWidth=scrollWidth=1366, ảnh chụp desktop bị vùng đen của công cụ nên không coi là kiểm tra hình ảnh desktop hoàn chỉnh. Đã trả viewport về mặc định.
+- Không sửa QuizRunner, QuizNavigation, QuizResult, types/quiz.ts hoặc dữ liệu Blockchain. Không kiểm tra lại toàn bộ thao tác lưu/khôi phục qua trình duyệt trong lượt này.
+- Hướng dẫn nhập: Dùng String.raw với chuỗi template để giữ nguyên dấu gạch chéo LaTeX; nếu dùng chuỗi thường thì viết hai dấu gạch chéo. Dùng aligned trong $$ để xuống dòng trong công thức. Ví dụ O(\\log n) cũ không có dấu $ vẫn là chữ như trước.
+- Tài liệu đối chiếu: https://github.com/talyssonoc/react-katex và https://katex.org/docs/options.html.
+- Ju kiểm tra: Mở /dev/math khi chạy dev; thử công thức trong câu hỏi/lựa chọn/giải thích; tải lại một bài đang làm để xác nhận tiến trình còn nguyên. Công thức dài nên đặt trong $$ để có vùng cuộn riêng. Trình phân tích đơn giản không suy đoán mọi trường hợp tiền tệ, nên dùng \$ khi cần dấu đô la chắc chắn.
+- Trạng thái: Hoàn thành, chờ Ju phản hồi. Không triển khai tính năng tiếp theo.

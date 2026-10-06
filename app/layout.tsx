@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Baloo_2, Nunito } from "next/font/google";
+import "katex/dist/katex.min.css";
 import "./globals.css";
 
 const nunito = Nunito({

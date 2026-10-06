@@ -1,6 +1,7 @@
 "use client";
 
 import styles from "@/components/QuizNotebook.module.css";
+import MathText from "@/components/MathText";
 import type { Question } from "@/types/quiz";
 
 type QuizQuestionProps = {
@@ -24,9 +25,9 @@ export default function QuizQuestion({ question, selectedOptionId, isSubmitted, 
 
     return (
         <div className="mt-4">
-            <fieldset disabled={isSubmitted}>
+            <fieldset disabled={isSubmitted} className="min-w-0">
                 <legend className="text-lg font-semibold leading-snug">
-                    {question.prompt}
+                    <MathText text={question.prompt} />
                 </legend>
 
                 <div className="mt-3 space-y-2">
@@ -44,11 +45,11 @@ export default function QuizQuestion({ question, selectedOptionId, isSubmitted, 
                                 className={styles.radio}
                             />
 
-                            <span>
+                            <span className="min-w-0 flex-1">
                                 <span className={styles.letter}>
                                     {option.id.toUpperCase()}.
                                 </span>
-                                {option.text}
+                                <MathText text={option.text} />
                             </span>
                         </label>
                     ))}
@@ -78,8 +79,8 @@ export default function QuizQuestion({ question, selectedOptionId, isSubmitted, 
                     </p>
 
                     {question.explanation && (
-                        <p className={`mt-2 leading-relaxed ${styles.muted}`}>
-                            {question.explanation}
+                        <div className={`mt-2 leading-relaxed ${styles.muted}`}>
+                            <MathText text={question.explanation} />
                             {question.source && (
                                 <>{" "}<a
                                     href={question.source}
@@ -89,7 +90,7 @@ export default function QuizQuestion({ question, selectedOptionId, isSubmitted, 
                                     aria-label="Đọc nguồn tham khảo (mở tab mới)"
                                 >Nguồn tham khảo ↗</a></>
                             )}
-                        </p>
+                        </div>
                     )}
                 </div>
             )}

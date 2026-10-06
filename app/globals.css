@@ -1,5 +1,17 @@
 @import "tailwindcss";
 
+/* Keep wide formulae inside the quiz; block regions can be scrolled by keyboard. */
+.math-block {
+  max-width: 100%;
+  overflow-x: auto;
+  overflow-y: hidden;
+}
+.math-block:focus-visible {
+  outline: 2px solid currentColor;
+  outline-offset: 2px;
+}
+.math-fallback { white-space: pre-wrap; overflow-wrap: anywhere; }
+
 :root {
   --background: #ffffff;
   --foreground: #171717;
