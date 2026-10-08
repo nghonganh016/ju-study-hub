@@ -39,8 +39,8 @@ function restoreProgress(raw: string | null, questions: Question[]) {
     return { currentIndex, answers };
 }
 
-export default function QuizRunner({ chapterId, questions }: { chapterId: string; questions: Question[] }) {
-    const storageKey = `ju-study-hub:quiz-progress:blockchain:${chapterId}`;
+export default function QuizRunner({ subjectId, chapterId, questions }: { subjectId: string; chapterId: string; questions: Question[] }) {
+    const storageKey = `ju-study-hub:quiz-progress:${subjectId}:${chapterId}`;
     const [restoredKey, setRestoredKey] = useState<string | null>(null);
     const [currentIndex, setCurrentIndex] = useState(0);
     // Draft selections and graded answers survive navigation between questions.

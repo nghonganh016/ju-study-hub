@@ -1,7 +1,7 @@
 import type { Chapter } from "@/types/quiz";
 
 export const session5: Chapter = {
-  "id": "blockchain-session-5",
+  "id": "session-5",
   "title": "Session 5 - Ethereum & the EVM",
   "description": "Accounts, world state, transactions, gas & EIP-1559, EVM, Proof of Stake, upgrade roadmap, MEV và các câu hỏi trọng tâm từ Lab 5.",
   "revision": 2,

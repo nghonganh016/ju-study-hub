@@ -49,7 +49,7 @@ export default async function QuizPage({ params }: QuizPageProps) {
                     {chapter.title}
                 </h1>
 
-                <QuizRunner key={chapter.id} chapterId={chapter.id} questions={chapter.questions} />
+                <QuizRunner key={chapter.id} subjectId="blockchain" chapterId={chapter.id} questions={chapter.questions} />
             </section>
         </main>
     );
