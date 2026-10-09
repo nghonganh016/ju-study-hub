@@ -1,12 +1,15 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import styles from "@/components/QuizNotebook.module.css";
+import styles from "@/components/QuizConsole.module.css";
+import Link from "next/link";
+import GameArrow from "@/components/GameArrow";
+import QuizCompanion from "@/components/QuizCompanion";
+import type { CatMood } from "@/components/StudyCat";
 
 import QuizQuestion from "@/components/QuizQuestion";
 import QuizNavigation, { QUESTIONS_PER_PAGE, type QuestionStatus } from "@/components/QuizNavigation";
 import QuizResult from "@/components/QuizResult";
-import JournalAsset from "@/components/journal/JournalAsset";
 import type { Question } from "@/types/quiz";
 
 type Answer = { optionId: string; isSubmitted: boolean };
@@ -39,7 +42,7 @@ function restoreProgress(raw: string | null, questions: Question[]) {
     return { currentIndex, answers };
 }
 
-export default function QuizRunner({ subjectId, chapterId, questions }: { subjectId: string; chapterId: string; questions: Question[] }) {
+export default function QuizRunner({ subjectId, subjectTitle, chapterId, chapterTitle, questions }: { subjectId: string; subjectTitle: string; chapterId: string; chapterTitle: string; questions: Question[] }) {
     const storageKey = `ju-study-hub:quiz-progress:${subjectId}:${chapterId}`;
     const [restoredKey, setRestoredKey] = useState<string | null>(null);
     const [currentIndex, setCurrentIndex] = useState(0);
@@ -47,6 +50,15 @@ export default function QuizRunner({ subjectId, chapterId, questions }: { subjec
     const [answers, setAnswers] = useState<Record<string, Answer>>({});
     const [showProgress, setShowProgress] = useState(false);
     const [navigatorPage, setNavigatorPage] = useState(0);
+    const [motion, setMotion] = useState(true);
+    const [navigationOpen, setNavigationOpen] = useState(false);
+    const [reward, setReward] = useState<{ questionId: string; status: "correct" | "incorrect" } | null>(null);
+
+    useEffect(() => {
+        if (!reward) return;
+        const timer = window.setTimeout(() => setReward(null), 1100);
+        return () => window.clearTimeout(timer);
+    }, [reward]);
 
     useEffect(() => {
         let cancelled = false;
@@ -102,6 +114,7 @@ export default function QuizRunner({ subjectId, chapterId, questions }: { subjec
         if (index < 0 || index >= questions.length) return;
         setCurrentIndex(index);
         setNavigatorPage(Math.floor(index / QUESTIONS_PER_PAGE));
+        setReward(null);
     }
 
     function handleSelect(optionId: string) {
@@ -114,6 +127,10 @@ export default function QuizRunner({ subjectId, chapterId, questions }: { subjec
 
     function handleSubmit() {
         if (!question) return;
+        const selected = answers[question.id];
+        if (!selected || selected.isSubmitted) return;
+        // Feedback belongs only to this click, never to restored or revisited answers.
+        setReward({ questionId: question.id, status: selected.optionId === question.correctOptionId ? "correct" : "incorrect" });
         setAnswers((previous) => {
             const answer = previous[question.id];
             if (!answer || answer.isSubmitted) return previous;
@@ -133,52 +150,60 @@ export default function QuizRunner({ subjectId, chapterId, questions }: { subjec
     }
 
     if (!question) return <p className="mt-8">Chapter này chưa có câu hỏi.</p>;
-    if (showProgress) {
-        return <QuizResult correctCount={correctCount} submittedCount={submittedCount}
-            totalQuestions={questions.length} onRestart={handleRestart}
-            onContinue={() => { handleNavigate(currentIndex); setShowProgress(false); }} />;
-    }
+    const activeReward = reward?.questionId === question.id ? reward.status : undefined;
+    const selected = answers[question.id];
+    const mood: CatMood = showProgress && canFinish ? "completed"
+        : activeReward && canFinish ? "celebrating"
+        : activeReward === "incorrect" ? "wrong" : activeReward === "correct" ? "correct"
+        : showProgress || selected?.isSubmitted ? "idle" : selected ? "thinking" : "waiting";
 
     return (
-        <div className={styles.spread}>
-            <div className="min-w-0">
-                <div className="flex flex-wrap items-center justify-between gap-2 text-sm" aria-live="polite">
-                    <p className={styles.questionCount}>
-                        Câu {currentIndex + 1} / {questions.length}
-                    </p>
-                    <p className={styles.muted}>Đúng: {correctCount} / {questions.length}</p>
+        <main className={styles.scene} data-motion={motion ? "on" : "off"}>
+            <div className={styles.ambient} aria-hidden="true"><i /><i /><i /><span>✦</span><span>✧</span></div>
+            <header className={styles.siteHeader}>
+                <Link href="/" className={styles.brand}><span aria-hidden="true">✿</span> Ju Study Hub<span className={styles.brandDot} aria-hidden="true">●</span></Link>
+                <button type="button" className={styles.motionToggle} aria-pressed={!motion} onClick={() => setMotion(!motion)}>{motion ? "Tắt chuyển động" : "Bật chuyển động"}</button>
+            </header>
+            <div className={styles.breadcrumb}><Link href={`/subjects/${subjectId}`}>Về danh sách chapter</Link></div>
+            <section className={styles.console} aria-label="Quiz">
+                <div className={styles.consoleTop} aria-hidden="true"><span><i /></span><div className={styles.speaker}><b /><b /><b /><b /><b /></div><span className={styles.consoleMark}>Ju / 01 <span>✦</span></span></div>
+                <div className={styles.consoleGrid}>
+                    <section className={styles.screen} aria-label="Nội dung bài học">
+                        <div className={styles.screenHeader}><span className={styles.subject}>{subjectTitle}</span></div>
+                        <h1>{chapterTitle}</h1>
+                        <div className={styles.progressLabels} aria-live="polite"><span>Đã chấm <strong>{submittedCount}/{questions.length}</strong> câu</span><span>Đúng: <strong>{correctCount}</strong></span></div>
+                        <div className={styles.progressTrack} role="progressbar" aria-label="Tiến độ chấm câu hỏi" aria-valuenow={submittedCount} aria-valuemin={0} aria-valuemax={questions.length}><span style={{ width: `${submittedCount / questions.length * 100}%` }} /></div>
+                        {showProgress ? (
+                            <QuizResult correctCount={correctCount} submittedCount={submittedCount}
+                                totalQuestions={questions.length} onRestart={handleRestart}
+                                onContinue={() => { handleNavigate(currentIndex); setShowProgress(false); }} />
+                        ) : (
+                            <div key={question.id} className={styles.questionEntry}>
+                                <div className={styles.questionMeta}><span>Câu {currentIndex + 1} / {questions.length}</span></div>
+                                <QuizQuestion question={question} selectedOptionId={selected?.optionId ?? null}
+                                    isSubmitted={selected?.isSubmitted ?? false} onSelect={handleSelect} onSubmit={handleSubmit}
+                                    reward={activeReward}
+                                    navigation={<div className={styles.stepButtons}>
+                                        <button type="button" aria-label="Câu trước" title="Câu trước" disabled={currentIndex === 0} onClick={() => handleNavigate(currentIndex - 1)}><GameArrow direction="left" /></button>
+                                        <button type="button" aria-label="Câu tiếp theo" title="Câu tiếp theo" disabled={currentIndex === questions.length - 1} onClick={() => handleNavigate(currentIndex + 1)}><GameArrow direction="right" /></button>
+                                    </div>} />
+                            </div>
+                        )}
+                    </section>
+                    <aside className={styles.sidePanel}>
+                        <QuizCompanion mood={mood} />
+                        <div className={styles.navigation}>
+                            <button type="button" className={styles.navigationToggle} aria-expanded={navigationOpen} aria-controls="quiz-question-nav" onClick={() => setNavigationOpen(!navigationOpen)}>Chọn câu hỏi <span aria-hidden="true">{navigationOpen ? "−" : "+"}</span></button>
+                            <div id="quiz-question-nav" className={styles.navigationBody} data-open={navigationOpen}>
+                                <QuizNavigation statuses={statuses} currentIndex={currentIndex} page={navigatorPage} onPageChange={setNavigatorPage}
+                                    onNavigate={(index) => { handleNavigate(index); setShowProgress(false); }} />
+                            </div>
+                            <button type="button" className={styles.summaryButton} onClick={() => { setReward(null); setShowProgress(true); }}>{canFinish ? "Xem kết quả" : "Xem tiến độ"}<span aria-hidden="true">↗</span></button>
+                        </div>
+                    </aside>
                 </div>
-                <QuizQuestion
-                    key={question.id}
-                    question={question}
-                    selectedOptionId={answers[question.id]?.optionId ?? null}
-                    isSubmitted={answers[question.id]?.isSubmitted ?? false}
-                    onSelect={handleSelect}
-                    onSubmit={handleSubmit}
-                />
-                <div className={styles.questionControls}>
-                    <button type="button" className={styles.pageButton} disabled={currentIndex === 0}
-                        onClick={() => handleNavigate(currentIndex - 1)}>‹ Câu trước</button>
-                    <button type="button" className={styles.pageButton} disabled={currentIndex === questions.length - 1}
-                        onClick={() => handleNavigate(currentIndex + 1)}>Câu tiếp theo ›</button>
-                </div>
-            </div>
-            <aside className={styles.sidebar}>
-                <JournalAsset kind="bookmark" className={styles.bookmark} />
-                <QuizNavigation statuses={statuses} currentIndex={currentIndex} onNavigate={handleNavigate}
-                    page={navigatorPage} onPageChange={setNavigatorPage} />
-                <p className={`mt-3 text-sm ${styles.muted}`} aria-live="polite">
-                    Đã chấm {submittedCount} / {questions.length} câu
-                </p>
-                <progress className={styles.progress} value={submittedCount} max={questions.length} aria-label="Tiến độ chấm câu hỏi" />
-                <button
-                    type="button"
-                    onClick={() => setShowProgress(true)}
-                    className={`mt-3 w-full ${styles.action}`}
-                >
-                    {canFinish ? "Xem kết quả" : "Xem tiến độ"}
-                </button>
-            </aside>
-        </div>
+                <div className={styles.consoleBottom} aria-hidden="true"><span><i /></span><span>● ● ●</span></div>
+            </section>
+        </main>
     );
 }

@@ -1,9 +1,9 @@
-import styles from "@/components/QuizNotebook.module.css";
+
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { subjects, isValidSubject } from "@/data/subjects";
 import QuizRunner from "@/components/QuizRunner";
-import JournalAsset from "@/components/journal/JournalAsset";
+
 
 type QuizPageProps = {
     params: Promise<{ subjectId: string; chapterId: string }>;
@@ -34,25 +34,9 @@ export default async function QuizPage({ params }: QuizPageProps) {
     }
 
     return (
-        <main className={styles.desk}>
-            <section className={styles.book}>
-                <JournalAsset kind="tape-striped" className={styles.bookTape} />
-                <JournalAsset kind="tab-rounded" className={styles.paperTab} />
-                <div className={styles.header}>
-                    <Link
-                        href={`/subjects/${subjectId}`}
-                        className={styles.backLink}
-                    >
-                        Về danh sách chapter
-                    </Link>
-                </div>
-
-                <h1 className={styles.title}>
-                    {chapter.title}
-                </h1>
-
-                <QuizRunner key={`${subjectId}:${chapter.id}`} subjectId={subjectId} chapterId={chapter.id} questions={chapter.questions} />
-            </section>
-        </main>
+        <>
+            <QuizRunner key={`${subjectId}:${chapter.id}`} subjectId={subjectId} subjectTitle={subjects[subjectId].title}
+                chapterId={chapter.id} chapterTitle={chapter.title} questions={chapter.questions} />
+        </>
     );
 }

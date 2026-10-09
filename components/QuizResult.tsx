@@ -1,4 +1,4 @@
-import styles from "@/components/QuizNotebook.module.css";
+import styles from "@/components/QuizConsole.module.css";
 
 type QuizResultProps = {
     correctCount: number;
@@ -44,11 +44,11 @@ export default function QuizResult({
             </p>
 
             <div className="mt-6 flex flex-wrap justify-center gap-3">
-                <button type="button" onClick={onContinue} className={styles.action}>
+                <button type="button" onClick={onContinue} className={styles.primary}>
                     {submittedCount === totalQuestions ? "Xem lại câu hỏi" : "Tiếp tục làm bài"}
                 </button>
                 {submittedCount === totalQuestions && (
-                    <button type="button" onClick={onRestart} className={styles.action}>
+                    <button type="button" onClick={onRestart} className={styles.primary}>
                         Làm lại bài
                     </button>
                 )}

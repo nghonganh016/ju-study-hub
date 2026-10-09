@@ -42,7 +42,7 @@
 .consoleMark span { color: #c75590; margin-left: 8px; }
 .speaker { display: flex; gap: 5px; }
 .speaker b { width: 4px; height: 13px; border-radius: 3px; background: #baa6d8; box-shadow: 0 1px white; rotate: 25deg; }
-.consoleGrid { display: grid; grid-template-columns: minmax(0, 1fr) 224px; gap: 20px; align-items: start; }
+.consoleGrid { display: grid; grid-template-columns: minmax(0, 1fr) 264px; gap: 20px; align-items: start; }
 .screen { min-width: 0; background: #fff; border: 2px solid #9980c0; border-radius: 20px; padding: 19px 22px; box-shadow: 0 3px 0 #d6c7ec; }
 .screenHeader { display: flex; justify-content: space-between; align-items: center; gap: 8px; font-size: 10px; font-weight: 700; color: #7a628b; }
 .subject { border-radius: 6px; background: #d1f8f8; padding: 3px 9px; color: #386774; letter-spacing: .04em; font-size: 11px; }
@@ -81,28 +81,31 @@
 .primary:enabled:active, .secondary:active { transform: translateY(3px); box-shadow: 0 1px 0 #cf81b4; }
 .secondary { background: #f4effd; border-color: #ac93d0; box-shadow: 0 3px #d6c7ec; }
 .stepButtons { display: flex; gap: 9px; }
-.stepButtons button { width: 42px; height: 42px; border: 1px solid #bba4db; background: #f4effd; border-radius: 12px; font-size: 22px; box-shadow: 0 3px #d9cbed; }
+.stepButtons button { display: grid; place-items: center; width: 44px; height: 44px; border: 1px solid #bba4db; background: #f4effd; border-radius: 12px; box-shadow: 0 3px #d9cbed; }
 .stepButtons button:enabled:active { transform: translateY(2px); box-shadow: none; }
 .sidePanel { min-width: 0; }
 .companion { text-align: center; padding: 12px; border-radius: 18px; background: #d0f6f8; border: 1px solid #90cad8; position: relative; }
+.heart { position: absolute; right: 12px; top: 12px; color: #7655a6; }
 .companionTitle { display: flex; justify-content: space-between; color: #496575; font-size: 11px; font-weight: 800; }
 .companionTitle > span:last-child { font-size: 18px; line-height: 1; }
 .catStage { position: relative; width: 150px; margin: 2px auto -2px; }
-.catHalo { position: absolute; inset: 24px 6px 12px; background: #effeff; border: 1px dashed #94cfd6; border-radius: 50%; }
+.catHalo { position: absolute; inset: 24px 6px 12px; background: radial-gradient(ellipse, #effeff, transparent 70%); }
 .cat { display: block; width: 100%; position: relative; }
 .catBody { transform-origin: 110px 204px; animation: breathe 5s ease-in-out infinite; }
-.catEyes { transform-origin: 110px 92px; animation: blink 7s infinite; }
-.catHead { transform-origin: 110px 130px; transition: transform 280ms ease; }
-.catLeftArm { transform-origin: 61px 143px; transition: transform 280ms ease; }
-.catRightArm { transform-origin: 159px 143px; transition: transform 280ms ease; }
-.cat[data-mood="thinking"] .catHead { transform: rotate(-8deg); }
-.cat[data-mood="thinking"] .catRightArm { transform: rotate(-125deg); }
-.cat[data-mood="incorrect"] .catHead { transform: rotate(7deg); }
-.cat[data-mood="correct"] .catLeftArm, .cat[data-mood="celebration"] .catLeftArm { transform: rotate(140deg); }
-.cat[data-mood="correct"] .catRightArm, .cat[data-mood="celebration"] .catRightArm { transform: rotate(-140deg); }
-.cat[data-mood="celebration"] .catBody { animation: jump 650ms ease; }
-.cat[data-mood="complete"] .catLeftArm { transform: rotate(-40deg); }
-.cat[data-mood="complete"] .catRightArm { transform: rotate(40deg); }
+.catEyes { transform-origin: 110px 83px; animation: blink 7s infinite; }
+/* SVG parents position the joints. CSS rotates only around the local origin.
+   A second nonzero origin here would displace the limbs in browsers. */
+.catHead, .catLeftArm, .catRightArm { transform-box: view-box; transform-origin: 0 0; transition: transform 280ms ease; }
+.catTail { transform-origin: 147px 175px; }
+.catLeftLeg, .catRightLeg { transform: none; }
+.catShadow { transform-origin: 110px 208px; }
+.cat[data-mood="waiting"] .catTail { animation: tailWait 6s ease-in-out infinite; }
+.cat[data-mood="celebrating"] .catBody { animation: jump 650ms ease; }
+.cat[data-mood="celebrating"] .catShadow { animation: shadowJump 650ms ease; }
+.catPrize { animation: prizeGlow 900ms ease-out; }
+@keyframes tailWait { 50% { transform: rotate(8deg); } }
+@keyframes shadowJump { 40% { transform: scaleX(.75); opacity: .12; } }
+@keyframes prizeGlow { 40% { fill: #fff4c7; } }
 .catStars { animation: burst 900ms ease-out both; }
 .speech { position: relative; display: grid; place-items: center; min-height: 47px; border: 1px solid #acd0db; background: #fff; border-radius: 12px; padding: 7px 10px; font-size: 12px; font-weight: 700; }
 .catCredit { display: block; font-size: 10px; color: #4d7080; margin-top: 7px; }
@@ -141,12 +144,12 @@
 .resultButtons { justify-content: center; }
 @keyframes float { 50% { transform: translate(8px, -12px) rotate(3deg); } }
 @keyframes twinkle { 50% { opacity: .45; } }
-@keyframes breathe { 50% { transform: scale(1.015, 1.025); } }
+@keyframes breathe { 50% { transform: scale(1.008, 1.012); } }
 @keyframes blink { 0%, 43%, 47%, 100% { transform: scaleY(1); } 45% { transform: scaleY(.12); } }
 @keyframes selectPop { 0% { transform: scale(.992); } 65% { transform: scale(1.004); } 100% { transform: scale(1); } }
 @keyframes shake { 25%, 75% { transform: translateX(-2px); } 50% { transform: translateX(2px); } }
 @keyframes burst { 0% { opacity: 0; transform: translateY(5px); } 30% { opacity: 1; } 100% { opacity: 0; transform: translateY(-14px); } }
-@keyframes jump { 40% { transform: translateY(-10px) rotate(-4deg); } 75% { transform: translateY(0) scale(1.03, .97); } }
+@keyframes jump { 40% { transform: translateY(-6px); } 75% { transform: translateY(0) scale(1.01, .99); } }
 @keyframes enter { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
 
 /* Give the reading surface priority over the decorative headline on short desktops. */
@@ -174,7 +177,6 @@
     .consoleTop { min-height: 38px; font-size: 10px; padding: 0 3px; }
     .consoleGrid { grid-template-columns: minmax(0, 1fr); gap: 14px; }
     .screen { padding: 15px 13px; border-radius: 16px; }
-    .screenHeader > span:last-child { display: none; }
     .screen h1 { font-size: 23px; }
     .answers legend { font-size: 17px; }
     .option { padding: 10px 9px; gap: 8px; }
@@ -182,7 +184,7 @@
     .optionStatus { font-size: 10px; }
     .optionLetter { flex-basis: 26px; height: 28px; font-size: 13px; }
     .sidePanel { display: grid; grid-template-columns: minmax(0, 1fr); gap: 10px; }
-    .companion { display: grid; grid-template-columns: 58px minmax(0, 1fr); column-gap: 10px; padding: 8px 10px; align-items: center; text-align: left; }
+    .companion { display: flex; justify-content: center; padding: 8px 10px; }
     .companionTitle, .catCredit, .catHalo, .hardware { display: none; }
     .catStage { width: 58px; margin: 0; }
     .speech { font-size: 12px; min-height: 40px; }
@@ -206,3 +208,28 @@
     .option:has(input:enabled):hover { transform: none; }
     .option[data-reward="correct"]::after { display: none; }
 }
+
+/* Shared production quiz controls; pagination remains 25 questions per group. */
+.breadcrumb { max-width: 1100px; margin: 14px auto 12px; font-size: 13px; color: #6943a3; }
+.breadcrumb a { text-underline-offset: 3px; }
+.breadcrumb a:hover { text-decoration: underline; }
+.navTitle { display: flex; align-items: center; gap: 6px; }
+.star { color: #9571ce; }
+.pageControls { display: flex; justify-content: space-between; align-items: center; gap: 8px; margin-top: 8px; font-size: 12px; }
+.pageButton { display: grid; place-items: center; min-width: 32px; min-height: 30px; border: 1px solid #c2addd; border-radius: 8px; background: white; color: #6943a3; font-size: 20px; }
+.questionGrid { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 5px; margin-top: 10px; }
+.tile { display: flex; min-height: 44px; flex-direction: column; align-items: center; justify-content: center; border: 1px solid #c2addd; background: white; border-radius: 10px; font-size: 13px; font-weight: 800; }
+.tile[aria-current="step"] { outline: 2px solid #8058c2; outline-offset: 1px; }
+.tile:focus-visible { outline-width: 3px; outline-offset: 3px; }
+.tile:hover { border-color: #7955d7; }
+.draft { background: #e0f8fa; color: #386774; }
+.correct { background: #d9f4e6; color: #2c6a4d; }
+.incorrect { background: #ffe3ee; color: #994365; }
+.legend { display: grid; grid-template-columns: 1fr 1fr; gap: 3px 8px; font-size: 10px; color: #705784; margin-top: 10px; }
+.muted, .hint { color: #705784; }
+.hint { font-size: 10px; margin-top: 6px; }
+.resultScore { font-weight: 800; color: #6943a3; }
+.progress { width: 100%; height: 9px; margin-top: 10px; appearance: none; border: none; border-radius: 8px; background: #f3eefb; }
+.progress::-webkit-progress-bar { border-radius: 8px; background: #f3eefb; }
+.progress::-webkit-progress-value { border-radius: 8px; background: #9571ce; }
+.progress::-moz-progress-bar { border-radius: 8px; background: #9571ce; }

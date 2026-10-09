@@ -1,6 +1,7 @@
 "use client";
 
-import styles from "@/components/QuizNotebook.module.css";
+import type { ReactNode } from "react";
+import styles from "@/components/QuizConsole.module.css";
 import MathText from "@/components/MathText";
 import type { Question } from "@/types/quiz";
 
@@ -10,90 +11,48 @@ type QuizQuestionProps = {
     isSubmitted: boolean;
     onSelect: (optionId: string) => void;
     onSubmit: () => void;
+    navigation?: ReactNode;
+    reward?: "correct" | "incorrect";
 };
 
-export default function QuizQuestion({ question, selectedOptionId, isSubmitted, onSelect, onSubmit }: QuizQuestionProps) {
+export default function QuizQuestion({ question, selectedOptionId, isSubmitted, onSelect, onSubmit, navigation, reward }: QuizQuestionProps) {
     const isCorrect = selectedOptionId === question.correctOptionId;
-
     function handleSubmit() {
-        if (selectedOptionId === null || isSubmitted) {
-            return;
-        }
-
+        if (selectedOptionId === null || isSubmitted) return;
         onSubmit();
     }
 
     return (
-        <div className="mt-4">
-            <fieldset disabled={isSubmitted} className="min-w-0">
-                <legend className="text-lg font-semibold leading-snug">
-                    <MathText text={question.prompt} />
-                </legend>
-
-                <div className="mt-3 space-y-2">
-                    {question.options.map((option) => (
-                        <label
-                            key={option.id}
-                            className={styles.option}
-                        >
-                            <input
-                                type="radio"
-                                name={question.id}
-                                value={option.id}
-                                checked={selectedOptionId === option.id}
-                                onChange={() => onSelect(option.id)}
-                                className={styles.radio}
-                            />
-
-                            <span className="min-w-0 flex-1">
-                                <span className={styles.letter}>
-                                    {option.id.toUpperCase()}.
-                                </span>
-                                <MathText text={option.text} />
-                            </span>
+        <div>
+            <fieldset disabled={isSubmitted} className={styles.answers}>
+                <legend><MathText text={question.prompt} /></legend>
+                {question.options.map((option) => {
+                    const selected = selectedOptionId === option.id;
+                    const status = isSubmitted && option.id === question.correctOptionId ? "correct"
+                        : isSubmitted && selected ? "incorrect" : selected ? "selected" : "default";
+                    return (
+                        <label key={option.id} className={styles.option} data-status={status} data-reward={selected ? reward : undefined}>
+                            <input type="radio" name={question.id} value={option.id} checked={selected} onChange={() => onSelect(option.id)} />
+                            <span className={styles.optionLetter} aria-hidden="true">{option.id.toUpperCase()}</span>
+                            <span className={styles.optionText}><MathText text={option.text} /></span>
+                            <span className={styles.optionStatus}>{status === "correct" ? "✓ Đúng" : status === "incorrect" ? "× Sai" : selected ? "●" : ""}</span>
                         </label>
-                    ))}
-                </div>
+                    );
+                })}
             </fieldset>
-
-            <button
-                type="button"
-                onClick={handleSubmit}
-                disabled={selectedOptionId === null || isSubmitted}
-                className={`mt-4 ${styles.action}`}
-            >
-                {isSubmitted ? "Đã kiểm tra" : "Kiểm tra đáp án"}
-            </button>
-
             {isSubmitted && (
-                <div
-                    role="status"
-                    className={styles.feedback}
-                >
-                    <p className="font-semibold">
-                        {isCorrect ? "Chính xác!" : "Chưa đúng."}
-                    </p>
-
-                    <p className="mt-2">
-                        Đáp án đúng: {question.correctOptionId.toUpperCase()}.
-                    </p>
-
-                    {question.explanation && (
-                        <div className={`mt-2 leading-relaxed ${styles.muted}`}>
-                            <MathText text={question.explanation} />
-                            {question.source && (
-                                <>{" "}<a
-                                    href={question.source}
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    className="underline underline-offset-2"
-                                    aria-label="Đọc nguồn tham khảo (mở tab mới)"
-                                >Nguồn tham khảo ↗</a></>
-                            )}
-                        </div>
-                    )}
+                <div role="status" className={styles.feedback}>
+                    <strong>{isCorrect ? "Chính xác!" : "Chưa đúng."} Đáp án đúng: {question.correctOptionId.toUpperCase()}.</strong>
+                    {question.explanation && <MathText text={question.explanation} />}
+                    {question.source && <a href={question.source} target="_blank" rel="noopener noreferrer" aria-label="Đọc nguồn tham khảo (mở tab mới)">Nguồn tham khảo ↗</a>}
                 </div>
             )}
+            <div className={styles.actions}>
+                <button type="button" onClick={handleSubmit} disabled={selectedOptionId === null || isSubmitted} className={styles.primary}>
+                    {isSubmitted ? "Đã kiểm tra" : "Kiểm tra đáp án"}<span aria-hidden="true">✦</span>
+                </button>
+                {navigation}
+            </div>
         </div>
     );
 }

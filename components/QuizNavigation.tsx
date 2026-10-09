@@ -1,4 +1,4 @@
-import styles from "@/components/QuizNotebook.module.css";
+import styles from "@/components/QuizConsole.module.css";
 
 export type QuestionStatus = "unanswered" | "draft" | "correct" | "incorrect";
 export const QUESTIONS_PER_PAGE = 25;

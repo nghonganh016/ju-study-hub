@@ -348,3 +348,20 @@
 - Desktop 1366x768: clientWidth=scrollWidth=1351 (có thanh cuộn dọc); câu 21 sau chấm có đáy lựa chọn khoảng y=559 và nút kiểm tra khoảng y=701 tính từ đầu tài liệu, nằm trong chiều cao 768. Đã xem ảnh toàn trang. Mobile 390x844: không tràn ngang cả câu ngắn và câu 21 trước/sau chấm; bảng chọn câu mở được; tắt chuyển động đưa số phần tử có CSS animation về 0, kể cả sau chấm. Đã lưu ảnh kiểm tra ngoài repo.
 - Giới hạn: chỉ 3 câu để duyệt thiết kế, chưa đại diện điều hướng 25/88 câu; chưa tích hợp vào quiz thật hoặc kiểm thử lại luồng quiz thật. Chưa giả lập cài đặt giảm chuyển động của hệ điều hành; đã kiểm tra quy tắc CSS và nút tắt trên trang. Chưa chạy production build. Không commit/push/deploy.
 - Ju kiểm tra: mở /dev/quiz-console khi chạy dev; chọn B câu mẫu 1 và chấm; thử câu mẫu 2/các biểu cảm mèo; thử tắt chuyển động. Chờ Ju phản hồi màu sắc, độ giống mèo và nhịp chuyển động trước bước tích hợp.
+
+## 09/10/2026: Thiết kế lại mèo đồng hành trong bản mẫu
+
+- Ju duyệt phương án mèo cam đào viền tím, khăn cyan, tay chân rõ và 7 trạng thái. Chỉ sửa components/quiz-preview/StudyCat.tsx, QuizConsolePreview.module.css và phần ánh xạ biểu cảm trong QuizConsolePreview.tsx; giữ nguyên bố cục, kích thước thẻ, nội dung và logic chấm quiz.
+- SVG mới tách đầu, thân, từng tay, từng chân, đuôi; tay nằm lớp trước để không mất sau đầu khi giơ lên. Có đế đứng tím, bóng chân và ngôi sao được hai tay ôm ở trạng thái hoàn thành. Tâm xoay đặt trực tiếp trong SVG để hình tĩnh và trình duyệt dùng cùng tư thế.
+- Bảy trạng thái: idle/waiting/thinking/correct/wrong/celebrating/completed. Chưa chọn là waiting, chọn nháp là thinking, phản hồi chấm ánh xạ correct/wrong, tổng kết đủ câu là completed; các trạng thái đều thử được qua nút có sẵn. Không thay handlers chọn/chấm/lưu tiến trình. Giữ quy tắc tắt chuyển động và prefers-reduced-motion.
+- Kiểm tra: ESLint components/quiz-preview đạt; TypeScript --noEmit --incremental false đạt. Dựng trực tiếp component React thành SVG, dùng sharp có sẵn để xem đủ 7 trạng thái ở 150 px và 58 px; phát hiện và sửa lệch tâm xoay trong bộ dựng ảnh tĩnh. Đã xem bảng ảnh cuối: tay chân tách rõ, không vượt khung. Ảnh tại thư mục visualizations của phiên, không đưa script kiểm tra tạm vào repo.
+- Giới hạn: Công cụ trình duyệt chặn đọc tab vì giao thức URL không được phép; không thử vượt chặn. Chưa xác nhận trực tiếp hoạt ảnh, bố cục trong trình duyệt hoặc cài đặt giảm chuyển động hệ thống ở lượt này. Không chạy production build, không cài thư viện, không sửa ảnh gốc hoặc quiz thật.
+- Ju kiểm tra: mở /dev/quiz-console khi chạy dev; thử bảy biểu cảm và nút tắt chuyển động; chọn/chấm để xem mèo phản ứng. Chờ Ju phản hồi trước thay đổi tiếp theo.
+
+## 09/10/2026: Sửa lệch tay chân khi mèo chuyển động
+
+- Tái hiện lỗi trực tiếp tại /dev/quiz-console: trạng thái thinking có tay phải nằm ngoài khung SVG. SVG rotate(angle cx cy) đã chứa tâm xoay, trong khi CSS transform-origin tiếp tục áp cùng tâm đó; trình duyệt dịch bộ phận thêm lần nữa. Ảnh SVG tĩnh trước đây không phản ánh lỗi này.
+- StudyCat.tsx: tách nhóm định vị khớp translate và nhóm chỉ xoay góc; trả nét vẽ về tọa độ khớp. Bỏ xoay riêng hai chân khi ăn mừng, giữ chúng cùng thân. QuizConsolePreview.module.css: đặt origin 0 0 cho đầu/tay, giữ chuyển góc mượt; giảm biên độ thở và nhảy để đầu nghiêng không chạm mép khung nhỏ.
+- Kiểm tra trực tiếp tab HTTP đang hoạt động (tab cũ là trang lỗi kết nối dạng data URL): cả 7 tư thế ổn định có đầu/tay nằm trong SVG, ma trận xoay không còn độ dịch bổ sung; lấy thêm mẫu trong chuyển trạng thái. Xem ảnh trình duyệt ở 1366x768, 1366x900 và 390x844. Sau giảm biên độ, lấy 5 mẫu trạng thái thinking 58 px đều trong khung. Nút tắt chuyển động đưa hoạt ảnh mèo về 0. Đã lưu ảnh chụp trình duyệt cat-fixed-browser.jpg ngoài repo.
+- ESLint StudyCat.tsx và TypeScript --noEmit --incremental false đạt. Không sửa handlers quiz, nội dung câu hỏi hoặc bố cục. Chưa kiểm tra trình duyệt khác và chưa chạy production build.
+- Ju kiểm tra: tải lại bản mẫu, lần lượt thử Suy nghĩ/Ăn mừng/Hoàn thành và bật/tắt chuyển động; tay cần giữ đúng vai, chân chuyển động cùng thân. Chờ phản hồi trước thay đổi tiếp theo.

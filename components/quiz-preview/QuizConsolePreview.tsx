@@ -4,16 +4,12 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import type { Question } from "@/types/quiz";
 import MathText from "@/components/MathText";
-import StudyCat, { catLabels, type CatMood } from "./StudyCat";
-import styles from "./QuizConsolePreview.module.css";
+import { catLabels, type CatMood } from "@/components/StudyCat";
+import QuizCompanion from "@/components/QuizCompanion";
+import GameArrow from "@/components/GameArrow";
+import styles from "@/components/QuizConsole.module.css";
 
 type Answer = { optionId: string; submitted: boolean };
-const greetings: Record<CatMood, string> = {
-    idle: "Mình học cùng nhau nhé!", thinking: "Từ từ thôi, mình chờ cậu.",
-    correct: "Đúng rồi! Giỏi quá nè!", incorrect: "Không sao, mình thử hiểu lại nhé.",
-    celebration: "Thêm một bước nhỏ rồi!", complete: "Xong rồi! Nghỉ một chút nha.",
-};
-
 // Isolated design fixture. No production quiz handlers or browser storage.
 export default function QuizConsolePreview({ questions }: { questions: Question[] }) {
     const [index, setIndex] = useState(0);
@@ -28,7 +24,7 @@ export default function QuizConsolePreview({ questions }: { questions: Question[
     const submitted = questions.filter((item) => answers[item.id]?.submitted).length;
     const correct = questions.filter((item) => answers[item.id]?.submitted && answers[item.id]?.optionId === item.correctOptionId).length;
     const complete = submitted === questions.length;
-    const mood: CatMood = moodPreview ?? (result && complete ? "complete" : reward ?? (answer && !answer.submitted ? "thinking" : "idle"));
+    const mood: CatMood = moodPreview ?? (result && complete ? "completed" : reward === "incorrect" ? "wrong" : reward === "correct" ? "correct" : answer && !answer.submitted ? "thinking" : !answer && !result ? "waiting" : "idle");
 
     useEffect(() => {
         if (!reward) return;
@@ -66,10 +62,10 @@ export default function QuizConsolePreview({ questions }: { questions: Question[
             <div className={styles.intro}><span className={styles.eyebrow}>Một chút tập trung, một chút đáng yêu</span><p>Đến giờ lên cấp kiến thức <span aria-hidden="true">✧</span></p></div>
 
             <section className={styles.console} aria-label="Máy học cùng mèo">
-                <div className={styles.consoleTop}><span><i /> Góc học của Ju</span><div aria-hidden="true" className={styles.speaker}><b /><b /><b /><b /><b /></div><span className={styles.consoleMark}>Ju / 01 <span aria-hidden="true">✦</span></span></div>
+                <div className={styles.consoleTop}><span aria-hidden="true"><i /></span><div aria-hidden="true" className={styles.speaker}><b /><b /><b /><b /><b /></div><span className={styles.consoleMark}>Ju / 01 <span aria-hidden="true">✦</span></span></div>
                 <div className={styles.consoleGrid}>
                     <section className={styles.screen} aria-label="Câu hỏi mẫu">
-                        <div className={styles.screenHeader}><span className={styles.subject}>Blockchain</span><span>Chọn → Kiểm tra → Khám phá</span></div>
+                        <div className={styles.screenHeader}><span className={styles.subject}>Blockchain</span></div>
                         <h1>Wallet, key và transaction</h1>
                         <div className={styles.progressLabels}><span>Đã chấm <strong>{submitted}/{questions.length}</strong> câu mẫu</span><span>Đúng: <strong>{correct}</strong></span></div>
                         <div className={styles.progressTrack} role="progressbar" aria-label="Tiến độ câu mẫu" aria-valuenow={submitted} aria-valuemin={0} aria-valuemax={questions.length}><span style={{ width: `${submitted / questions.length * 100}%` }} /></div>
@@ -95,12 +91,12 @@ export default function QuizConsolePreview({ questions }: { questions: Question[
                                 })}
                             </fieldset>
                             {answer?.submitted && <div className={styles.feedback} role="status"><strong>{answer.optionId === question.correctOptionId ? "✦ Chính xác!" : `Đáp án đúng: ${question.correctOptionId.toUpperCase()}.`}</strong><MathText text={question.explanation} />{question.source && <a href={question.source} target="_blank" rel="noopener noreferrer">Nguồn tham khảo ↗</a>}</div>}
-                            <div className={styles.actions}><button type="button" className={styles.primary} disabled={!answer || answer.submitted} onClick={submit}>{answer?.submitted ? "✓ Đã kiểm tra" : "Kiểm tra đáp án"}<span aria-hidden="true">✦</span></button><div className={styles.stepButtons}><button type="button" aria-label="Câu trước" disabled={index === 0} onClick={() => navigate(index - 1)}>←</button><button type="button" aria-label="Câu tiếp theo" disabled={index === questions.length - 1} onClick={() => navigate(index + 1)}>→</button></div></div>
+                            <div className={styles.actions}><button type="button" className={styles.primary} disabled={!answer || answer.submitted} onClick={submit}>{answer?.submitted ? "✓ Đã kiểm tra" : "Kiểm tra đáp án"}<span aria-hidden="true">✦</span></button><div className={styles.stepButtons}><button type="button" aria-label="Câu trước" disabled={index === 0} onClick={() => navigate(index - 1)}><GameArrow direction="left" /></button><button type="button" aria-label="Câu tiếp theo" disabled={index === questions.length - 1} onClick={() => navigate(index + 1)}><GameArrow direction="right" /></button></div></div>
                         </div>}
                     </section>
 
                     <aside className={styles.sidePanel}>
-                        <div className={styles.companion}><div className={styles.companionTitle}><span>Bạn đồng hành</span><span aria-hidden="true">♡</span></div><div className={styles.catStage}><div className={styles.catHalo} /><StudyCat mood={mood} /></div><p className={styles.speech} aria-live="polite">{greetings[mood]}</p><span className={styles.catCredit}>Mèo nhỏ của Ju</span></div>
+                        <QuizCompanion mood={mood} />
                         <div className={styles.navigation}>
                             <button className={styles.navigationToggle} type="button" aria-expanded={navigationOpen} aria-controls="preview-question-nav" onClick={() => setNavigationOpen(!navigationOpen)}>Chọn câu mẫu <span>{navigationOpen ? "−" : "+"}</span></button>
                             <nav id="preview-question-nav" className={styles.navigationBody} data-open={navigationOpen} aria-label="Chọn câu mẫu"><h2>Chọn câu mẫu</h2><div className={styles.questionTiles}>{questions.map((item, i) => {
@@ -114,7 +110,7 @@ export default function QuizConsolePreview({ questions }: { questions: Question[
                         <div className={styles.hardware} aria-hidden="true"><span className={styles.dpad}>✚</span><div><i>B</i><i>A</i></div></div>
                     </aside>
                 </div>
-                <div className={styles.consoleBottom}><span><i /> Cứ thong thả, cậu đang tiến bộ.</span><span aria-hidden="true">● ● ●</span></div>
+                <div className={styles.consoleBottom}><span aria-hidden="true"><i /></span><span aria-hidden="true">● ● ●</span></div>
             </section>
 
             <section className={styles.previewTools} aria-label="Thử biểu cảm linh vật"><span>Thử biểu cảm mèo</span><div>{(Object.keys(catLabels) as CatMood[]).map((item) => <button key={item} type="button" aria-pressed={moodPreview === item} onClick={() => setMoodPreview(item)}>{catLabels[item]}</button>)}<button type="button" aria-pressed={moodPreview === null} onClick={() => setMoodPreview(null)}>Theo câu trả lời</button></div><p>Bản mẫu 3 câu · Không lưu tiến trình · Chưa áp dụng vào quiz thật</p></section>
