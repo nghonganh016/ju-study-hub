@@ -160,13 +160,45 @@ export default function QuizRunner({ subjectId, subjectTitle, chapterId, chapter
     return (
         <main className={styles.scene} data-motion={motion ? "on" : "off"}>
             <div className={styles.ambient} aria-hidden="true"><i /><i /><i /><span>✦</span><span>✧</span></div>
-            <header className={styles.siteHeader}>
-                <Link href="/" className={styles.brand}><span aria-hidden="true">✿</span> Ju Study Hub<span className={styles.brandDot} aria-hidden="true">●</span></Link>
-                <button type="button" className={styles.motionToggle} aria-pressed={!motion} onClick={() => setMotion(!motion)}>{motion ? "Tắt chuyển động" : "Bật chuyển động"}</button>
-            </header>
-            <div className={styles.breadcrumb}><Link href={`/subjects/${subjectId}`}>Về danh sách chapter</Link></div>
             <section className={styles.console} aria-label="Quiz">
-                <div className={styles.consoleTop} aria-hidden="true"><span><i /></span><div className={styles.speaker}><b /><b /><b /><b /><b /></div><span className={styles.consoleMark}>Ju / 01 <span>✦</span></span></div>
+                <nav className={styles.consoleTabs} aria-label="Điều hướng quiz">
+                    <Link href="/" className={`${styles.consoleTab} ${styles.homeTab}`}>
+                        <span aria-hidden="true">⌂</span>
+                        Trang chủ
+                    </Link>
+
+                    <Link
+                        href={`/subjects/${subjectId}`}
+                        className={`${styles.consoleTab} ${styles.chapterTab}`}
+                    >
+                        <span aria-hidden="true">‹</span>
+                        Chapters
+                    </Link>
+
+                    <button
+                        type="button"
+                        className={`${styles.consoleTab} ${styles.fxTab}`}
+                        aria-pressed={motion}
+                        aria-label={motion ? "Tắt hiệu ứng chuyển động" : "Bật hiệu ứng chuyển động"}
+                        onClick={() => setMotion((previous) => !previous)}
+                    >
+                        <span aria-hidden="true">✦</span>
+                        {motion ? "FX On" : "FX Off"}
+                    </button>
+                </nav>
+                <div className={styles.consoleTop}>
+                    <span className={styles.powerLight} aria-hidden="true">
+                        <i />
+                    </span>
+
+                    <div className={styles.speaker} aria-hidden="true">
+                        <b /><b /><b /><b /><b />
+                    </div>
+
+                    <span className={styles.consoleMark}>
+                        Ju Study Hub <span aria-hidden="true">✦</span>
+                    </span>
+                </div>
                 <div className={styles.consoleGrid}>
                     <section className={styles.screen} aria-label="Nội dung bài học">
                         <div className={styles.screenHeader}><span className={styles.subject}>{subjectTitle}</span></div>
@@ -198,7 +230,22 @@ export default function QuizRunner({ subjectId, subjectTitle, chapterId, chapter
                                 <QuizNavigation statuses={statuses} currentIndex={currentIndex} page={navigatorPage} onPageChange={setNavigatorPage}
                                     onNavigate={(index) => { handleNavigate(index); setShowProgress(false); }} />
                             </div>
-                            <button type="button" className={styles.summaryButton} onClick={() => { setReward(null); setShowProgress(true); }}>{canFinish ? "Xem kết quả" : "Xem tiến độ"}<span aria-hidden="true">↗</span></button>
+                            <button
+                                type="button"
+                                className={styles.summaryButton}
+                                onClick={() => {
+                                    setReward(null);
+                                    setShowProgress(true);
+                                }}
+                            >
+                                <span>
+                                    {canFinish ? "Xem kết quả" : "Xem tiến độ"}
+                                </span>
+
+                                <span className={styles.summaryIcon} aria-hidden="true">
+                                    <span className={styles.playTriangle}></span>
+                                </span>
+                            </button>
                         </div>
                     </aside>
                 </div>

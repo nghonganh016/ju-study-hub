@@ -52,12 +52,6 @@ export default function QuizNavigation({ statuses, currentIndex, page, onPageCha
                     );
                 })}
             </div>
-            <ul className={styles.legend}>
-                {Object.entries(statusDetails).map(([status, details]) => (
-                    <li key={status}><span aria-hidden="true">{details.symbol}</span> {details.label}</li>
-                ))}
-            </ul>
-            <p className={styles.hint}>Viền tím đậm: câu đang xem.</p>
         </nav>
     );
 }

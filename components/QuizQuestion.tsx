@@ -42,7 +42,11 @@ export default function QuizQuestion({ question, selectedOptionId, isSubmitted, 
             </fieldset>
             {isSubmitted && (
                 <div role="status" className={styles.feedback}>
-                    <strong>{isCorrect ? "Chính xác!" : "Chưa đúng."} Đáp án đúng: {question.correctOptionId.toUpperCase()}.</strong>
+                    <strong>
+                        {isCorrect
+                            ? "Chính xác!"
+                            : `Chưa đúng. Đáp án đúng: ${question.correctOptionId.toUpperCase()}.`}
+                    </strong>
                     {question.explanation && <MathText text={question.explanation} />}
                     {question.source && <a href={question.source} target="_blank" rel="noopener noreferrer" aria-label="Đọc nguồn tham khảo (mở tab mới)">Nguồn tham khảo ↗</a>}
                 </div>
