@@ -1,3 +1,4 @@
+import { subjects } from "@/data/subjects";
 import SubjectCard from "@/components/SubjectCard";
 
 export default function Home() {
@@ -13,7 +14,7 @@ export default function Home() {
         </h1>
 
         <p className="mt-4 leading-relaxed text-slate-600">
-          Mỗi ngày hiểu thêm một chút. Hôm nay cùng ôn Blockchain nhé!
+          Mỗi ngày hiểu thêm một chút. Hôm nay cùng chọn môn để ôn tập nhé!
         </p>
       </section>
       <section className="mx-auto mt-8 max-w-2xl">
@@ -21,11 +22,16 @@ export default function Home() {
           Môn học
         </h2>
 
-        <SubjectCard
-          title="Blockchain"
-          description="Ôn tập kiến thức và luyện câu hỏi theo từng chapter."
-          href="/subjects/blockchain"
-        />
+        <div className="space-y-4">
+          {Object.entries(subjects).map(([subjectId, subject]) => (
+            <SubjectCard
+              key={subjectId}
+              title={subject.title}
+              description={subject.description}
+              href={`/subjects/${subjectId}`}
+            />
+          ))}
+        </div>
       </section>
     </main>
   );

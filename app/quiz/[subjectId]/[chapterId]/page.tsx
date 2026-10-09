@@ -1,16 +1,18 @@
 import styles from "@/components/QuizNotebook.module.css";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { chapters } from "@/data/blockchain";
+import { subjects, isValidSubject } from "@/data/subjects";
 import QuizRunner from "@/components/QuizRunner";
 import JournalAsset from "@/components/journal/JournalAsset";
 
 type QuizPageProps = {
-    params: Promise<{ chapterId: string }>;
+    params: Promise<{ subjectId: string; chapterId: string }>;
 };
 
 export default async function QuizPage({ params }: QuizPageProps) {
-    const { chapterId } = await params;
+    const { subjectId, chapterId } = await params;
+    if (!isValidSubject(subjectId)) notFound();
+    const { chapters } = subjects[subjectId];
 
     const chapter = chapters.find((item) => item.id === chapterId);
 
@@ -24,7 +26,7 @@ export default async function QuizPage({ params }: QuizPageProps) {
         return (
             <main className="p-8">
                 <p>Chapter này chưa có câu hỏi.</p>
-                <Link href="/subjects/blockchain" className="text-pink-700 underline">
+                <Link href={`/subjects/${subjectId}`} className="text-pink-700 underline">
                     Về danh sách chapter
                 </Link>
             </main>
@@ -38,7 +40,7 @@ export default async function QuizPage({ params }: QuizPageProps) {
                 <JournalAsset kind="tab-rounded" className={styles.paperTab} />
                 <div className={styles.header}>
                     <Link
-                        href="/subjects/blockchain"
+                        href={`/subjects/${subjectId}`}
                         className={styles.backLink}
                     >
                         Về danh sách chapter
@@ -49,7 +51,7 @@ export default async function QuizPage({ params }: QuizPageProps) {
                     {chapter.title}
                 </h1>
 
-                <QuizRunner key={chapter.id} subjectId="blockchain" chapterId={chapter.id} questions={chapter.questions} />
+                <QuizRunner key={`${subjectId}:${chapter.id}`} subjectId={subjectId} chapterId={chapter.id} questions={chapter.questions} />
             </section>
         </main>
     );

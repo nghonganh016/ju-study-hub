@@ -1,7 +1,15 @@
 import Link from "next/link";
-import { chapters } from "@/data/blockchain";
+import { notFound } from "next/navigation";
+import { subjects, isValidSubject } from "@/data/subjects";
 
-export default function BlockchainPage() {
+type SubjectPageProps = {
+    params: Promise<{ subjectId: string }>;
+};
+
+export default async function SubjectPage({ params }: SubjectPageProps) {
+    const { subjectId } = await params;
+    if (!isValidSubject(subjectId)) notFound();
+    const subject = subjects[subjectId];
     return (
         <main className="min-h-screen bg-pink-50 px-6 py-16 text-slate-800">
             <section className="mx-auto max-w-2xl rounded-3xl bg-white p-8 shadow-sm">
@@ -10,18 +18,18 @@ export default function BlockchainPage() {
                 </Link>
 
                 <h1 className="mt-6 text-3xl font-bold">
-                    Blockchain
+                    {subject.title}
                 </h1>
 
                 <p className="mt-4 leading-relaxed text-slate-600">
-                    Đây là nơi chứa các chapter và bài quiz Blockchain của Ju.
+                    {subject.description}
                 </p>
                 <div className="mt-8">
                     <h2 className="mb-4 text-xl font-semibold">
                         Các chapter
                     </h2>
 
-                    {chapters.map((chapter) => (
+                    {subject.chapters.map((chapter) => (
                         <article key={chapter.id} className="mt-4 rounded-2xl border border-pink-100 bg-pink-50 p-6">
                             <h3 className="text-lg font-semibold">
                                 {chapter.title}
@@ -35,7 +43,7 @@ export default function BlockchainPage() {
                                 {chapter.questions.length} câu hỏi
                             </p>
                             <Link
-                                href={`/subjects/blockchain/${chapter.id}`}
+                                href={`/subjects/${subjectId}/${chapter.id}`}
                                 className="mt-4 inline-block rounded-2xl bg-pink-700 font-heading px-4 py-2 font-medium text-white hover:bg-pink-800"
                             >
                                 Xem chapter
