@@ -1,7 +1,7 @@
 
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { subjects, isValidSubject } from "@/data/subjects";
+import { subjects, isValidSubject, questionCatalog } from "@/data/subjects";
 import QuizRunner from "@/components/QuizRunner";
 
 
@@ -36,7 +36,7 @@ export default async function QuizPage({ params }: QuizPageProps) {
     return (
         <>
             <QuizRunner key={`${subjectId}:${chapter.id}`} subjectId={subjectId} subjectTitle={subjects[subjectId].title}
-                chapterId={chapter.id} chapterTitle={chapter.title} questions={chapter.questions} />
+                chapterId={chapter.id} chapterTitle={chapter.title} questions={chapter.questions} mistakeCatalog={questionCatalog} />
         </>
     );
 }

@@ -26,30 +26,65 @@ export function parseMistakes(raw: string | null): MistakeRef[] {
     } catch { return []; }
 }
 
-// Storage can be blocked or full. Keep a usable collection for this page lifetime.
+// Replay local additions/removals against the latest stored collection after
+// recovery, so an unavailable read cannot erase unrelated saved mistakes.
 let fallback: MistakeRef[] = [];
-let memoryOnly = false;
-export function readMistakes(): MistakeRef[] {
-    if (!memoryOnly) {
-        try { fallback = parseMistakes(window.localStorage.getItem(MISTAKES_KEY)); } catch { memoryOnly = true; }
+const pending = new Map<string, { ref: MistakeRef; present: boolean }>();
+
+function applyPending(items: MistakeRef[]) {
+    const merged = new Map(items.map(ref => [mistakeId(ref), ref]));
+    for (const [id, change] of pending) {
+        if (change.present) merged.set(id, change.ref);
+        else merged.delete(id);
     }
-    return fallback;
+    return [...merged.values()];
+}
+
+export function readMistakes(): MistakeRef[] {
+    try { fallback = parseMistakes(window.localStorage.getItem(MISTAKES_KEY)); } catch { /* Use last readable data. */ }
+    // React store snapshots must not write or dispatch events.
+    return applyPending(fallback);
+}
+
+export function flushMistakes() {
+    if (pending.size === 0) return;
+    try {
+        const stored = parseMistakes(window.localStorage.getItem(MISTAKES_KEY));
+        const merged = applyPending(stored);
+        if (JSON.stringify(merged) !== JSON.stringify(stored)) {
+            window.localStorage.setItem(MISTAKES_KEY, JSON.stringify({ version: 1, items: merged }));
+        }
+        fallback = merged;
+        pending.clear();
+    } catch { /* Retry on the next action, focus or storage event. */ }
 }
 
 export function saveMistakes(items: MistakeRef[]) {
-    fallback = items;
-    try { window.localStorage.setItem(MISTAKES_KEY, JSON.stringify({ version: 1, items })); } catch { memoryOnly = true; }
+    const current = readMistakes();
+    const target = parseMistakes(JSON.stringify({ version: 1, items }));
+    const targetIds = new Set(target.map(mistakeId));
+    const currentIds = new Set(current.map(mistakeId));
+    for (const ref of current) {
+        if (!targetIds.has(mistakeId(ref))) pending.set(mistakeId(ref), { ref, present: false });
+    }
+    for (const ref of target) {
+        if (!currentIds.has(mistakeId(ref))) pending.set(mistakeId(ref), { ref, present: true });
+    }
+    flushMistakes();
     window.dispatchEvent(new Event(MISTAKES_EVENT));
 }
 
 export function recordAttempt(ref: MistakeRef, correct: boolean, review: boolean) {
     const items = readMistakes();
     const id = mistakeId(ref);
-    if (review && correct) saveMistakes(items.filter(item => mistakeId(item) !== id));
-    else if (!review && !correct && !items.some(item => mistakeId(item) === id)) saveMistakes([...items, ref]);
+    const cleanRef = { subjectId: ref.subjectId, chapterId: ref.chapterId, questionId: ref.questionId };
+    if (review && correct) pending.set(id, { ref: cleanRef, present: false });
+    else if (!review && !correct && !items.some(item => mistakeId(item) === id)) pending.set(id, { ref: cleanRef, present: true });
+    flushMistakes();
+    window.dispatchEvent(new Event(MISTAKES_EVENT));
 }
 
-export function resolveMistakes(refs: MistakeRef[], catalog: ReviewItem[]) {
+export function resolveMistakes<T extends MistakeRef>(refs: MistakeRef[], catalog: readonly T[]) {
     const lookup = new Map(catalog.map(item => [mistakeId(item), item]));
     return refs.flatMap(ref => {
         const item = lookup.get(mistakeId(ref));

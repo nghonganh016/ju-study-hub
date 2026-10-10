@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import QuizRunner from "@/components/QuizRunner";
 import styles from "@/components/QuizConsole.module.css";
+import { isProgressComplete } from "@/lib/quiz-progress";
 import { mistakeId, parseMistakes, readMistakes, resolveMistakes, saveMistakes,
     ROUND_KEY, REVIEW_PROGRESS_KEY, type ReviewItem } from "@/lib/mistakes";
 
@@ -20,10 +21,9 @@ export default function ReviewMistakes({ catalog }: { catalog: ReviewItem[] }) {
             let saved: ReviewItem[] = [];
             try {
                 saved = resolveMistakes(parseMistakes(window.localStorage.getItem(ROUND_KEY)), catalog);
-                const progress = JSON.parse(window.localStorage.getItem(REVIEW_PROGRESS_KEY) ?? "null");
+                const progress = window.localStorage.getItem(REVIEW_PROGRESS_KEY);
                 // Reopening a completed round starts with the remaining mistakes.
-                if (progress?.version === 1 && saved.length && saved.every(item =>
-                    progress.answers?.[mistakeId(item)]?.isSubmitted === true)) saved = [];
+                if (isProgressComplete(progress, saved.map(item => ({ ...item.question, id: mistakeId(item) })))) saved = [];
             } catch { /* Start in memory. */ }
             const next = saved.length ? saved : current;
             if (!saved.length) {

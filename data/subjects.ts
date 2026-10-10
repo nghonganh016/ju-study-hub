@@ -22,6 +22,12 @@ export const subjects = {
     },
 } satisfies Record<string, Subject>;
 
+// Send only IDs to the mistake counter, not full question content.
+export const questionCatalog = Object.entries(subjects).flatMap(([subjectId, subject]) =>
+    subject.chapters.flatMap(chapter => chapter.questions.map(question => ({
+        subjectId, chapterId: chapter.id, questionId: question.id,
+    }))));
+
 export type SubjectId = keyof typeof subjects;
 
 export function isValidSubject(id: string): id is SubjectId {
