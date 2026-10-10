@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { subjects, isValidSubject } from "@/data/subjects";
+import styles from "@/components/LevelSelect.module.css";
 
 type SubjectPageProps = {
     params: Promise<{ subjectId: string }>;
@@ -11,47 +12,44 @@ export default async function SubjectPage({ params }: SubjectPageProps) {
     if (!isValidSubject(subjectId)) notFound();
     const subject = subjects[subjectId];
     return (
-        <main className="min-h-screen bg-pink-50 px-6 py-16 text-slate-800">
-            <section className="mx-auto max-w-2xl rounded-3xl bg-white p-8 shadow-sm">
-                <Link href="/" className="text-sm text-pink-700 hover:underline">
-                    Về trang chủ
-                </Link>
+        <main className={styles.page} data-accent={subject.accent}>
+            <div className={styles.content}>
+                <header className={styles.header}>
+                    <Link href="/" className={styles.brand} aria-label="Ju Study Hub, về trang chủ">
+                        <span className={styles.brandMark} aria-hidden="true" />
+                        Ju Study Hub
+                    </Link>
+                    <Link href="/" className={styles.backLink}>← Chọn môn học</Link>
+                </header>
 
-                <h1 className="mt-6 text-3xl font-bold">
-                    {subject.title}
-                </h1>
+                <section className={styles.levels} aria-labelledby="levels-heading">
+                    <div className={styles.intro}>
+                        <p className={styles.eyebrow}>Chọn màn chơi của bạn</p>
+                        <h1 id="levels-heading">{subject.title}</h1>
+                        <p>Chọn chapter để bắt đầu ôn tập.</p>
+                    </div>
 
-                <p className="mt-4 leading-relaxed text-slate-600">
-                    {subject.description}
-                </p>
-                <div className="mt-8">
-                    <h2 className="mb-4 text-xl font-semibold">
-                        Các chapter
-                    </h2>
-
-                    {subject.chapters.map((chapter) => (
-                        <article key={chapter.id} className="mt-4 rounded-2xl border border-pink-100 bg-pink-50 p-6">
-                            <h3 className="text-lg font-semibold">
-                                {chapter.title}
-                            </h3>
-
-                            <p className="mt-2 text-slate-600">
-                                {chapter.description}
-                            </p>
-
-                            <p className="mt-4 text-sm font-medium text-pink-700">
-                                {chapter.questions.length} câu hỏi
-                            </p>
+                    <div className={styles.levelList}>
+                        {subject.chapters.map((chapter, index) => (
                             <Link
-                                href={`/subjects/${subjectId}/${chapter.id}`}
-                                className="mt-4 inline-block rounded-2xl bg-pink-700 font-heading px-4 py-2 font-medium text-white hover:bg-pink-800"
+                                key={chapter.id}
+                                href={`/quiz/${subjectId}/${chapter.id}`}
+                                className={styles.levelCard}
                             >
-                                Xem chapter
+                                <span className={styles.levelMarker}>
+                                    <span>Level</span>
+                                    <strong>{String(index + 1).padStart(2, "0")}</strong>
+                                </span>
+                                <span className={styles.levelContent}>
+                                    <span className={styles.levelTitle}>{chapter.title}</span>
+                                    <span className={styles.questionCount}>{chapter.questions.length} câu hỏi</span>
+                                </span>
+                                <span className={styles.levelArrow} aria-hidden="true">→</span>
                             </Link>
-                        </article>
-                    ))}
-                </div>
-            </section>
+                        ))}
+                    </div>
+                </section>
+            </div>
         </main>
     );
 }

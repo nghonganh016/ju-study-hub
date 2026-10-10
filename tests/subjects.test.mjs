@@ -63,14 +63,15 @@ test('registry validates only own keys and reuses original chapter collections',
     assert.equal(subjects.database.chapters[0].id, 'chapter-2');
 });
 
-test('homepage and subject lists link to every registered subject and chapter', async () => {
+test('homepage links to every subject and chapter cards open quizzes directly', async () => {
     const home = renderToStaticMarkup(load('app/page.tsx').default());
     for (const [subjectId, subject] of Object.entries(subjects)) {
         assert.ok(home.includes(`href="/subjects/${subjectId}"`));
         const html = renderToStaticMarkup(await page(subjectPage, subjectId));
         assert.ok(html.includes(subject.title));
         for (const chapter of subject.chapters) {
-            assert.ok(html.includes(`href="/subjects/${subjectId}/${chapter.id}"`));
+            assert.ok(html.includes(`href="/quiz/${subjectId}/${chapter.id}"`));
+            assert.ok(!html.includes(`href="/subjects/${subjectId}/${chapter.id}"`));
             assert.ok(html.includes(`${chapter.questions.length} câu hỏi`));
         }
     }

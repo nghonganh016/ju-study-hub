@@ -200,7 +200,7 @@ export default function QuizRunner({ subjectId, subjectTitle, chapterId, chapter
                         className={`${styles.consoleTab} ${styles.chapterTab}`}
                     >
                         <span aria-hidden="true">‹</span>
-                        {isReview ? "Chọn môn" : "Chapters"}
+                        {isReview ? "Chọn môn" : "Chọn chapter"}
                     </Link>
 
                     {isReview ? <button type="button" className={`${styles.consoleTab} ${styles.chapterTab}`} onClick={onNewReviewRound}>Lượt ôn mới</button>

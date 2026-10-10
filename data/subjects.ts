@@ -2,9 +2,12 @@ import type { Chapter } from "@/types/quiz";
 import { chapters as blockchainChapters } from "./blockchain";
 import { chapters as databaseChapters } from "./database";
 
+export type SubjectAccent = "cyan" | "lavender";
+
 type Subject = {
     title: string;
     description: string;
+    accent: SubjectAccent;
     chapters: Chapter[];
 };
 
@@ -13,11 +16,13 @@ export const subjects = {
     blockchain: {
         title: "Blockchain",
         description: "Ôn tập kiến thức và luyện câu hỏi Blockchain theo từng chapter.",
+        accent: "cyan",
         chapters: blockchainChapters,
     },
     database: {
         title: "Database",
         description: "Ôn tập cơ sở dữ liệu và luyện câu hỏi theo từng chapter.",
+        accent: "lavender",
         chapters: databaseChapters,
     },
 } satisfies Record<string, Subject>;
