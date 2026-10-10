@@ -7,10 +7,12 @@ import QuizRunner from "@/components/QuizRunner";
 
 type QuizPageProps = {
     params: Promise<{ subjectId: string; chapterId: string }>;
+    searchParams: Promise<{ questionId?: string | string[] }>;
 };
 
-export default async function QuizPage({ params }: QuizPageProps) {
+export default async function QuizPage({ params, searchParams }: QuizPageProps) {
     const { subjectId, chapterId } = await params;
+    const { questionId } = await searchParams;
     if (!isValidSubject(subjectId)) notFound();
     const { chapters } = subjects[subjectId];
 
@@ -36,7 +38,8 @@ export default async function QuizPage({ params }: QuizPageProps) {
     return (
         <>
             <QuizRunner key={`${subjectId}:${chapter.id}`} subjectId={subjectId} subjectTitle={subjects[subjectId].title}
-                chapterId={chapter.id} chapterTitle={chapter.title} questions={chapter.questions} mistakeCatalog={questionCatalog} />
+                chapterId={chapter.id} chapterTitle={chapter.title} questions={chapter.questions} mistakeCatalog={questionCatalog}
+                requestedQuestionId={typeof questionId === "string" ? questionId : null} />
         </>
     );
 }

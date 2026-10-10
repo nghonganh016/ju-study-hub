@@ -12,6 +12,7 @@ const require = createRequire(import.meta.url);
 const cache = new Map();
 const notFoundError = new Error('404');
 const Runner = () => null;
+const Bookmarks = () => null;
 
 // Run real data and page functions; replace only framework/UI boundaries.
 function load(file) {
@@ -24,6 +25,7 @@ function load(file) {
         if (id === 'next/link') return { default: props => React.createElement('a', props) };
         if (id.endsWith('.css')) return { default: {} };
         if (id === '@/components/QuizRunner') return { default: Runner };
+        if (id === '@/components/BookmarkedQuestions') return { default: Bookmarks };
         if (id === '@/components/journal/JournalAsset') return { default: () => null };
         if (id.startsWith('@/') || id.startsWith('.')) {
             const base = id.startsWith('@/') ? path.resolve(id.slice(2)) : path.resolve(path.dirname(file), id);
@@ -44,7 +46,10 @@ const { subjects, isValidSubject } = load('data/subjects.ts');
 const subjectPage = load('app/subjects/[subjectId]/page.tsx').default;
 const chapterPage = load('app/subjects/[subjectId]/[chapterId]/page.tsx').default;
 const quizPage = load('app/quiz/[subjectId]/[chapterId]/page.tsx').default;
-const page = (component, subjectId, chapterId) => component({ params: Promise.resolve({ subjectId, chapterId }) });
+const bookmarksPage = load('app/bookmarks/page.tsx').default;
+const page = (component, subjectId, chapterId, searchParams = {}) => component({
+    params: Promise.resolve({ subjectId, chapterId }), searchParams: Promise.resolve(searchParams),
+});
 function findRunner(element) {
     if (!React.isValidElement(element)) return undefined;
     if (element.type === Runner) return element;
@@ -65,6 +70,8 @@ test('registry validates only own keys and reuses original chapter collections',
 
 test('homepage links to every subject and chapter cards open quizzes directly', async () => {
     const home = renderToStaticMarkup(load('app/page.tsx').default());
+    assert.ok(home.includes('href="/bookmarks"'));
+    assert.ok(home.includes('Ôn tập thông minh hơn với những câu đã lưu hoặc trả lời sai.'));
     for (const [subjectId, subject] of Object.entries(subjects)) {
         assert.ok(home.includes(`href="/subjects/${subjectId}"`));
         const html = renderToStaticMarkup(await page(subjectPage, subjectId));
@@ -74,6 +81,20 @@ test('homepage links to every subject and chapter cards open quizzes directly', 
             assert.ok(!html.includes(`href="/subjects/${subjectId}/${chapter.id}"`));
             assert.ok(html.includes(`${chapter.questions.length} câu hỏi`));
         }
+    }
+});
+
+test('bookmarks page sends only question identity, titles and prompts to its client list', () => {
+    const tree = bookmarksPage();
+    assert.equal(tree.type, Bookmarks);
+    const { catalog, sections } = tree.props;
+    assert.equal(catalog.length, sections.reduce((count, subject) => count +
+        subject.chapters.reduce((sum, chapter) => sum + subjects[subject.id].chapters.find(item => item.id === chapter.id).questions.length, 0), 0));
+    for (const item of catalog) {
+        assert.deepEqual(Object.keys(item).sort(), ['chapterId', 'chapterTitle', 'prompt', 'questionId', 'subjectId', 'subjectTitle']);
+        assert.equal(typeof item.prompt, 'string');
+        assert.equal(item.prompt, subjects[item.subjectId].chapters.find(chapter => chapter.id === item.chapterId)
+            .questions.find(question => question.id === item.questionId).prompt);
     }
 });
 
@@ -89,9 +110,20 @@ test('every chapter routes to its own quiz and passes unchanged questions and ID
             assert.equal(runner.props.subjectId, subjectId);
             assert.equal(runner.props.chapterId, chapter.id);
             assert.equal(runner.props.questions, chapter.questions);
+            assert.equal(runner.props.requestedQuestionId, null);
             assert.ok(runner.key.endsWith(`${subjectId}=2${chapter.id}`));
         }
     }
+});
+
+test('quiz route passes the requested question ID without changing the question collection', async () => {
+    const chapter = subjects.blockchain.chapters[0];
+    const questionId = chapter.questions[3].id;
+    const runner = findRunner(await page(quizPage, 'blockchain', chapter.id, { questionId }));
+    assert.equal(runner.props.requestedQuestionId, questionId);
+    assert.equal(runner.props.questions, chapter.questions);
+    const invalid = findRunner(await page(quizPage, 'blockchain', chapter.id, { questionId: ['a', 'b'] }));
+    assert.equal(invalid.props.requestedQuestionId, null);
 });
 
 test('invalid subjects and chapters call notFound, including chapters from another subject', async () => {

@@ -30,6 +30,11 @@ export function restoreProgress(raw: string | null, questions: Question[]) {
     return { currentIndex, answers };
 }
 
+export function questionIndexFromLink(questions: readonly Question[], questionId: string | null | undefined, fallbackIndex: number) {
+    const index = questionId ? questions.findIndex(question => question.id === questionId) : -1;
+    return index >= 0 ? index : fallbackIndex;
+}
+
 export function isProgressComplete(raw: string | null, questions: Question[]) {
     const { answers } = restoreProgress(raw, questions);
     return questions.length > 0 && questions.every(question => answers[question.id]?.isSubmitted === true);

@@ -1,4 +1,5 @@
 import { subjects, questionCatalog } from "@/data/subjects";
+import Link from "next/link";
 import SubjectCard from "@/components/SubjectCard";
 import MistakeLink from "@/components/MistakeLink";
 import styles from "@/components/Home.module.css";
@@ -32,9 +33,12 @@ export default function Home() {
           </div>
         </section>
 
-        <aside className={styles.review} aria-label="Ôn lại câu sai">
-          <p>Cần ôn lại những câu đã làm sai?</p>
-          <MistakeLink catalog={questionCatalog} className={styles.reviewLink} />
+        <aside className={styles.review} aria-label="Ôn tập nhanh">
+          <p>Ôn tập thông minh hơn với những câu đã lưu hoặc trả lời sai.</p>
+          <div className={styles.reviewActions}>
+            <Link href="/bookmarks" className={styles.reviewLink}>Câu đã lưu</Link>
+            <MistakeLink catalog={questionCatalog} className={styles.reviewLink} />
+          </div>
         </aside>
       </div>
     </main>

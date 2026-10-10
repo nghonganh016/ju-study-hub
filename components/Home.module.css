@@ -186,6 +186,8 @@
   font-weight: 700;
 }
 
+.reviewActions { display: flex; flex-wrap: wrap; gap: 10px; }
+
 .reviewLink {
   display: inline-flex;
   min-height: 40px;
@@ -238,6 +240,9 @@
     flex-direction: column;
     gap: 10px;
   }
+
+  .reviewActions { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .reviewLink { min-width: 0; }
 }
 
 @media (prefers-reduced-motion: reduce) {

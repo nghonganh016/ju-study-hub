@@ -53,6 +53,17 @@ test('malformed containers and obsolete question IDs are safe', () => {
     }});
 });
 
+test('deep link selects by ID after restoring answers and falls back to saved position', () => {
+    const raw = saved({ q1: { optionId: 'b', isSubmitted: true }, q2: { optionId: 'a', isSubmitted: false } });
+    const restored = progress.restoreProgress(raw, questions);
+    assert.equal(progress.questionIndexFromLink(questions, 'q2', restored.currentIndex), 1);
+    assert.equal(progress.questionIndexFromLink(questions, 'missing', restored.currentIndex), 2);
+    assert.equal(progress.questionIndexFromLink(questions, null, restored.currentIndex), 2);
+    assert.deepEqual(plain(restored.answers), {
+        q1: { optionId: 'b', isSubmitted: true }, q2: { optionId: 'a', isSubmitted: false },
+    });
+});
+
 test('review loader preserves the snapshot and good answers when another submitted option is invalid', () => {
     const data = new Map();
     const storage = { getItem: key => data.get(key) ?? null,

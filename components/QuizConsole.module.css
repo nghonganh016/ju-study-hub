@@ -362,6 +362,31 @@
   font-weight: 800;
   color: #6943b1;
 }
+.bookmarkButton {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  width: 120px;
+  height: 34px;
+  padding: 0 8px;
+  border: 1.5px solid #a98bd4;
+  border-radius: 10px;
+  background: #fff;
+  color: #6943b1;
+  font-size: 11px;
+  font-weight: 800;
+  transition: background 150ms ease, box-shadow 150ms ease, transform 150ms ease;
+}
+.bookmarkButton svg { flex: none; }
+.bookmarkButton:hover:not(:disabled) {
+  background: #f6efff;
+  box-shadow: 0 2px 0 #c5a9ed;
+}
+.bookmarkButton:active:not(:disabled) { transform: translateY(2px); box-shadow: none; }
+.bookmarkButton[aria-pressed="true"] { background: #f5e8fa; border-color: #8865c6; }
+.bookmarkButton[data-pending="true"] { border-style: dashed; }
 .answers {
   min-width: 0;
   border: 0;
