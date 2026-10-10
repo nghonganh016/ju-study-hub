@@ -365,3 +365,23 @@
 - Kiểm tra trực tiếp tab HTTP đang hoạt động (tab cũ là trang lỗi kết nối dạng data URL): cả 7 tư thế ổn định có đầu/tay nằm trong SVG, ma trận xoay không còn độ dịch bổ sung; lấy thêm mẫu trong chuyển trạng thái. Xem ảnh trình duyệt ở 1366x768, 1366x900 và 390x844. Sau giảm biên độ, lấy 5 mẫu trạng thái thinking 58 px đều trong khung. Nút tắt chuyển động đưa hoạt ảnh mèo về 0. Đã lưu ảnh chụp trình duyệt cat-fixed-browser.jpg ngoài repo.
 - ESLint StudyCat.tsx và TypeScript --noEmit --incremental false đạt. Không sửa handlers quiz, nội dung câu hỏi hoặc bố cục. Chưa kiểm tra trình duyệt khác và chưa chạy production build.
 - Ju kiểm tra: tải lại bản mẫu, lần lượt thử Suy nghĩ/Ăn mừng/Hoàn thành và bật/tắt chuyển động; tay cần giữ đúng vai, chân chuyển động cùng thân. Chờ phản hồi trước thay đổi tiếp theo.
+
+## 10/10/2026: Phím tắt cho quiz
+
+- Chỉ sửa components/QuizRunner.tsx và nhật ký này. Không đổi giao diện, dữ liệu, cấu trúc localStorage hoặc các hàm chọn/chấm/chuyển câu hiện có.
+- Phím 1/2/3/4 chọn ID a/b/c/d nếu tồn tại và chưa chấm. ArrowLeft/ArrowRight gọi handleNavigate với giới hạn đầu/cuối như hai nút hiện có; vẫn cho phép chuyển câu chưa trả lời. Enter chấm bản nháp, hoặc chuyển tiếp khi câu đã chấm; cuối bài không tự mở kết quả.
+- useEffect đăng ký một bộ nghe keydown và gỡ khi component rời trang; useEffectEvent đọc trạng thái mới nhất mà không đăng ký lại sau mỗi lần render. Chỉ bật sau khôi phục tiến trình và khi đang xem câu hỏi. Bỏ qua input (kể cả radio), textarea, select, contenteditable, Ctrl/Alt/Meta/Shift, sự kiện đã xử lý, giữ phím và lúc bộ gõ đang ghép ký tự. Enter trên nút/liên kết giữ hành vi mặc định, tránh chấm và chuyển câu cùng lúc. Chỉ preventDefault khi có hành động hợp lệ.
+- Đã chạy đạt: node node_modules/eslint/bin/eslint.js .; node node_modules/typescript/bin/tsc --noEmit --incremental false; node node_modules/next/dist/bin/next build --webpack; node --test tests/*.test.mjs (9/9); git diff --check. npm không có trên PATH nên gọi trực tiếp các công cụ đã cài. Không thêm thư viện.
+- Trình duyệt production tại localhost:3110: 2 rồi Enter chấm B câu 1 đúng; Enter tiếp sang câu 2; 3 chọn nháp C rồi tải lại giữ câu 2, bản nháp và điểm câu 1. ArrowLeft trở lại câu 1, thêm ArrowLeft không vượt đầu bài; 4 không thay đáp án đã khóa. ArrowRight trở lại câu 2. Enter trên nút kiểm tra chỉ chấm, không nhảy câu; màn hình tiến độ bỏ qua phím số và ArrowRight.
+- Giới hạn: 9 kiểm thử sẵn có không bao phủ phím tắt. Chưa thử trực tiếp mọi tổ hợp phím, bộ gõ, trường nhập liệu, bài có thiếu lựa chọn hoặc cuối bài trên trình duyệt. Các điều kiện này đã được rà soát trong code. Không kiểm tra lại toàn bộ nội dung/đáp án hoặc thiết kế.
+- Ju kiểm tra: thử 1–4, Enter hai lần, mũi tên ở đầu/cuối; tải lại câu đang chọn nháp; dùng Tab và Enter trên các nút; kiểm tra phím tắt không tác động màn hình kết quả. Khi radio đang có tiêu điểm, phím mũi tên vẫn theo hành vi radio gốc.
+- Trạng thái: Hoàn thành, chờ Ju kiểm tra; không commit/push/deploy. Bước tiếp theo chỉ xử lý phản hồi của Ju.
+
+## 10/10/2026: Sửa tiêu điểm sau khi chọn câu
+
+- Ju báo: bấm câu trong bảng điều hướng rồi chọn bằng phím số thì Enter không chấm; viền tím đậm còn ở nút câu đã bấm khi chuyển câu bằng mũi tên.
+- Nguyên nhân: nút điều hướng vẫn giữ tiêu điểm; Enter được nhường cho hành vi nút, còn CSS focus-visible tạo viền tím đậm tại nút cũ dù aria-current đã chuyển đúng.
+- QuizRunner.tsx: thêm screenRef, tabIndex=-1 cho vùng Nội dung bài học và chuyển tiêu điểm tới vùng đó trong handleNavigate bằng focus({ preventScroll: true }). Vùng này không thêm vào thứ tự Tab. Áp dụng cả chọn lại cùng câu và điều hướng bằng chuột/bàn phím. Không đổi CSS, hàm chấm/chọn hoặc localStorage.
+- Đã đạt: ESLint QuizRunner.tsx, TypeScript --noEmit --incremental false, build --webpack. Trình duyệt production localhost:3111: bấm câu 15 bằng chuột, 2 rồi Enter chấm đúng; ArrowRight sang câu 16, 3 rồi Enter chấm đúng. DOM xác nhận aria-current ở câu 16, focus ở Nội dung bài học và nút câu 15 không còn focus-visible. Kích hoạt nút câu 17 bằng Enter rồi 1/Enter cũng chấm được, không kích hoạt lại nút điều hướng.
+- Giới hạn: kiểm tra tập trung vào lỗi tiêu điểm, không chạy lại toàn bộ luồng lưu tiến trình hoặc mọi tổ hợp phím. Máy chủ dev của Ju ở cổng 3000 giữ nguyên; dùng bản production riêng để thử.
+- Ju kiểm tra: bấm câu 15 rồi chọn số/Enter; sang câu 16 bằng mũi tên và kiểm tra viền câu hiện tại; dùng Tab/Enter chọn câu rồi tiếp tục chọn/chấm. Chờ phản hồi, không commit/push hoặc triển khai task tiếp theo.

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useEffectEvent, useRef, useState } from "react";
 import styles from "@/components/QuizConsole.module.css";
 import Link from "next/link";
 import GameArrow from "@/components/GameArrow";
@@ -53,6 +53,7 @@ export default function QuizRunner({ subjectId, subjectTitle, chapterId, chapter
     const [motion, setMotion] = useState(true);
     const [navigationOpen, setNavigationOpen] = useState(false);
     const [reward, setReward] = useState<{ questionId: string; status: "correct" | "incorrect" } | null>(null);
+    const screenRef = useRef<HTMLElement>(null);
 
     useEffect(() => {
         if (!reward) return;
@@ -115,6 +116,9 @@ export default function QuizRunner({ subjectId, subjectTitle, chapterId, chapter
         setCurrentIndex(index);
         setNavigatorPage(Math.floor(index / QUESTIONS_PER_PAGE));
         setReward(null);
+        // Move keyboard interaction to the question instead of leaving Enter on
+        // the navigation button that opened it. Keep the viewport in place.
+        screenRef.current?.focus({ preventScroll: true });
     }
 
     function handleSelect(optionId: string) {
@@ -148,6 +152,49 @@ export default function QuizRunner({ subjectId, subjectTitle, chapterId, chapter
         setAnswers({});
         setShowProgress(false);
     }
+
+    const handleQuizKeyDown = useEffectEvent((event: KeyboardEvent) => {
+        if (restoredKey !== storageKey || showProgress || !question
+            || event.defaultPrevented || event.repeat || event.isComposing
+            || event.ctrlKey || event.altKey || event.metaKey || event.shiftKey) return;
+
+        const target = event.target;
+        if (target instanceof HTMLElement) {
+            // Preserve typing and native input behavior, including radio arrow keys.
+            if (target.closest("input, textarea, select") || target.isContentEditable) return;
+            // Enter belongs to the focused control, never both it and the quiz.
+            if (event.key === "Enter"
+                && target.closest("button, a[href], summary, [role='button'], [role='link']")) return;
+        }
+
+        const answer = answers[question.id];
+        if (["1", "2", "3", "4"].includes(event.key)) {
+            const optionId = ["a", "b", "c", "d"][Number(event.key) - 1];
+            if (answer?.isSubmitted || !question.options.some((option) => option.id === optionId)) return;
+            event.preventDefault();
+            handleSelect(optionId);
+        } else if (event.key === "ArrowLeft" && currentIndex > 0) {
+            event.preventDefault();
+            handleNavigate(currentIndex - 1);
+        } else if (event.key === "ArrowRight" && currentIndex < questions.length - 1) {
+            event.preventDefault();
+            handleNavigate(currentIndex + 1);
+        } else if (event.key === "Enter" && answer) {
+            if (!answer.isSubmitted) {
+                event.preventDefault();
+                handleSubmit();
+            } else if (currentIndex < questions.length - 1) {
+                event.preventDefault();
+                handleNavigate(currentIndex + 1);
+            }
+        }
+    });
+
+    useEffect(() => {
+        const onKeyDown = (event: KeyboardEvent) => handleQuizKeyDown(event);
+        window.addEventListener("keydown", onKeyDown);
+        return () => window.removeEventListener("keydown", onKeyDown);
+    }, []);
 
     if (!question) return <p className="mt-8">Chapter này chưa có câu hỏi.</p>;
     const activeReward = reward?.questionId === question.id ? reward.status : undefined;
@@ -200,7 +247,7 @@ export default function QuizRunner({ subjectId, subjectTitle, chapterId, chapter
                     </span>
                 </div>
                 <div className={styles.consoleGrid}>
-                    <section className={styles.screen} aria-label="Nội dung bài học">
+                    <section ref={screenRef} tabIndex={-1} className={styles.screen} aria-label="Nội dung bài học">
                         <div className={styles.screenHeader}><span className={styles.subject}>{subjectTitle}</span></div>
                         <h1>{chapterTitle}</h1>
                         <div className={styles.progressLabels} aria-live="polite"><span>Đã chấm <strong>{submittedCount}/{questions.length}</strong> câu</span><span>Đúng: <strong>{correctCount}</strong></span></div>
