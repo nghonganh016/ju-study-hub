@@ -10,6 +10,8 @@ import type { CatMood } from "@/components/StudyCat";
 import QuizQuestion from "@/components/QuizQuestion";
 import QuizNavigation, { QUESTIONS_PER_PAGE, type QuestionStatus } from "@/components/QuizNavigation";
 import QuizResult from "@/components/QuizResult";
+import MistakeLink from "@/components/MistakeLink";
+import { recordAttempt, REVIEW_PROGRESS_KEY, type ReviewItem } from "@/lib/mistakes";
 import type { Question } from "@/types/quiz";
 
 type Answer = { optionId: string; isSubmitted: boolean };
@@ -42,8 +44,9 @@ function restoreProgress(raw: string | null, questions: Question[]) {
     return { currentIndex, answers };
 }
 
-export default function QuizRunner({ subjectId, subjectTitle, chapterId, chapterTitle, questions }: { subjectId: string; subjectTitle: string; chapterId: string; chapterTitle: string; questions: Question[] }) {
-    const storageKey = `ju-study-hub:quiz-progress:${subjectId}:${chapterId}`;
+export default function QuizRunner({ subjectId, subjectTitle, chapterId, chapterTitle, questions, reviewItems, onNewReviewRound }: { subjectId: string; subjectTitle: string; chapterId: string; chapterTitle: string; questions: Question[]; reviewItems?: ReviewItem[]; onNewReviewRound?: () => void }) {
+    const isReview = reviewItems !== undefined;
+    const storageKey = isReview ? REVIEW_PROGRESS_KEY : `ju-study-hub:quiz-progress:${subjectId}:${chapterId}`;
     const [restoredKey, setRestoredKey] = useState<string | null>(null);
     const [currentIndex, setCurrentIndex] = useState(0);
     // Draft selections and graded answers survive navigation between questions.
@@ -130,9 +133,11 @@ export default function QuizRunner({ subjectId, subjectTitle, chapterId, chapter
     }
 
     function handleSubmit() {
-        if (!question) return;
+        if (!question || restoredKey !== storageKey) return;
         const selected = answers[question.id];
         if (!selected || selected.isSubmitted) return;
+        const context = reviewItems?.[currentIndex] ?? { subjectId, chapterId, questionId: question.id };
+        recordAttempt(context, selected.optionId === question.correctOptionId, isReview);
         // Feedback belongs only to this click, never to restored or revisited answers.
         setReward({ questionId: question.id, status: selected.optionId === question.correctOptionId ? "correct" : "incorrect" });
         setAnswers((previous) => {
@@ -143,6 +148,10 @@ export default function QuizRunner({ subjectId, subjectTitle, chapterId, chapter
     }
 
     function handleRestart() {
+        if (isReview && onNewReviewRound) {
+            onNewReviewRound();
+            return;
+        }
         try {
             window.localStorage.removeItem(storageKey);
         } catch {
@@ -215,12 +224,15 @@ export default function QuizRunner({ subjectId, subjectTitle, chapterId, chapter
                     </Link>
 
                     <Link
-                        href={`/subjects/${subjectId}`}
+                        href={isReview ? "/" : `/subjects/${subjectId}`}
                         className={`${styles.consoleTab} ${styles.chapterTab}`}
                     >
                         <span aria-hidden="true">‹</span>
-                        Chapters
+                        {isReview ? "Chọn môn" : "Chapters"}
                     </Link>
+
+                    {isReview ? <button type="button" className={`${styles.consoleTab} ${styles.chapterTab}`} onClick={onNewReviewRound}>Lượt ôn mới</button>
+                        : <MistakeLink className={`${styles.consoleTab} ${styles.chapterTab}`} />}
 
                     <button
                         type="button"
@@ -250,10 +262,15 @@ export default function QuizRunner({ subjectId, subjectTitle, chapterId, chapter
                     <section ref={screenRef} tabIndex={-1} className={styles.screen} aria-label="Nội dung bài học">
                         <div className={styles.screenHeader}><span className={styles.subject}>{subjectTitle}</span></div>
                         <h1>{chapterTitle}</h1>
+                        {reviewItems && <p className={styles.muted}>
+                            {reviewItems[currentIndex].subjectTitle} · {reviewItems[currentIndex].chapterTitle}
+                            {" · "}<Link href={`/quiz/${reviewItems[currentIndex].subjectId}/${reviewItems[currentIndex].chapterId}`}>Về bài gốc</Link>
+                        </p>}
                         <div className={styles.progressLabels} aria-live="polite"><span>Đã chấm <strong>{submittedCount}/{questions.length}</strong> câu</span><span>Đúng: <strong>{correctCount}</strong></span></div>
                         <div className={styles.progressTrack} role="progressbar" aria-label="Tiến độ chấm câu hỏi" aria-valuenow={submittedCount} aria-valuemin={0} aria-valuemax={questions.length}><span style={{ width: `${submittedCount / questions.length * 100}%` }} /></div>
                         {showProgress ? (
                             <QuizResult correctCount={correctCount} submittedCount={submittedCount}
+                                isReview={isReview}
                                 totalQuestions={questions.length} onRestart={handleRestart}
                                 onContinue={() => { handleNavigate(currentIndex); setShowProgress(false); }} />
                         ) : (

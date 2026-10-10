@@ -6,6 +6,7 @@ type QuizResultProps = {
     submittedCount: number;
     onContinue: () => void;
     onRestart: () => void;
+    isReview?: boolean;
 };
 
 export default function QuizResult({
@@ -14,6 +15,7 @@ export default function QuizResult({
     submittedCount,
     onContinue,
     onRestart,
+    isReview = false,
 }: QuizResultProps) {
     const percentage =
         submittedCount > 0
@@ -23,7 +25,7 @@ export default function QuizResult({
     return (
         <div className={styles.result}>
             <h2 className="text-2xl font-bold">
-                {submittedCount === totalQuestions ? "Hoàn thành bài quiz!" : "Tiến độ bài quiz"}
+                {submittedCount === totalQuestions ? (isReview ? "Hoàn thành lượt ôn!" : "Hoàn thành bài quiz!") : (isReview ? "Tiến độ lượt ôn" : "Tiến độ bài quiz")}
             </h2>
 
             <p className={`mt-4 ${styles.muted}`}>Đã chấm {submittedCount} / {totalQuestions} câu</p>
@@ -49,7 +51,7 @@ export default function QuizResult({
                 </button>
                 {submittedCount === totalQuestions && (
                     <button type="button" onClick={onRestart} className={styles.primary}>
-                        Làm lại bài
+                        {isReview ? "Ôn các câu còn sai" : "Làm lại bài"}
                     </button>
                 )}
             </div>
