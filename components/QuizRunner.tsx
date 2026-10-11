@@ -17,11 +17,11 @@ import { addBookmark, BOOKMARKS_KEY, flushBookmarks, isBookmarked, isBookmarkPen
     removeBookmark } from "@/lib/bookmarks";
 import type { Question } from "@/types/quiz";
 
-import { questionIndexFromLink, restoreProgress, type Answer } from "@/lib/quiz-progress";
+import { questionIndexFromLink, quizProgressKey, restoreProgress, type Answer } from "@/lib/quiz-progress";
 
 export default function QuizRunner({ subjectId, subjectTitle, chapterId, chapterTitle, questions, reviewItems, reviewScopeLabel, onChangeReviewScope, onNewReviewRound, initialReviewProgress, onReviewProgressChange, mistakeCatalog = [], requestedQuestionId = null }: { subjectId: string; subjectTitle: string; chapterId: string; chapterTitle: string; questions: Question[]; reviewItems?: ReviewItem[]; reviewScopeLabel?: string; onChangeReviewScope?: (complete: boolean) => void; onNewReviewRound?: () => void; initialReviewProgress?: string | null; onReviewProgressChange?: (raw: string) => void; mistakeCatalog?: MistakeRef[]; requestedQuestionId?: string | null }) {
     const isReview = reviewItems !== undefined;
-    const storageKey = isReview ? REVIEW_PROGRESS_KEY : `ju-study-hub:quiz-progress:${subjectId}:${chapterId}`;
+    const storageKey = isReview ? REVIEW_PROGRESS_KEY : quizProgressKey(subjectId, chapterId);
     const [restoredKey, setRestoredKey] = useState<string | null>(null);
     const [currentIndex, setCurrentIndex] = useState(0);
     // Draft selections and graded answers survive navigation between questions.

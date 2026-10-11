@@ -2,6 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { subjects, isValidSubject } from "@/data/subjects";
 import styles from "@/components/LevelSelect.module.css";
+import LevelProgress from "@/components/LevelProgress";
 
 type SubjectPageProps = {
     params: Promise<{ subjectId: string }>;
@@ -42,7 +43,10 @@ export default async function SubjectPage({ params }: SubjectPageProps) {
                                 </span>
                                 <span className={styles.levelContent}>
                                     <span className={styles.levelTitle}>{chapter.title}</span>
-                                    <span className={styles.questionCount}>{chapter.questions.length} câu hỏi</span>
+                                    <LevelProgress subjectId={subjectId} chapterId={chapter.id} chapterTitle={chapter.title}
+                                        questions={chapter.questions.map(question => ({
+                                            id: question.id, options: question.options.map(option => ({ id: option.id })),
+                                        }))} />
                                 </span>
                                 <span className={styles.levelArrow} aria-hidden="true">→</span>
                             </Link>

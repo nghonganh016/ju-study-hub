@@ -173,6 +173,37 @@
   font-weight: 700;
 }
 
+.progressBlock {
+  display: flex;
+  width: 100%;
+  min-width: 0;
+  flex-direction: column;
+  gap: 5px;
+  margin-top: 4px;
+}
+
+.progressStatus {
+  color: #56456f;
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1.3;
+}
+
+.progressTrack {
+  display: block;
+  height: 5px;
+  overflow: hidden;
+  border-radius: 99px;
+  background: #eee9f2;
+}
+
+.progressFill {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: var(--accent-border);
+}
+
 .levelArrow {
   display: grid;
   width: 35px;

@@ -13,6 +13,49 @@ const questions = ['q1', 'q2', 'q3'].map(id => ({ id, options: [{ id: 'a' }, { i
 const plain = value => JSON.parse(JSON.stringify(value));
 const saved = answers => JSON.stringify({ version: 1, currentQuestionId: 'q3', answers });
 
+test('level summary counts only valid submitted answers and keeps drafts distinct', () => {
+    const summary = raw => plain(progress.summarizeProgress(raw, questions));
+    assert.deepEqual(summary(null), { submitted: 0, hasAnswers: false, total: 3 });
+    assert.deepEqual(summary(saved({ q1: { optionId: 'a', isSubmitted: false } })),
+        { submitted: 0, hasAnswers: true, total: 3 });
+    assert.deepEqual(summary(saved({ q1: { optionId: 'a', isSubmitted: true },
+        q2: { optionId: 'b', isSubmitted: true }, q3: { optionId: 'a', isSubmitted: false } })),
+        { submitted: 2, hasAnswers: true, total: 3 });
+    assert.equal(summary(saved(Object.fromEntries(questions.map(q => [q.id, { optionId: 'a', isSubmitted: true }])))).submitted, 3);
+    assert.deepEqual(plain(progress.summarizeProgress(saved({}), [])),
+        { submitted: 0, hasAnswers: false, total: 0 });
+});
+
+test('level summary uses restoration rules for malformed data and removed IDs', () => {
+    const raw = saved({ q1: { optionId: 'a', isSubmitted: true },
+        q2: { optionId: 'removed', isSubmitted: true },
+        removed: { optionId: 'a', isSubmitted: true },
+        q3: { optionId: 'b', isSubmitted: 'true' } });
+    assert.deepEqual(plain(progress.summarizeProgress(raw, questions)),
+        { submitted: 1, hasAnswers: true, total: 3 });
+    assert.equal(progress.summarizeProgress('{', questions).submitted, 0);
+    assert.equal(progress.summarizeProgress(JSON.stringify({ version: 2, answers: {} }), questions).submitted, 0);
+});
+
+test('normal quiz keys isolate subjects and chapters from review progress', () => {
+    assert.equal(progress.quizProgressKey('blockchain', 'session-1'),
+        'ju-study-hub:quiz-progress:blockchain:session-1');
+    assert.notEqual(progress.quizProgressKey('blockchain', 'session-1'), progress.quizProgressKey('database', 'session-1'));
+    assert.notEqual(progress.quizProgressKey('blockchain', 'session-1'), progress.quizProgressKey('blockchain', 'session-2'));
+    assert.notEqual(progress.quizProgressKey('blockchain', 'session-1'), 'ju-study-hub:mistakes-review-progress');
+});
+
+test('level reader uses only its own key and reports unavailable storage', () => {
+    const key = progress.quizProgressKey('blockchain', 'chapter-1');
+    const raw = saved({ q1: { optionId: 'a', isSubmitted: true } });
+    const read = progress.readLevelProgress({ getItem(requested) {
+        assert.equal(requested, key);
+        return raw;
+    } }, key, questions);
+    assert.equal(read.submitted, 1);
+    assert.equal(progress.readLevelProgress({ getItem() { throw new Error('blocked'); } }, key, questions), 'unavailable');
+});
+
 test('partial corruption retains valid submitted answers, drafts and current position', () => {
     const raw = saved({ q1: { optionId: 'b', isSubmitted: true },
         q2: { optionId: 'removed', isSubmitted: true }, q3: { optionId: 'a', isSubmitted: false } });
