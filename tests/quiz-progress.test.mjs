@@ -65,42 +65,19 @@ test('deep link selects by ID after restoring answers and falls back to saved po
 });
 
 test('review loader preserves the snapshot and good answers when another submitted option is invalid', () => {
-    const data = new Map();
-    const storage = { getItem: key => data.get(key) ?? null,
-        setItem: (key, value) => data.set(key, value), removeItem: key => data.delete(key) };
     const mistakes = {};
-    vm.runInNewContext(compile('lib/mistakes.ts'), { exports: mistakes,
-        window: { localStorage: storage, dispatchEvent() {} }, Event: class {} });
+    vm.runInNewContext(compile('lib/mistakes.ts'), { exports: mistakes });
+    const rounds = {};
+    vm.runInNewContext(compile('lib/review-round.ts'), { exports: rounds, require: () => mistakes });
     const refs = ['q1', 'q2'].map(questionId => ({ subjectId: 's', chapterId: 'c', questionId }));
     const catalog = refs.map(ref => ({ ...ref, question: { id: ref.questionId, options: [{ id: 'a' }, { id: 'b' }] } }));
+    const snapshot = rounds.createReviewRound(refs, catalog, rounds.ALL_SCOPE);
     const raw = JSON.stringify({ version: 1, currentQuestionId: mistakes.mistakeId(refs[1]), answers: {
         [mistakes.mistakeId(refs[0])]: { optionId: 'b', isSubmitted: true },
         [mistakes.mistakeId(refs[1])]: { optionId: 'removed', isSubmitted: true },
     }});
-    data.set(mistakes.MISTAKES_KEY, JSON.stringify({ version: 1, items: [refs[1]] }));
-    data.set(mistakes.ROUND_KEY, JSON.stringify({ version: 1, items: refs }));
-    data.set(mistakes.REVIEW_PROGRESS_KEY, raw);
-    const states = [], effects = [], queue = [];
-    let cursor = 0;
-    const exports = {};
-    vm.runInNewContext(compile('components/ReviewMistakes.tsx'), { exports,
-        window: { localStorage: storage }, queueMicrotask: fn => queue.push(fn), require(id) {
-            if (id === 'react') return {
-                useState(initial) { const index = cursor++; states[index] = initial; return [initial, value => { states[index] = value; }]; },
-                useEffect(effect) { effects.push(effect); },
-            };
-            if (id === 'react/jsx-runtime') return { jsx: (_type, props) => props, jsxs: (_type, props) => props };
-            if (id === '@/lib/mistakes') return mistakes;
-            if (id === '@/lib/quiz-progress') return progress;
-            return { default: () => null };
-        },
-    });
-    exports.default({ catalog });
-    effects.forEach(effect => effect());
-    queue.forEach(task => task());
-    assert.deepEqual(plain(states[0].map(item => item.questionId)), ['q1', 'q2']);
-    assert.equal(data.get(mistakes.REVIEW_PROGRESS_KEY), raw);
-    const resolvedQuestions = states[0].map(item => ({ ...item.question, id: mistakes.mistakeId(item) }));
+    assert.deepEqual(plain(snapshot.map(item => item.questionId)), ['q1', 'q2']);
+    const resolvedQuestions = snapshot.map(item => ({ ...item.question, id: mistakes.mistakeId(item) }));
     const restored = progress.restoreProgress(raw, resolvedQuestions);
     assert.equal(restored.currentIndex, 1);
     assert.equal(Object.keys(restored.answers).length, 1);

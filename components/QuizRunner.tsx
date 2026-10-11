@@ -19,7 +19,7 @@ import type { Question } from "@/types/quiz";
 
 import { questionIndexFromLink, restoreProgress, type Answer } from "@/lib/quiz-progress";
 
-export default function QuizRunner({ subjectId, subjectTitle, chapterId, chapterTitle, questions, reviewItems, onNewReviewRound, mistakeCatalog = [], requestedQuestionId = null }: { subjectId: string; subjectTitle: string; chapterId: string; chapterTitle: string; questions: Question[]; reviewItems?: ReviewItem[]; onNewReviewRound?: () => void; mistakeCatalog?: MistakeRef[]; requestedQuestionId?: string | null }) {
+export default function QuizRunner({ subjectId, subjectTitle, chapterId, chapterTitle, questions, reviewItems, reviewScopeLabel, onChangeReviewScope, onNewReviewRound, initialReviewProgress, onReviewProgressChange, mistakeCatalog = [], requestedQuestionId = null }: { subjectId: string; subjectTitle: string; chapterId: string; chapterTitle: string; questions: Question[]; reviewItems?: ReviewItem[]; reviewScopeLabel?: string; onChangeReviewScope?: (complete: boolean) => void; onNewReviewRound?: () => void; initialReviewProgress?: string | null; onReviewProgressChange?: (raw: string) => void; mistakeCatalog?: MistakeRef[]; requestedQuestionId?: string | null }) {
     const isReview = reviewItems !== undefined;
     const storageKey = isReview ? REVIEW_PROGRESS_KEY : `ju-study-hub:quiz-progress:${subjectId}:${chapterId}`;
     const [restoredKey, setRestoredKey] = useState<string | null>(null);
@@ -35,6 +35,8 @@ export default function QuizRunner({ subjectId, subjectTitle, chapterId, chapter
     const screenRef = useRef<HTMLElement>(null);
     const appliedQuestionId = useRef(requestedQuestionId);
     const latestRequestedQuestionId = useEffectEvent(() => requestedQuestionId);
+    const latestInitialReviewProgress = useEffectEvent(() => initialReviewProgress);
+    const reportReviewProgress = useEffectEvent((raw: string) => onReviewProgressChange?.(raw));
     const question = questions[currentIndex];
     const bookmarkSubjectId = reviewItems?.[currentIndex]?.subjectId ?? subjectId;
     const bookmarkChapterId = reviewItems?.[currentIndex]?.chapterId ?? chapterId;
@@ -59,7 +61,7 @@ export default function QuizRunner({ subjectId, subjectTitle, chapterId, chapter
             } catch {
                 // Storage may be blocked; the quiz still works in memory.
             }
-            const restored = restoreProgress(raw, questions);
+            const restored = restoreProgress(raw ?? (isReview ? latestInitialReviewProgress() : null) ?? null, questions);
             const targetIndex = questionIndexFromLink(questions, latestRequestedQuestionId(), restored.currentIndex);
             setCurrentIndex(targetIndex);
             setAnswers(restored.answers);
@@ -67,7 +69,7 @@ export default function QuizRunner({ subjectId, subjectTitle, chapterId, chapter
             setRestoredKey(storageKey);
         });
         return () => { cancelled = true; };
-    }, [storageKey, questions]);
+    }, [storageKey, questions, isReview]);
 
     useEffect(() => {
         if (restoredKey !== storageKey || appliedQuestionId.current === requestedQuestionId) return;
@@ -89,20 +91,22 @@ export default function QuizRunner({ subjectId, subjectTitle, chapterId, chapter
     useEffect(() => {
         // Initial effects (including Strict Mode replays) cannot overwrite saved data.
         if (restoredKey !== storageKey) return;
+        const serialized = JSON.stringify({
+            version: 1,
+            currentQuestionId: questions[currentIndex]?.id ?? null,
+            answers,
+        });
         try {
             if (currentIndex === 0 && Object.keys(answers).length === 0) {
                 window.localStorage.removeItem(storageKey);
             } else {
-                window.localStorage.setItem(storageKey, JSON.stringify({
-                    version: 1,
-                    currentQuestionId: questions[currentIndex]?.id ?? null,
-                    answers,
-                }));
+                window.localStorage.setItem(storageKey, serialized);
             }
         } catch {
             // Storage unavailable or full: keep the current in-memory progress.
         }
-    }, [answers, currentIndex, questions, restoredKey, storageKey]);
+        if (isReview) reportReviewProgress(serialized);
+    }, [answers, currentIndex, questions, restoredKey, storageKey, isReview]);
 
     useEffect(() => {
         if (!bookmarkQuestionId || !bookmarkKey) return;
@@ -271,7 +275,7 @@ export default function QuizRunner({ subjectId, subjectTitle, chapterId, chapter
                         {isReview ? "Chọn môn" : "Chọn chapter"}
                     </Link>
 
-                    {isReview ? <button type="button" className={`${styles.consoleTab} ${styles.chapterTab}`} onClick={onNewReviewRound}>Lượt ôn mới</button>
+                    {isReview ? <button type="button" className={`${styles.consoleTab} ${styles.chapterTab}`} onClick={() => onChangeReviewScope?.(canFinish)}>Đổi phạm vi</button>
                         : <MistakeLink catalog={mistakeCatalog} className={`${styles.consoleTab} ${styles.chapterTab}`} />}
 
                     <button
@@ -302,6 +306,7 @@ export default function QuizRunner({ subjectId, subjectTitle, chapterId, chapter
                     <section ref={screenRef} tabIndex={-1} className={styles.screen} aria-label="Nội dung bài học">
                         <div className={styles.screenHeader}><span className={styles.subject}>{subjectTitle}</span></div>
                         <h1>{chapterTitle}</h1>
+                        {reviewScopeLabel && <p className={styles.muted}>Phạm vi: {reviewScopeLabel}</p>}
                         {reviewItems && <p className={styles.muted}>
                             {reviewItems[currentIndex].subjectTitle} · {reviewItems[currentIndex].chapterTitle}
                             {" · "}<Link href={`/quiz/${reviewItems[currentIndex].subjectId}/${reviewItems[currentIndex].chapterId}`}>Về bài gốc</Link>
