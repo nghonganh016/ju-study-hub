@@ -65,8 +65,7 @@ test('registry validates only own keys and reuses original chapter collections',
     for (const id of ['', 'missing', 'constructor', 'toString', '__proto__', 'Blockchain']) {
         assert.equal(isValidSubject(id), false);
     }
-    assert.equal(subjects.database.chapters[0].id, 'session-1');
-    assert.ok(subjects.database.chapters.some(chapter => chapter.id === 'chapter-2'));
+    assert.deepEqual(Array.from(subjects.database.chapters, chapter => chapter.id), ['session-1', 'session-2']);
 });
 
 test('homepage links to every subject and chapter cards open quizzes directly', async () => {
@@ -133,7 +132,7 @@ test('invalid subjects and chapters call notFound, including chapters from anoth
             await assert.rejects(page(component, id, 'chapter-1'), error => error === notFoundError);
         }
     }
-    for (const [subjectId, chapterId] of [['database', 'chapter-1'], ['blockchain', 'chapter-2'], ['database', 'missing']]) {
+    for (const [subjectId, chapterId] of [['database', 'chapter-1'], ['database', 'chapter-2'], ['blockchain', 'chapter-2'], ['database', 'missing']]) {
         for (const component of [chapterPage, quizPage]) {
             await assert.rejects(page(component, subjectId, chapterId), error => error === notFoundError);
         }

@@ -1,213 +1,61 @@
 # Kiến trúc nhiều môn học
 
-## Mục tiêu và phạm vi
+Cập nhật: 13/10/2026. Tài liệu mô tả code hiện tại. Lịch sử các thay đổi đã hoàn thành nằm trong `docs/progress.md`.
 
-Blockchain và Database dùng chung ba trang. Nội dung câu hỏi, giao diện quiz, KaTeX và cơ chế lưu tiến trình được giữ nguyên. Các URL Blockchain cũ vẫn hoạt động. Database hiện có `chapter-2`, không cần tạo `chapter-1`.
+## Registry và dữ liệu
 
-## Cấu trúc trước và sau
+`data/subjects.ts` đăng ký `blockchain` và `database`. Khóa của mỗi mục là subject ID ổn định trong URL và key tiến độ. Mỗi mục có `title`, `description`, `accent` và `chapters`. Mảng chapter được nhập từ `data/blockchain/index.ts` hoặc `data/database/index.ts`; thứ tự mảng quyết định thứ tự hiển thị. Hiện Blockchain có `chapter-1` và Session 3–8; Database có Session 1 (58 câu) và Session 2. Chapter thử `database/chapter-2` đã được Ju chủ đích bỏ.
 
-Trước đây, ba trang gắn cố định với Blockchain:
+`types/quiz.ts` định nghĩa `Chapter`, `Question` và `QuestionSource`. Mỗi câu có ID, prompt, options, đáp án đúng và explanation. `source`, `topic`, `difficulty`, `sources` là metadata tùy chọn. `questionCatalog` từ registry chứa bộ ba ID môn/chapter/câu để đối chiếu kho câu sai; không sao chép toàn bộ nội dung câu vào đó.
 
-```text
-app/subjects/blockchain/page.tsx
-app/subjects/blockchain/[chapterId]/page.tsx
-app/quiz/blockchain/[chapterId]/page.tsx
-```
+`isValidSubject()` dùng `Object.hasOwn` để kiểm tra ID thật. Không suy ra ID từ vị trí mảng, không dùng tên hiển thị làm ID và không thay ID đã được lưu trong trình duyệt.
 
-Sau thay đổi:
+## Route và component
 
 ```text
-app/
-  page.tsx
-  subjects/[subjectId]/
-    page.tsx
-    [chapterId]/page.tsx
-  quiz/[subjectId]/[chapterId]/page.tsx
-data/
-  subjects.ts
-  blockchain/index.ts
-  database/
-    index.ts
-    chapter-2.ts
+data/<subject>/*.ts → data/<subject>/index.ts → data/subjects.ts
+                                                ↓
+app/page.tsx → app/subjects/[subjectId]/page.tsx
+                       ↓
+app/subjects/[subjectId]/[chapterId]/page.tsx
+                       ↓
+app/quiz/[subjectId]/[chapterId]/page.tsx → QuizRunner
 ```
 
-Thư mục `blockchain` cũ trong `app` không còn chứa trang. Các tệp dữ liệu trong `data/blockchain` vẫn giữ nguyên.
+Các trang động nhận `params` dạng Promise, kiểm tra subject và tìm chapter trong đúng môn; ID không có trả 404. Trang quiz xử lý chapter rỗng và truyền `subjectId`, `chapterId`, tiêu đề, câu hỏi và catalog vào `QuizRunner`. `searchParams.questionId` tùy chọn mở câu đã bookmark; ID không hợp lệ rơi về vị trí khôi phục. Trang `/bookmarks` liệt kê câu đã đánh dấu; `/review` chọn phạm vi môn/chapter và tạo lượt ôn câu sai.
 
-## Đường dẫn động và params
+`QuizRunner` giữ state câu hiện tại, đáp án nháp/đã chấm, màn hình tiến độ/kết quả, điều hướng, bookmark và trạng thái hiệu ứng. Component này render `QuizQuestion`, `QuizNavigation`, `QuizResult` và các phần console. Một phần quy tắc khôi phục đã được chia sẻ qua `lib/quiz-progress.ts`, nhưng việc đọc/ghi storage và điều phối state vẫn nằm trong `QuizRunner`. Đây là ranh giới dự kiến cho Task 2; chưa thay đổi trong tài liệu này.
 
-Đường dẫn động là đường dẫn có một phần thay đổi theo URL. Dấu ngoặc vuông đặt tên cho phần đó. `/quiz/database/chapter-2` được xử lý bởi `app/quiz/[subjectId]/[chapterId]/page.tsx`, với `subjectId = "database"` và `chapterId = "chapter-2"`.
+## Storage hiện tại
 
-Next.js truyền thông tin này qua `params`. Trang hiện tại nhận một `Promise`, nên phải chờ bằng `await`:
+Tất cả dữ liệu dưới đây nằm trong `localStorage` của origin hiện tại và có schema version 1:
 
-```tsx
-type QuizPageProps = {
-    params: Promise<{ subjectId: string; chapterId: string }>;
-};
-```
+| Dữ liệu | Key hoặc module | Ghi chú |
+| --- | --- | --- |
+| Tiến độ quiz thường | `ju-study-hub:quiz-progress:<subjectId>:<chapterId>` trong `lib/quiz-progress.ts` | ID câu đang xem và bản đồ đáp án `{ optionId, isSubmitted }` |
+| Kho câu sai | `ju-study-hub:mistakes:v1` trong `lib/mistakes.ts` | Bộ ba ID môn/chapter/câu; giữ tham chiếu còn hợp lệ qua catalog |
+| Lượt Review | `ju-study-hub:review-round:v1` và `ju-study-hub:review-progress:v1` | Snapshot câu của lượt, phạm vi và tiến độ riêng |
+| Bookmark | `ju-study-hub:bookmarks:v1` trong `lib/bookmarks.ts` | Bộ ba ID; `lib/bookmark-catalog.ts` tìm nội dung hiện có |
 
-Trong hàm trang:
+`lib/quiz-progress.ts` kiểm tra phiên bản, question ID và option ID khi khôi phục; `LevelProgress` dùng cùng quy tắc để hiển thị số câu đã chấm trên card. `QuizRunner` chờ client mount rồi mới đọc/ghi storage nhằm giữ tiến độ cũ khi hydration. Nếu storage lỗi, quiz tiếp tục trong bộ nhớ. Bookmark và mistakes có cơ chế giữ thay đổi pending để thử ghi lại; không nên gộp các kho này chỉ vì chúng đều dùng localStorage, vì hợp đồng dữ liệu khác nhau.
 
-```tsx
-const { subjectId, chapterId } = await params;
-if (!isValidSubject(subjectId)) notFound();
-const { chapters } = subjects[subjectId];
+`localStorage` không đồng bộ giữa origin, browser hoặc thiết bị. Chưa có server, database hay tài khoản trong ứng dụng.
 
-const chapter = chapters.find((item) => item.id === chapterId);
+## Thêm nội dung mới
 
-if (!chapter) {
-    notFound();
-}
-```
+1. Tạo `Chapter` trong `data/<subject>/`, giữ ID câu và option ổn định.
+2. Thêm chapter vào mảng `data/<subject>/index.ts`. Với môn mới, thêm mục `title`, `description`, `accent`, `chapters` vào `data/subjects.ts`.
+3. Chạy `npm test`, ESLint, TypeScript và production build. Kiểm tra route, quiz và storage trên browser nếu thay đổi ảnh hưởng đến tương tác hoặc ID.
 
-Chỉ tìm bài trong môn đã chọn. Vì vậy `/subjects/database/chapter-1` không lấy nhầm bài Blockchain. ID là chuỗi, không được chuyển thành số hoặc suy ra từ vị trí trong mảng. `notFound()` yêu cầu Next.js hiển thị trang 404 khi không tìm thấy dữ liệu.
+Không cần tạo route mới cho từng môn/chapter. Nếu buộc phải đổi ID đã lưu, cần thiết kế migration riêng trước khi sửa.
 
-## Danh mục môn học
-
-`data/subjects.ts` là nơi tập trung cấu hình môn học. Khóa của đối tượng chính là ID duy nhất, tránh lưu thêm một trường `id` có thể lệch với khóa. Mỗi môn có tiêu đề, mô tả và mảng bài học:
-
-```ts
-type Subject = {
-    title: string;
-    description: string;
-    chapters: Chapter[];
-};
-```
-
-Mảng bài được nhập trực tiếp từ `data/blockchain/index.ts` và `data/database/index.ts`. Không sao chép câu hỏi. `Chapter` dùng kiểu `Question` có sẵn trong `types/quiz.ts`.
-
-Đối tượng kết thúc bằng `satisfies Record<string, Subject>`. Cú pháp này kiểm tra mỗi mục có đúng cấu trúc `Subject`, đồng thời giữ tên khóa cụ thể để suy ra kiểu ID.
-
-```ts
-export type SubjectId = keyof typeof subjects;
-
-export function isValidSubject(id: string): id is SubjectId {
-    return Object.hasOwn(subjects, id);
-}
-```
-
-- `typeof subjects` lấy kiểu của đối tượng trong TypeScript.
-- `keyof` lấy các tên khóa. Hiện tại `SubjectId` tương đương `"blockchain" | "database"`.
-- Dấu `|` tạo kiểu hợp: giá trị phải thuộc một trong các khả năng được liệt kê.
-- Hàm kiểm tra kiểu (`type guard`) vừa kiểm tra giá trị khi chạy, vừa cho TypeScript biết rằng sau khi kiểm tra thành công, `id` là `SubjectId`.
-- `Object.hasOwn` chỉ nhận khóa thực sự được khai báo trong danh mục. Các tên như `constructor` hoặc `toString` không được xem là môn học.
-
-Khi thêm khóa môn mới, `SubjectId` tự cập nhật. Không cần sửa một danh sách kiểu riêng.
-
-## Luồng dữ liệu và liên kết
-
-```text
-Tệp câu hỏi → index.ts của môn → data/subjects.ts
-                                      ↓
-                       Trang chủ / danh sách / chi tiết
-                                      ↓
-                               Trang quiz
-                                      ↓
-                                QuizRunner
-                                      ↓
-                QuizQuestion / QuizNavigation / QuizResult
-```
-
-Trang chủ dùng `Object.entries(subjects)` để lấy từng cặp ID và thông tin môn, rồi hiển thị `SubjectCard`. Danh sách bài dùng `subject.chapters.map(...)`. Số câu lấy từ `chapter.questions.length`.
-
-Liên kết dùng ID đã kiểm tra:
-
-```tsx
-href={`/subjects/${subjectId}/${chapter.id}`}
-href={`/quiz/${subjectId}/${chapter.id}`}
-```
-
-Trang quiz kiểm tra bài rỗng trước khi hiển thị QuizRunner. Nếu chưa có câu hỏi, trang hiển thị thông báo và liên kết về đúng môn.
-
-```tsx
-<QuizRunner key={`${subjectId}:${chapter.id}`} subjectId={subjectId} chapterId={chapter.id} questions={chapter.questions} />
-```
-
-`subjectId`, `chapterId` và `questions` là props, tức dữ liệu trang truyền xuống component. `key` dùng cả môn và bài để React tạo trạng thái riêng khi chuyển giữa hai môn có cùng ID bài. `key` là thông tin React dùng để nhận diện component, không phải một prop mà QuizRunner đọc.
-
-## Tiến trình và localStorage
-
-QuizRunner vẫn quản lý lựa chọn nháp, đáp án đã chấm, câu đang xem, điều hướng, điểm và màn hình kết quả. Không sửa QuizRunner hoặc các component con trong lần chuyển kiến trúc này.
-
-Khóa lưu giữ nguyên:
-
-```ts
-const storageKey = `ju-study-hub:quiz-progress:${subjectId}:${chapterId}`;
-```
-
-Ví dụ:
-
-```text
-ju-study-hub:quiz-progress:blockchain:chapter-1
-ju-study-hub:quiz-progress:database:chapter-2
-```
-
-Ngay cả khi hai môn có cùng `chapterId`, tiền tố môn vẫn tách riêng tiến trình. Khóa Blockchain cũ không đổi nên không cần chuyển dữ liệu.
-
-Cấu trúc bản lưu hiện có được giữ nguyên:
-
-```ts
-{
-    version: 1,
-    currentQuestionId: questions[currentIndex]?.id ?? null,
-    answers,
-}
-```
-
-Mỗi đáp án chứa `optionId` và `isSubmitted`. QuizRunner đọc sau khi gắn vào trình duyệt, rồi mới cho phép ghi để tránh trạng thái rỗng ban đầu đè lên bản lưu cũ. Trạng thái màn hình kết quả không được lưu. Làm lại giữ hành vi cũ: xóa tiến trình của đúng bài đang làm. Việc chuyển kiến trúc không chạy thao tác xóa kho lưu của người dùng.
-
-`localStorage` là kho dữ liệu trong trình duyệt, riêng theo địa chỉ web và trình duyệt. Đổi từ localhost sang Vercel không tự chuyển tiến trình. Nếu trình duyệt chặn kho lưu, quiz vẫn chạy nhưng không giữ tiến trình sau khi tải lại.
-
-## Thêm bài Database
-
-1. Tạo tệp, ví dụ `data/database/chapter-3.ts`, xuất một đối tượng có kiểu `Chapter`. Chọn ID duy nhất trong môn; dùng nội dung câu hỏi thực tế.
-2. Nhập đối tượng và thêm vào mảng `chapters` trong `data/database/index.ts`.
-
-Tệp hiện tại:
-
-```ts
-import { chapter2 } from "./chapter-2";
-
-export const chapters = [chapter2];
-```
-
-Thứ tự mảng quyết định thứ tự hiển thị. Không cần sửa trang chủ, danh mục môn hoặc tạo trang mới. Giữ ID của các bài/câu/lựa chọn đã có để bản lưu vẫn khớp.
-
-## Thêm môn mới
-
-1. Tạo thư mục dữ liệu môn với các bài kiểu `Chapter` và một `index.ts` xuất mảng `chapters`.
-2. Nhập mảng đó trong `data/subjects.ts`.
-3. Thêm một khóa môn mới với `title`, `description`, `chapters`. Dùng ID ổn định, ngắn, phù hợp URL, ví dụ `statistics`.
-
-Trang chủ và cả ba trang động tự đọc cấu hình mới. Không cần thêm component trang hoặc QuizRunner mới.
-
-## Các tệp thay đổi
-
-| Tệp | Vai trò trong thay đổi |
-| --- | --- |
-| `data/subjects.ts` | Hoàn thiện tệp có sẵn của Ju: thêm mô tả và kiểm tra cấu trúc; giữ SubjectId và hàm kiểm tra ID |
-| `app/page.tsx` | Hiển thị thẻ môn từ danh mục; lời chào không gắn cố định Blockchain |
-| `app/subjects/[subjectId]/page.tsx` | Trang danh sách dùng chung, lấy tiêu đề/mô tả/bài từ môn đã kiểm tra |
-| `app/subjects/[subjectId]/[chapterId]/page.tsx` | Trang chi tiết dùng chung và liên kết tới quiz đúng môn |
-| `app/quiz/[subjectId]/[chapterId]/page.tsx` | Trang quiz dùng chung, kiểm tra dữ liệu và truyền props |
-| Ba trang `blockchain` cũ trong `app` | Được thay thế và xóa sau khi kiểm tra các hàm trang động |
-| `tests/subjects.test.mjs` | Kiểm tra danh mục, trang, liên kết, props, 404 và bài rỗng |
-| `docs/multi-subject-architecture.md` | Tài liệu này |
-| `docs/progress.md` | Ghi kết quả kiểm tra và trạng thái bàn giao |
-
-`data/database/index.ts` và `data/database/chapter-2.ts` đã có trong máy Ju trước lần sửa này, chưa được Git theo dõi. Giữ nguyên hai tệp đó; khi tự commit cần đưa chúng vào cùng thay đổi để máy triển khai đọc được Database. Không có commit hoặc push tự động.
-
-## Cách kiểm tra
-
-Không cần cài thư viện kiểm thử mới:
+## Kiểm tra
 
 ```sh
-node node_modules/next/dist/bin/next typegen
+npm test
+npm run lint
 node node_modules/typescript/bin/tsc --noEmit --incremental false
-node node_modules/eslint/bin/eslint.js .
-node --test tests/*.test.mjs
 node node_modules/next/dist/bin/next build --webpack
 ```
 
-Các kiểm tra trang chạy hàm thật và dữ liệu thật, thay phần phụ thuộc Next.js và component hiển thị bằng thành phần mô phỏng. Chúng kiểm tra được nhánh gọi 404 và dữ liệu, nhưng không thay thế kiểm tra trình duyệt hoặc mã HTTP của máy chủ.
-
-Trên trình duyệt: từ trang chủ mở từng môn, mở bài rồi quiz; chấm một câu, chọn nháp câu khác và tải lại; đổi môn rồi quay lại để kiểm tra hai tiến trình độc lập. Thử môn/bài không có để thấy 404. Chỉ thử làm lại trên lượt thử nghiệm có thể bỏ, vì thao tác này chủ ý xóa tiến trình của bài đó.
+Test trong `tests/` dùng Node test runner, kiểm tra dữ liệu và các contract logic/component. Với thay đổi tương tác, test tĩnh không thay thế việc chấm câu, khôi phục tiến độ, Review và Bookmark trong trình duyệt.

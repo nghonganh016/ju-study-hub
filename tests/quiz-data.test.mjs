@@ -38,8 +38,7 @@ const expected = {
     'blockchain/session-6': [83, 0, 'b9a2d868792f4656c24342127fd19cb9110e9bfe7f2953c5cf726d6a2d5c004e'],
     'blockchain/session-7': [68, 0, '0e5938da49c28d449d72c89a3f555c25573721dd9789b5fba983fe90de3efeee'],
     'blockchain/session-8': [80, 0, '3f50ea53ab91916024f5d1d6af8057899f128fb070f7c0fd7eb39139301a9e9e'],
-    'database/session-1': [80, 1, 'c94d86f27c2302ed506a1319b224ad78f237d1d201eabf933e9970767a5dedd1'],
-    'database/chapter-2': [1, 1, '7c28cc1f35d70ecbbfa4773fbe1d96d2047e8ec882f66cc15c67da9f8ec1966c'],
+    'database/session-1': [58, 2, 'bac08f7803ee87b92eb9a4305e0ad5dc9f7d56c2509ecacf6eeebfac2fd4d845'],
     'database/session-2': [88, 1, 'e57afd7010a2ce5ea504637fef3f5d0fa925b1599ec13d2cbd300b984d71ab56'],
 };
 
@@ -99,7 +98,7 @@ test('every rendered question has the supported schema and valid answer IDs', ()
             }
         }
     }
-    assert.equal(seenIds.size, 822);
+    assert.equal(seenIds.size, 799);
 });
 
 test('Database Session 1 preserves supplied questions and links to actual lecture pages', () => {
@@ -108,8 +107,8 @@ test('Database Session 1 preserves supplied questions and links to actual lectur
     const digest = value => createHash('sha256').update(JSON.stringify(value)).digest('hex');
     const preserved = session1.questions.map(({ id, prompt, options, correctOptionId, explanation, topic, difficulty, sources }) =>
         ({ id, prompt, options, correctOptionId, explanation, topic, difficulty, sources }));
-    assert.equal(digest(preserved), 'ae4925ad37cdb9ae61177d8265ded78fd1f5e307fbe7811066c88e921b5366cf');
-    assert.equal(session1.questions.flatMap(question => question.sources).length, 127);
+    assert.equal(digest(preserved), 'fd3d34ec299a7b87da18f00dd5cecfe0b6e423d8021df3ff63912f91c2831401');
+    assert.equal(session1.questions.flatMap(question => question.sources).length, 91);
     const pdf = path.resolve('public/references/database-session-1-slides.pdf');
     assert.equal(fs.readFileSync(pdf).subarray(0, 5).toString(), '%PDF-');
     for (const question of session1.questions) {
@@ -125,19 +124,16 @@ test('Database Session 1 preserves supplied questions and links to actual lectur
     assert.equal(Object.hasOwn(load('data/database/session-1.ts'), 'questions'), false);
 });
 
-test('both Database chapters use direct Question objects and preserve their content', () => {
-    const chapter2 = subjects.database.chapters.find(chapter => chapter.id === 'chapter-2');
+test('Database Session 2 uses direct Question objects and preserves its content', () => {
     const session2 = subjects.database.chapters.find(chapter => chapter.id === 'session-2');
     const digest = value => createHash('sha256').update(JSON.stringify(value)).digest('hex');
-    assert.equal(digest(chapter2), '63cf400965ff0fd9f2d0338c1c96eb6e59cf269219e6aba44337a3ec23a404c6');
     assert.equal(digest(session2.questions), 'e896a8e19cea345eef5ea3ab3be2f9dda2e1ee11b9336fa0db012505218f72cf');
     assert.equal(session2.questions.length, 88);
     assert.ok(session2.questions.every(question => typeof question.topic === 'string' && question.topic.trim()));
     assert.equal(Object.hasOwn(load('data/database/session-2.ts'), 'questions'), false);
 });
 
-test('old Database progress, bookmarks and review references resolve against the direct data', () => {
-    const chapter2 = subjects.database.chapters.find(chapter => chapter.id === 'chapter-2');
+test('removed test chapter stays unresolved while current Database references work', () => {
     const session2 = subjects.database.chapters.find(chapter => chapter.id === 'session-2');
     const progress = load('lib/quiz-progress.ts');
     const bookmarks = load('lib/bookmarks.ts');
@@ -150,17 +146,19 @@ test('old Database progress, bookmarks and review references resolve against the
         { subjectId: 'database', chapterId: 'session-2', questionId: 'db-s2-original-01' },
     ];
     const sections = [{ id: 'database', title: 'Database', chapters: [
-        { id: 'chapter-2', title: chapter2.title }, { id: 'session-2', title: session2.title },
+        { id: 'session-2', title: session2.title },
     ] }];
     const catalog = [
-        { ...refs[0], subjectTitle: 'Database', chapterTitle: chapter2.title, prompt: chapter2.questions[0].prompt },
         { ...refs[1], subjectTitle: 'Database', chapterTitle: session2.title, prompt: session2.questions[0].prompt },
     ];
     const savedRefs = JSON.stringify({ version: 1, items: refs });
     const parsedBookmarks = plain(bookmarks.parseBookmarks(savedRefs));
     assert.deepEqual(parsedBookmarks, refs);
     const entries = bookmarkCatalog.resolveBookmarkEntries(parsedBookmarks, catalog, sections);
-    assert.ok(entries.every(entry => !entry.missing && entry.href?.includes(entry.questionId)));
+    assert.equal(entries[0].missing, true);
+    assert.equal(entries[0].href, null);
+    assert.equal(entries[1].missing, false);
+    assert.ok(entries[1].href?.includes(entries[1].questionId));
     assert.deepEqual(plain(mistakes.parseMistakes(savedRefs)), refs);
     const round = rounds.parseReviewRound(JSON.stringify({
         version: 1, scope: { subjectId: 'database', chapterId: 'session-2' }, items: refs,
@@ -179,5 +177,5 @@ test('old Database progress, bookmarks and review references resolve against the
     const chapter2Progress = JSON.stringify({ version: 1, currentQuestionId: 'db-ch2-1-q01', answers: {
         'db-ch2-1-q01': { optionId: 'b', isSubmitted: true },
     } });
-    assert.equal(progress.summarizeProgress(chapter2Progress, chapter2.questions).submitted, 1);
+    assert.equal(progress.summarizeProgress(chapter2Progress, session2.questions).submitted, 0);
 });
