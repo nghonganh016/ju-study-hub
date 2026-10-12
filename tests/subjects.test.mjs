@@ -26,7 +26,6 @@ function load(file) {
         if (id.endsWith('.css')) return { default: {} };
         if (id === '@/components/QuizRunner') return { default: Runner };
         if (id === '@/components/BookmarkedQuestions') return { default: Bookmarks };
-        if (id === '@/components/journal/JournalAsset') return { default: () => null };
         if (id.startsWith('@/') || id.startsWith('.')) {
             const base = id.startsWith('@/') ? path.resolve(id.slice(2)) : path.resolve(path.dirname(file), id);
             const target = [base + '.ts', base + '.tsx', path.join(base, 'index.ts')].find(fs.existsSync);

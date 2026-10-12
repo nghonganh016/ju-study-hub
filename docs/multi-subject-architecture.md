@@ -24,7 +24,7 @@ app/quiz/[subjectId]/[chapterId]/page.tsx → QuizRunner
 
 Các trang động nhận `params` dạng Promise, kiểm tra subject và tìm chapter trong đúng môn; ID không có trả 404. Trang quiz xử lý chapter rỗng và truyền `subjectId`, `chapterId`, tiêu đề, câu hỏi và catalog vào `QuizRunner`. `searchParams.questionId` tùy chọn mở câu đã bookmark; ID không hợp lệ rơi về vị trí khôi phục. Trang `/bookmarks` liệt kê câu đã đánh dấu; `/review` chọn phạm vi môn/chapter và tạo lượt ôn câu sai.
 
-`QuizRunner` giữ state câu hiện tại, đáp án nháp/đã chấm, màn hình tiến độ/kết quả, điều hướng, bookmark và trạng thái hiệu ứng. Component này render `QuizQuestion`, `QuizNavigation`, `QuizResult` và các phần console. Một phần quy tắc khôi phục đã được chia sẻ qua `lib/quiz-progress.ts`, nhưng việc đọc/ghi storage và điều phối state vẫn nằm trong `QuizRunner`. Đây là ranh giới dự kiến cho Task 2; chưa thay đổi trong tài liệu này.
+`hooks/useQuizProgress.ts` giữ state câu hiện tại, đáp án nháp/đã chấm, trang điều hướng, trạng thái khôi phục và số liệu tiến độ. Hook dùng `lib/quiz-progress.ts` để kiểm tra dữ liệu version 1 và xác định câu của deep link, rồi đọc/ghi đúng key localStorage. `QuizRunner` nhận state và các thao tác `navigate`, `selectAnswer`, `submitAnswer`, `resetProgress` từ hook; component này tiếp tục xử lý URL, focus, shortcut, feedback, mistakes, bookmark và render `QuizQuestion`, `QuizNavigation`, `QuizResult`. `ReviewMistakes` remount `QuizRunner` bằng `key={generation}` khi mở lượt mới, nên hook cũng bắt đầu với state mới.
 
 ## Storage hiện tại
 
@@ -37,7 +37,7 @@ Tất cả dữ liệu dưới đây nằm trong `localStorage` của origin hi�
 | Lượt Review | `ju-study-hub:review-round:v1` và `ju-study-hub:review-progress:v1` | Snapshot câu của lượt, phạm vi và tiến độ riêng |
 | Bookmark | `ju-study-hub:bookmarks:v1` trong `lib/bookmarks.ts` | Bộ ba ID; `lib/bookmark-catalog.ts` tìm nội dung hiện có |
 
-`lib/quiz-progress.ts` kiểm tra phiên bản, question ID và option ID khi khôi phục; `LevelProgress` dùng cùng quy tắc để hiển thị số câu đã chấm trên card. `QuizRunner` chờ client mount rồi mới đọc/ghi storage nhằm giữ tiến độ cũ khi hydration. Nếu storage lỗi, quiz tiếp tục trong bộ nhớ. Bookmark và mistakes có cơ chế giữ thay đổi pending để thử ghi lại; không nên gộp các kho này chỉ vì chúng đều dùng localStorage, vì hợp đồng dữ liệu khác nhau.
+`lib/quiz-progress.ts` kiểm tra phiên bản, question ID và option ID khi khôi phục; `LevelProgress` dùng cùng quy tắc để hiển thị số câu đã chấm trên card. `useQuizProgress` chờ client mount và khôi phục xong rồi mới ghi storage nhằm giữ tiến độ cũ khi hydration. Nếu storage lỗi, quiz tiếp tục trong bộ nhớ. Bookmark và mistakes có cơ chế giữ thay đổi pending để thử ghi lại; không nên gộp các kho này chỉ vì chúng đều dùng localStorage, vì hợp đồng dữ liệu khác nhau.
 
 `localStorage` không đồng bộ giữa origin, browser hoặc thiết bị. Chưa có server, database hay tài khoản trong ứng dụng.
 

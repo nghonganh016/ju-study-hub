@@ -29,7 +29,8 @@ node node_modules/next/dist/bin/next build --webpack
 | `data/subjects.ts` | Registry hai môn, ID dùng trong URL và kho tiến độ |
 | `data/blockchain/`, `data/database/` | Các `Chapter` và mảng chapter của từng môn |
 | `types/quiz.ts` | Kiểu dữ liệu câu hỏi, đáp án, chapter và metadata nguồn |
-| `components/QuizRunner.tsx` | State và tương tác quiz, kể cả Review; gọi các module `lib/` để khôi phục/lưu tiến độ, câu sai, bookmark |
+| `components/QuizRunner.tsx` | Ghép UI quiz và Review; xử lý shortcut, focus, feedback, mistakes và bookmark |
+| `hooks/useQuizProgress.ts` | State câu/đáp án, khôi phục/lưu/reset tiến độ và số liệu chấm |
 | `components/LevelProgress.tsx` | Đọc tiến độ quiz thường trên card chapter |
 | `lib/quiz-progress.ts` | Khóa, khôi phục và tóm tắt tiến độ quiz thường |
 | `lib/mistakes.ts`, `lib/review-round.ts` | Kho câu sai, snapshot và phạm vi lượt Review |

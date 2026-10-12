@@ -9,34 +9,30 @@ import type { CatMood } from "@/components/StudyCat";
 
 import QuizQuestion from "@/components/QuizQuestion";
 import BookmarkButton from "@/components/BookmarkButton";
-import QuizNavigation, { QUESTIONS_PER_PAGE, type QuestionStatus } from "@/components/QuizNavigation";
+import QuizNavigation, { QUESTIONS_PER_PAGE } from "@/components/QuizNavigation";
 import QuizResult from "@/components/QuizResult";
 import MistakeLink from "@/components/MistakeLink";
-import { recordAttempt, REVIEW_PROGRESS_KEY, type ReviewItem, type MistakeRef } from "@/lib/mistakes";
+import { recordAttempt, type ReviewItem, type MistakeRef } from "@/lib/mistakes";
 import { addBookmark, BOOKMARKS_KEY, flushBookmarks, isBookmarked, isBookmarkPending,
     removeBookmark } from "@/lib/bookmarks";
 import type { Question } from "@/types/quiz";
 
-import { questionIndexFromLink, quizProgressKey, restoreProgress, type Answer } from "@/lib/quiz-progress";
+import useQuizProgress from "@/hooks/useQuizProgress";
 
 export default function QuizRunner({ subjectId, subjectTitle, chapterId, chapterTitle, questions, reviewItems, reviewScopeLabel, onChangeReviewScope, onNewReviewRound, initialReviewProgress, onReviewProgressChange, mistakeCatalog = [], requestedQuestionId = null }: { subjectId: string; subjectTitle: string; chapterId: string; chapterTitle: string; questions: Question[]; reviewItems?: ReviewItem[]; reviewScopeLabel?: string; onChangeReviewScope?: (complete: boolean) => void; onNewReviewRound?: () => void; initialReviewProgress?: string | null; onReviewProgressChange?: (raw: string) => void; mistakeCatalog?: MistakeRef[]; requestedQuestionId?: string | null }) {
     const isReview = reviewItems !== undefined;
-    const storageKey = isReview ? REVIEW_PROGRESS_KEY : quizProgressKey(subjectId, chapterId);
-    const [restoredKey, setRestoredKey] = useState<string | null>(null);
-    const [currentIndex, setCurrentIndex] = useState(0);
-    // Draft selections and graded answers survive navigation between questions.
-    const [answers, setAnswers] = useState<Record<string, Answer>>({});
     const [showProgress, setShowProgress] = useState(false);
-    const [navigatorPage, setNavigatorPage] = useState(0);
     const [motion, setMotion] = useState(true);
     const [navigationOpen, setNavigationOpen] = useState(false);
     const [reward, setReward] = useState<{ questionId: string; status: "correct" | "incorrect" } | null>(null);
     const [bookmarkState, setBookmarkState] = useState<{ key: string; bookmarked: boolean; pending: boolean } | null>(null);
     const screenRef = useRef<HTMLElement>(null);
-    const appliedQuestionId = useRef(requestedQuestionId);
-    const latestRequestedQuestionId = useEffectEvent(() => requestedQuestionId);
-    const latestInitialReviewProgress = useEffectEvent(() => initialReviewProgress);
-    const reportReviewProgress = useEffectEvent((raw: string) => onReviewProgressChange?.(raw));
+    const { currentIndex, currentAnswer, ready, navigatorPage, setNavigatorPage, statuses,
+        submittedCount, correctCount, canFinish, navigate, selectAnswer, submitAnswer, resetProgress } = useQuizProgress({
+        subjectId, chapterId, questions, isReview, pageSize: QUESTIONS_PER_PAGE,
+        requestedQuestionId, initialReviewProgress, onReviewProgressChange,
+        onDeepLinkNavigate: () => { setReward(null); setShowProgress(false); },
+    });
     const question = questions[currentIndex];
     const bookmarkSubjectId = reviewItems?.[currentIndex]?.subjectId ?? subjectId;
     const bookmarkChapterId = reviewItems?.[currentIndex]?.chapterId ?? chapterId;
@@ -49,64 +45,6 @@ export default function QuizRunner({ subjectId, subjectTitle, chapterId, chapter
         const timer = window.setTimeout(() => setReward(null), 1100);
         return () => window.clearTimeout(timer);
     }, [reward]);
-
-    useEffect(() => {
-        let cancelled = false;
-        // Defer restoration until after mount; cancel the first Strict Mode setup.
-        queueMicrotask(() => {
-            if (cancelled) return;
-            let raw: string | null = null;
-            try {
-                raw = window.localStorage.getItem(storageKey);
-            } catch {
-                // Storage may be blocked; the quiz still works in memory.
-            }
-            const restored = restoreProgress(raw ?? (isReview ? latestInitialReviewProgress() : null) ?? null, questions);
-            const targetIndex = questionIndexFromLink(questions, latestRequestedQuestionId(), restored.currentIndex);
-            setCurrentIndex(targetIndex);
-            setAnswers(restored.answers);
-            setNavigatorPage(Math.floor(targetIndex / QUESTIONS_PER_PAGE));
-            setRestoredKey(storageKey);
-        });
-        return () => { cancelled = true; };
-    }, [storageKey, questions, isReview]);
-
-    useEffect(() => {
-        if (restoredKey !== storageKey || appliedQuestionId.current === requestedQuestionId) return;
-        let cancelled = false;
-        queueMicrotask(() => {
-            if (cancelled) return;
-            appliedQuestionId.current = requestedQuestionId;
-            const index = questionIndexFromLink(questions, requestedQuestionId, currentIndex);
-            if (index !== currentIndex) {
-                setCurrentIndex(index);
-                setNavigatorPage(Math.floor(index / QUESTIONS_PER_PAGE));
-                setReward(null);
-                setShowProgress(false);
-            }
-        });
-        return () => { cancelled = true; };
-    }, [requestedQuestionId, restoredKey, storageKey, questions, currentIndex]);
-
-    useEffect(() => {
-        // Initial effects (including Strict Mode replays) cannot overwrite saved data.
-        if (restoredKey !== storageKey) return;
-        const serialized = JSON.stringify({
-            version: 1,
-            currentQuestionId: questions[currentIndex]?.id ?? null,
-            answers,
-        });
-        try {
-            if (currentIndex === 0 && Object.keys(answers).length === 0) {
-                window.localStorage.removeItem(storageKey);
-            } else {
-                window.localStorage.setItem(storageKey, serialized);
-            }
-        } catch {
-            // Storage unavailable or full: keep the current in-memory progress.
-        }
-        if (isReview) reportReviewProgress(serialized);
-    }, [answers, currentIndex, questions, restoredKey, storageKey, isReview]);
 
     useEffect(() => {
         if (!bookmarkQuestionId || !bookmarkKey) return;
@@ -130,16 +68,6 @@ export default function QuizRunner({ subjectId, subjectTitle, chapterId, chapter
         };
     }, [bookmarkSubjectId, bookmarkChapterId, bookmarkQuestionId, bookmarkKey]);
 
-    const statuses: QuestionStatus[] = questions.map((item) => {
-        const answer = answers[item.id];
-        if (!answer) return "unanswered";
-        if (!answer.isSubmitted) return "draft";
-        return answer.optionId === item.correctOptionId ? "correct" : "incorrect";
-    });
-    const submittedCount = statuses.filter((status) => status === "correct" || status === "incorrect").length;
-    const correctCount = statuses.filter((status) => status === "correct").length;
-    const canFinish = questions.length > 0 && submittedCount === questions.length;
-
     // Every question change also reveals its group. Browsing groups alone keeps the question.
     function handleNavigate(index: number) {
         if (index < 0 || index >= questions.length) return;
@@ -148,23 +76,12 @@ export default function QuizRunner({ subjectId, subjectTitle, chapterId, chapter
         if (url.searchParams.has("questionId")) {
             url.searchParams.delete("questionId");
             window.history.replaceState(window.history.state, "", url);
-            // Keep the last applied prop until Next supplies a new one.
-            appliedQuestionId.current = requestedQuestionId;
         }
-        setCurrentIndex(index);
-        setNavigatorPage(Math.floor(index / QUESTIONS_PER_PAGE));
+        navigate(index);
         setReward(null);
         // Move keyboard interaction to the question instead of leaving Enter on
         // the navigation button that opened it. Keep the viewport in place.
         screenRef.current?.focus({ preventScroll: true });
-    }
-
-    function handleSelect(optionId: string) {
-        if (!question || !question.options.some((option) => option.id === optionId)) return;
-        setAnswers((previous) => {
-            if (previous[question.id]?.isSubmitted) return previous;
-            return { ...previous, [question.id]: { optionId, isSubmitted: false } };
-        });
     }
 
     function handleToggleBookmark() {
@@ -176,18 +93,13 @@ export default function QuizRunner({ subjectId, subjectTitle, chapterId, chapter
     }
 
     function handleSubmit() {
-        if (!question || restoredKey !== storageKey) return;
-        const selected = answers[question.id];
-        if (!selected || selected.isSubmitted) return;
+        if (!question) return;
+        const optionId = submitAnswer();
+        if (optionId === null) return;
         const context = reviewItems?.[currentIndex] ?? { subjectId, chapterId, questionId: question.id };
-        recordAttempt(context, selected.optionId === question.correctOptionId, isReview);
+        recordAttempt(context, optionId === question.correctOptionId, isReview);
         // Feedback belongs only to this click, never to restored or revisited answers.
-        setReward({ questionId: question.id, status: selected.optionId === question.correctOptionId ? "correct" : "incorrect" });
-        setAnswers((previous) => {
-            const answer = previous[question.id];
-            if (!answer || answer.isSubmitted) return previous;
-            return { ...previous, [question.id]: { ...answer, isSubmitted: true } };
-        });
+        setReward({ questionId: question.id, status: optionId === question.correctOptionId ? "correct" : "incorrect" });
     }
 
     function handleRestart() {
@@ -195,18 +107,13 @@ export default function QuizRunner({ subjectId, subjectTitle, chapterId, chapter
             onNewReviewRound();
             return;
         }
-        try {
-            window.localStorage.removeItem(storageKey);
-        } catch {
-            // Reset the quiz even when browser storage is unavailable.
-        }
         handleNavigate(0);
-        setAnswers({});
+        resetProgress();
         setShowProgress(false);
     }
 
     const handleQuizKeyDown = useEffectEvent((event: KeyboardEvent) => {
-        if (restoredKey !== storageKey || showProgress || !question
+        if (!ready || showProgress || !question
             || event.defaultPrevented || event.repeat || event.isComposing
             || event.ctrlKey || event.altKey || event.metaKey || event.shiftKey) return;
 
@@ -219,12 +126,12 @@ export default function QuizRunner({ subjectId, subjectTitle, chapterId, chapter
                 && target.closest("button, a[href], summary, [role='button'], [role='link']")) return;
         }
 
-        const answer = answers[question.id];
+        const answer = currentAnswer;
         if (["1", "2", "3", "4"].includes(event.key)) {
             const optionId = ["a", "b", "c", "d"][Number(event.key) - 1];
             if (answer?.isSubmitted || !question.options.some((option) => option.id === optionId)) return;
             event.preventDefault();
-            handleSelect(optionId);
+            selectAnswer(optionId);
         } else if (event.key === "ArrowLeft" && currentIndex > 0) {
             event.preventDefault();
             handleNavigate(currentIndex - 1);
@@ -251,7 +158,7 @@ export default function QuizRunner({ subjectId, subjectTitle, chapterId, chapter
     if (!question) return <p className="mt-8">Chapter này chưa có câu hỏi.</p>;
     const currentBookmarkState = bookmarkKey !== null && bookmarkState?.key === bookmarkKey ? bookmarkState : null;
     const activeReward = reward?.questionId === question.id ? reward.status : undefined;
-    const selected = answers[question.id];
+    const selected = currentAnswer;
     const mood: CatMood = showProgress && canFinish ? "completed"
         : activeReward && canFinish ? "celebrating"
         : activeReward === "incorrect" ? "wrong" : activeReward === "correct" ? "correct"
@@ -328,7 +235,7 @@ export default function QuizRunner({ subjectId, subjectTitle, chapterId, chapter
                                         onToggle={handleToggleBookmark} />
                                 </div>
                                 <QuizQuestion question={question} selectedOptionId={selected?.optionId ?? null}
-                                    isSubmitted={selected?.isSubmitted ?? false} onSelect={handleSelect} onSubmit={handleSubmit}
+                                    isSubmitted={selected?.isSubmitted ?? false} onSelect={selectAnswer} onSubmit={handleSubmit}
                                     reward={activeReward}
                                     navigation={<div className={styles.stepButtons}>
                                         <button type="button" aria-label="Câu trước" title="Câu trước" disabled={currentIndex === 0} onClick={() => handleNavigate(currentIndex - 1)}><GameArrow direction="left" /></button>
