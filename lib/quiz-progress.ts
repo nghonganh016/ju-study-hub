@@ -1,3 +1,5 @@
+import type { StudyStorage } from "./storage";
+
 type ProgressQuestion = { id: string; options: readonly { id: string }[] };
 
 export function quizProgressKey(subjectId: string, chapterId: string) {
@@ -53,7 +55,7 @@ export function summarizeProgress(raw: string | null, questions: readonly Progre
     };
 }
 
-export function readLevelProgress(storage: Pick<Storage, "getItem">, key: string,
+export function readLevelProgress(storage: Pick<StudyStorage, "getItem">, key: string,
     questions: readonly ProgressQuestion[]) {
     try {
         return summarizeProgress(storage.getItem(key), questions);

@@ -21,9 +21,10 @@ function mount(initial = {}, seed = {}) {
     const data = new Map(Object.entries(seed));
     const writes = [];
     let blocked = false;
+    let full = false;
     const storage = {
         getItem(key) { if (blocked) throw Error('blocked'); return data.get(key) ?? null; },
-        setItem(key, value) { if (blocked) throw Error('blocked'); writes.push(['set', key]); data.set(key, value); },
+        setItem(key, value) { if (blocked) throw Error('blocked'); if (full) throw Error('quota'); writes.push(['set', key]); data.set(key, value); },
         removeItem(key) { if (blocked) throw Error('blocked'); writes.push(['remove', key]); data.delete(key); },
     };
     const slots = [];
@@ -76,6 +77,7 @@ function mount(initial = {}, seed = {}) {
             if (id === 'react') return react;
             if (id === '@/lib/quiz-progress') return progress;
             if (id === '@/lib/mistakes') return { REVIEW_PROGRESS_KEY: reviewKey };
+            if (id === '@/lib/storage') return { localStudyStorage: storage };
             throw Error(`Unexpected import: ${id}`);
         },
         window: { localStorage: storage },
@@ -107,6 +109,7 @@ function mount(initial = {}, seed = {}) {
         update(next) { render({ ...props, ...next }); return settle(); },
         act(action) { const value = action(result); settle(); return value; },
         block(value = true) { blocked = value; },
+        quota(value = true) { full = value; },
         replayEffects() {
             for (const slot of slots) {
                 if (slot?.dependencies) { slot.cleanup?.(); slot.dependencies = undefined; }
@@ -197,4 +200,15 @@ test('blocked storage remains usable in memory and deep links yield to manual na
     hook.act(current => current.resetProgress());
     assert.equal(hook.current.currentIndex, 0);
     assert.equal(hook.current.submittedCount, 0);
+});
+
+test('quota failure retains in-memory answers without corrupting the last saved progress', () => {
+    const key = progress.quizProgressKey('database', 'session-1');
+    const raw = saved('q1', { q1: { optionId: 'a', isSubmitted: false } });
+    const hook = mount({ subjectId: 'database', chapterId: 'session-1' }, { [key]: raw });
+    hook.settle();
+    hook.quota();
+    hook.act(current => current.selectAnswer('b'));
+    assert.deepEqual(plain(hook.current.currentAnswer), { optionId: 'b', isSubmitted: false });
+    assert.equal(hook.data.get(key), raw);
 });

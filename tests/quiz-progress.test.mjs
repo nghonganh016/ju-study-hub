@@ -109,7 +109,7 @@ test('deep link selects by ID after restoring answers and falls back to saved po
 
 test('review loader preserves the snapshot and good answers when another submitted option is invalid', () => {
     const mistakes = {};
-    vm.runInNewContext(compile('lib/mistakes.ts'), { exports: mistakes });
+    vm.runInNewContext(compile('lib/mistakes.ts'), { exports: mistakes, require: () => ({}) });
     const rounds = {};
     vm.runInNewContext(compile('lib/review-round.ts'), { exports: rounds, require: () => mistakes });
     const refs = ['q1', 'q2'].map(questionId => ({ subjectId: 's', chapterId: 'c', questionId }));

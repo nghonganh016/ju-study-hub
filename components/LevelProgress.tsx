@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { quizProgressKey, readLevelProgress, summarizeProgress } from "@/lib/quiz-progress";
+import { localStudyStorage } from "@/lib/storage";
 import styles from "@/components/LevelSelect.module.css";
 
 type ProgressQuestion = { id: string; options: { id: string }[] };
@@ -16,7 +17,7 @@ export default function LevelProgress({ subjectId, chapterId, chapterTitle, ques
     useEffect(() => {
         const refresh = () => {
             try {
-                setSnapshot(readLevelProgress(window.localStorage, key, questions));
+                setSnapshot(readLevelProgress(localStudyStorage, key, questions));
             } catch {
                 setSnapshot("unavailable");
             }

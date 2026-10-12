@@ -18,7 +18,12 @@ function setup({ blocked = false, full = false } = {}) {
     const code = ts.transpileModule(fs.readFileSync('lib/mistakes.ts', 'utf8'), {
         compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2022 },
     }).outputText;
-    vm.runInNewContext(code, { exports, window, Event: class {} });
+    const adapter = ts.transpileModule(fs.readFileSync('lib/storage.ts', 'utf8'), {
+        compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2022 },
+    }).outputText;
+    const storageExports = {};
+    vm.runInNewContext(adapter, { exports: storageExports, window });
+    vm.runInNewContext(code, { exports, window, Event: class {}, require: () => storageExports });
     return { api: exports, data, get writes() { return writes; },
         availability(options) { blocked = options.blocked ?? blocked; full = options.full ?? full; } };
 }

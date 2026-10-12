@@ -8,6 +8,7 @@ import { isProgressComplete } from "@/lib/quiz-progress";
 import { mistakeId, readMistakes, saveMistakes, ROUND_KEY, REVIEW_PROGRESS_KEY, type ReviewItem } from "@/lib/mistakes";
 import { ALL_SCOPE, createReviewRound, filterReviewItems, parseReviewRound, reviewScopeLabel,
     serializeReviewRound, type ReviewScope } from "@/lib/review-round";
+import { localStudyStorage } from "@/lib/storage";
 
 type Section = { id: string; title: string; chapters: { id: string; title: string }[] };
 type Round = { items: ReviewItem[]; scope: ReviewScope; complete: boolean };
@@ -30,8 +31,8 @@ export default function ReviewMistakes({ catalog, sections }: { catalog: ReviewI
             let saved: ReturnType<typeof parseReviewRound> = { refs: [], scope: ALL_SCOPE };
             let progress: string | null = null;
             try {
-                saved = parseReviewRound(window.localStorage.getItem(ROUND_KEY), sections);
-                progress = window.localStorage.getItem(REVIEW_PROGRESS_KEY);
+                saved = parseReviewRound(localStudyStorage.getItem(ROUND_KEY), sections);
+                progress = localStudyStorage.getItem(REVIEW_PROGRESS_KEY);
             } catch { /* Storage unavailable; selection and quiz work in memory. */ }
             const items = createReviewRound(saved.refs, catalog, saved.scope);
             const complete = isProgressComplete(progress, items.map(item => ({ ...item.question, id: mistakeId(item) })));
@@ -50,8 +51,8 @@ export default function ReviewMistakes({ catalog, sections }: { catalog: ReviewI
     function startRound(items: ReviewItem[], nextScope: ReviewScope) {
         if (items.length === 0) return;
         try {
-            window.localStorage.removeItem(REVIEW_PROGRESS_KEY);
-            window.localStorage.setItem(ROUND_KEY, serializeReviewRound(items, nextScope));
+            localStudyStorage.removeItem(REVIEW_PROGRESS_KEY);
+            localStudyStorage.setItem(ROUND_KEY, serializeReviewRound(items, nextScope));
         } catch { /* Keep the new round in memory. */ }
         setRound({ items, scope: nextScope, complete: false });
         setMemoryProgress(null);

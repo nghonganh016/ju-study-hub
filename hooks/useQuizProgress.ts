@@ -4,6 +4,7 @@ import { useEffect, useEffectEvent, useRef, useState } from "react";
 import type { QuestionStatus } from "@/components/QuizNavigation";
 import { questionIndexFromLink, quizProgressKey, restoreProgress, type Answer } from "@/lib/quiz-progress";
 import { REVIEW_PROGRESS_KEY } from "@/lib/mistakes";
+import { localStudyStorage } from "@/lib/storage";
 import type { Question } from "@/types/quiz";
 
 type Options = {
@@ -39,7 +40,7 @@ export default function useQuizProgress({ subjectId, chapterId, questions, isRev
             if (cancelled) return;
             let raw: string | null = null;
             try {
-                raw = window.localStorage.getItem(storageKey);
+                raw = localStudyStorage.getItem(storageKey);
             } catch {
                 // Storage may be blocked; the quiz still works in memory.
             }
@@ -81,9 +82,9 @@ export default function useQuizProgress({ subjectId, chapterId, questions, isRev
         });
         try {
             if (currentIndex === 0 && Object.keys(answers).length === 0) {
-                window.localStorage.removeItem(storageKey);
+                localStudyStorage.removeItem(storageKey);
             } else {
-                window.localStorage.setItem(storageKey, serialized);
+                localStudyStorage.setItem(storageKey, serialized);
             }
         } catch {
             // Storage unavailable or full: keep the current in-memory progress.
@@ -133,7 +134,7 @@ export default function useQuizProgress({ subjectId, chapterId, questions, isRev
 
     function resetProgress() {
         try {
-            window.localStorage.removeItem(storageKey);
+            localStudyStorage.removeItem(storageKey);
         } catch {
             // Reset the quiz even when browser storage is unavailable.
         }

@@ -33,6 +33,7 @@ node node_modules/next/dist/bin/next build --webpack
 | `hooks/useQuizProgress.ts` | State câu/đáp án, khôi phục/lưu/reset tiến độ và số liệu chấm |
 | `components/LevelProgress.tsx` | Đọc tiến độ quiz thường trên card chapter |
 | `lib/quiz-progress.ts` | Khóa, khôi phục và tóm tắt tiến độ quiz thường |
+| `lib/storage.ts` | Interface lưu chuỗi đồng bộ và adapter `localStorage` dùng chung |
 | `lib/mistakes.ts`, `lib/review-round.ts` | Kho câu sai, snapshot và phạm vi lượt Review |
 | `lib/bookmarks.ts`, `lib/bookmark-catalog.ts` | Kho bookmark và đối chiếu với registry câu hỏi |
 | `tests/` | Test `.test.mjs` dùng Node test runner |
@@ -42,7 +43,7 @@ Các route `/subjects/[subjectId]` và `/quiz/[subjectId]/[chapterId]` đọc re
 
 ## Lưu tiến độ
 
-Quiz thường dùng key `ju-study-hub:quiz-progress:<subjectId>:<chapterId>` với dữ liệu version 1 gồm ID câu đang xem và đáp án nháp/đã chấm. Review, câu sai và bookmark dùng key riêng trong các module `lib/`. Dữ liệu `localStorage` thuộc origin của trình duyệt: đổi domain hoặc thiết bị không tự chuyển dữ liệu. Khi browser chặn storage, quiz vẫn dùng được trong phiên hiện tại nhưng không bảo đảm khôi phục sau khi tải lại.
+Quiz thường dùng key `ju-study-hub:quiz-progress:<subjectId>:<chapterId>` với dữ liệu version 1 gồm ID câu đang xem và đáp án nháp/đã chấm. Review, câu sai và bookmark dùng key riêng trong các module `lib/`. Các thao tác đọc/ghi/xóa đi qua adapter đồng bộ `lib/storage.ts`; quy tắc dữ liệu nằm ở từng module. Xem [tài liệu storage](docs/storage-architecture.md) để biết key, schema và giới hạn khôi phục. Dữ liệu `localStorage` thuộc origin của trình duyệt: đổi domain hoặc thiết bị không tự chuyển dữ liệu. Khi browser chặn storage, quiz vẫn dùng được trong phiên hiện tại nhưng không bảo đảm khôi phục sau khi tải lại.
 
 ## Kiểm thử
 
@@ -55,6 +56,6 @@ node node_modules/next/dist/bin/next build --webpack
 
 `npm test` chạy `node --test tests/*.test.mjs` bằng Node test runner có sẵn, không dùng framework mới. Test kiểm tra dữ liệu/registry, các module storage, Review, Bookmark và một số contract component. Chúng không thay thế kiểm tra tương tác thực tế trên trình duyệt. Nếu TypeScript báo thiếu `.next/types` ở checkout mới, tạo Next types bằng `node node_modules/next/dist/bin/next typegen` hoặc chạy build trước rồi chạy lại TypeScript.
 
-Baseline ngày 13/10/2026: `npm test` đạt 57/57 test sau khi đồng bộ kỳ vọng Database với việc bỏ chapter thử `chapter-2` và rút Session 1 còn 58 câu theo quyết định của Ju. Xem [nhật ký](docs/progress.md) để biết phạm vi kiểm tra.
+Baseline ngày 13/10/2026: `npm test` đạt 65/65 test sau Task 3. Database đã bỏ chapter thử `chapter-2` và rút Session 1 còn 58 câu theo quyết định của Ju. Xem [nhật ký](docs/progress.md) để biết phạm vi kiểm tra.
 
 Quy tắc cộng tác và phạm vi thay đổi xem [AGENTS.md](AGENTS.md). Nhật ký kiểm tra nằm ở [docs/progress.md](docs/progress.md).

@@ -7,6 +7,9 @@ import ts from 'typescript';
 const source = ts.transpileModule(fs.readFileSync('lib/bookmarks.ts', 'utf8'), {
     compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2022 },
 }).outputText;
+const adapter = ts.transpileModule(fs.readFileSync('lib/storage.ts', 'utf8'), {
+    compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2022 },
+}).outputText;
 const plain = value => JSON.parse(JSON.stringify(value));
 const ref = { subjectId: 'blockchain', chapterId: 'session-5', questionId: 'bc-s5-q01' };
 
@@ -20,7 +23,9 @@ function setup({ server = false, readBlocked = false, writeBlocked = false } = {
             setItem(key, value) { if (writeBlocked) throw Error('full'); writes++; data.set(key, value); },
         },
     };
-    vm.runInNewContext(source, { exports, window });
+    const storageExports = {};
+    vm.runInNewContext(adapter, { exports: storageExports, window });
+    vm.runInNewContext(source, { exports, window, require: () => storageExports });
     return { api: exports, data, get writes() { return writes; },
         availability(options) {
             readBlocked = options.readBlocked ?? readBlocked;

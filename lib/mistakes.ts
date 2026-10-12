@@ -1,4 +1,5 @@
 import type { Question } from "../types/quiz";
+import { localStudyStorage } from "./storage";
 
 export type MistakeRef = { subjectId: string; chapterId: string; questionId: string };
 export type ReviewItem = MistakeRef & { subjectTitle: string; chapterTitle: string; question: Question };
@@ -41,7 +42,7 @@ function applyPending(items: MistakeRef[]) {
 }
 
 export function readMistakes(): MistakeRef[] {
-    try { fallback = parseMistakes(window.localStorage.getItem(MISTAKES_KEY)); } catch { /* Use last readable data. */ }
+    try { fallback = parseMistakes(localStudyStorage.getItem(MISTAKES_KEY)); } catch { /* Use last readable data. */ }
     // React store snapshots must not write or dispatch events.
     return applyPending(fallback);
 }
@@ -49,10 +50,10 @@ export function readMistakes(): MistakeRef[] {
 export function flushMistakes() {
     if (pending.size === 0) return;
     try {
-        const stored = parseMistakes(window.localStorage.getItem(MISTAKES_KEY));
+        const stored = parseMistakes(localStudyStorage.getItem(MISTAKES_KEY));
         const merged = applyPending(stored);
         if (JSON.stringify(merged) !== JSON.stringify(stored)) {
-            window.localStorage.setItem(MISTAKES_KEY, JSON.stringify({ version: 1, items: merged }));
+            localStudyStorage.setItem(MISTAKES_KEY, JSON.stringify({ version: 1, items: merged }));
         }
         fallback = merged;
         pending.clear();

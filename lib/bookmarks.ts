@@ -1,3 +1,5 @@
+import { localStudyStorage } from "./storage";
+
 export type BookmarkRef = { subjectId: string; chapterId: string; questionId: string };
 
 export const BOOKMARKS_KEY = "ju-study-hub:bookmarks:v1";
@@ -47,7 +49,7 @@ function applyPending(items: BookmarkRef[]) {
 
 export function readBookmarks(): BookmarkRef[] {
     if (typeof window === "undefined") return [];
-    try { lastReadable = parseBookmarks(window.localStorage.getItem(BOOKMARKS_KEY)); }
+    try { lastReadable = parseBookmarks(localStudyStorage.getItem(BOOKMARKS_KEY)); }
     catch { /* Use the last readable list and pending changes. */ }
     return applyPending(lastReadable);
 }
@@ -55,10 +57,10 @@ export function readBookmarks(): BookmarkRef[] {
 export function flushBookmarks() {
     if (typeof window === "undefined" || pending.size === 0) return;
     try {
-        const stored = parseBookmarks(window.localStorage.getItem(BOOKMARKS_KEY));
+        const stored = parseBookmarks(localStudyStorage.getItem(BOOKMARKS_KEY));
         const merged = applyPending(stored);
         if (JSON.stringify(merged) !== JSON.stringify(stored)) {
-            window.localStorage.setItem(BOOKMARKS_KEY, JSON.stringify({ version: 1, items: merged }));
+            localStudyStorage.setItem(BOOKMARKS_KEY, JSON.stringify({ version: 1, items: merged }));
         }
         lastReadable = merged;
         pending.clear();
@@ -98,7 +100,7 @@ export function isBookmarkPending(value: BookmarkRef): boolean {
 export function bookmarkStorageStatus(): "available" | "pending" | "unavailable" {
     if (typeof window === "undefined") return "unavailable";
     try {
-        window.localStorage.getItem(BOOKMARKS_KEY);
+        localStudyStorage.getItem(BOOKMARKS_KEY);
         return pending.size > 0 ? "pending" : "available";
     } catch { return "unavailable"; }
 }
