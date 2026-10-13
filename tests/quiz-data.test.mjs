@@ -41,6 +41,7 @@ const expected = {
     'database/session-1': [58, 2, 'bac08f7803ee87b92eb9a4305e0ad5dc9f7d56c2509ecacf6eeebfac2fd4d845'],
     'database/session-2': [57, 2, '9f5465bd5190fc5883fa32696dbdd9bb009cca669875d2db68b1cfd4f2db1090'],
     'database/session-3': [58, 1, 'b40aa51c29ba47c58bae3d66952614951cd3b552559e4368570c2de33218e1a1'],
+    'database/sample-midterm-test': [40, 1, '07c8cdcfb25dcbc6a3a9ca550d4d7c08d54f71ce517506a97a6a0bcf4dfdabd9'],
 };
 
 test('quiz chapter counts, revisions and question order match the baseline', () => {
@@ -99,7 +100,59 @@ test('every rendered question has the supported schema and valid answer IDs', ()
             }
         }
     }
-    assert.equal(seenIds.size, 826);
+    assert.equal(seenIds.size, 866);
+});
+
+test('sample midterm has all 40 MCQs, validated answers and available lecture sources', () => {
+    const chapter = subjects.database.chapters.find(item => item.id === 'sample-midterm-test');
+    assert.ok(chapter);
+    assert.deepEqual(Array.from(chapter.questions, item => item.id),
+        Array.from({ length: 40 }, (_, index) => `db-midterm-q${String(index + 1).padStart(2, '0')}`));
+    const answerKey = ['c', 'd', 'b', 'c', 'a', 'a', 'c', 'c', 'a', 'b',
+        'b', 'c', 'a', 'd', 'b', 'b', 'd', 'b', 'b', 'a',
+        'c', 'd', 'd', 'd', 'a', 'b', 'd', 'd', 'c', 'b',
+        'd', 'd', 'd', 'a', 'a', 'b', 'c', 'd', 'c', 'b'];
+    assert.deepEqual(Array.from(chapter.questions, item => item.correctOptionId), answerKey);
+    for (const question of chapter.questions) {
+        assert.deepEqual(Array.from(question.options, option => option.id), ['a', 'b', 'c', 'd']);
+        assert.equal(question.sources.length, 1);
+        const source = question.sources[0];
+        assert.equal(source.kind, 'lecture');
+        assert.ok(Number.isInteger(source.pdfPage) && source.pdfPage > 0);
+        assert.ok(Number.isInteger(source.slideNumber) && source.slideNumber > 0);
+        const asset = question.source.split('#')[0];
+        assert.ok(fs.existsSync(path.join('public', asset)), asset);
+        assert.equal(question.source.endsWith(`#page=${source.pdfPage}`), true);
+    }
+});
+
+test('sample midterm progress and references stay scoped to the new chapter', () => {
+    const chapter = subjects.database.chapters.find(item => item.id === 'sample-midterm-test');
+    const progress = load('lib/quiz-progress.ts');
+    const bookmarks = load('lib/bookmarks.ts');
+    const bookmarkCatalog = load('lib/bookmark-catalog.ts');
+    const mistakes = load('lib/mistakes.ts');
+    const rounds = load('lib/review-round.ts');
+    const current = { subjectId: 'database', chapterId: chapter.id, questionId: chapter.questions[0].id };
+    const foreign = { subjectId: 'database', chapterId: 'session-3', questionId: chapter.questions[0].id };
+    const retired = { ...current, questionId: 'db-midterm-retired' };
+    assert.notEqual(progress.quizProgressKey('database', chapter.id), progress.quizProgressKey('database', 'session-3'));
+    const raw = JSON.stringify({ version: 1, currentQuestionId: retired.questionId, answers: {
+        [current.questionId]: { optionId: 'a', isSubmitted: true },
+        [retired.questionId]: { optionId: 'b', isSubmitted: true },
+    } });
+    assert.deepEqual(JSON.parse(JSON.stringify(progress.restoreProgress(raw, chapter.questions))),
+        { currentIndex: 0, answers: { [current.questionId]: { optionId: 'a', isSubmitted: true } } });
+    assert.equal(progress.summarizeProgress(raw, chapter.questions).submitted, 1);
+    const refs = [current, foreign, retired];
+    const catalog = chapter.questions.map(question => ({ ...current, questionId: question.id,
+        subjectTitle: 'Database', chapterTitle: chapter.title, prompt: question.prompt, question }));
+    const sections = [{ id: 'database', title: 'Database', chapters: [{ id: chapter.id, title: chapter.title }] }];
+    const entries = bookmarkCatalog.resolveBookmarkEntries(bookmarks.parseBookmarks(JSON.stringify({ version: 1, items: refs })), catalog, sections);
+    assert.deepEqual(JSON.parse(JSON.stringify(entries.map(entry => entry.missing))), [false, true, true]);
+    assert.ok(entries[0].href?.includes(current.questionId));
+    assert.deepEqual(JSON.parse(JSON.stringify(mistakes.parseMistakes(JSON.stringify({ version: 1, items: refs })))), refs);
+    assert.deepEqual(JSON.parse(JSON.stringify(rounds.createReviewRound(refs, catalog, rounds.ALL_SCOPE).map(item => item.questionId))), [current.questionId]);
 });
 
 test('Database Session 1 preserves supplied questions and links to actual lecture pages', () => {
