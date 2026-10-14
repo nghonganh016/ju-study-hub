@@ -64,7 +64,7 @@ test('registry validates only own keys and reuses original chapter collections',
     for (const id of ['', 'missing', 'constructor', 'toString', '__proto__', 'Blockchain']) {
         assert.equal(isValidSubject(id), false);
     }
-    assert.deepEqual(Array.from(subjects.database.chapters, chapter => chapter.id), ['session-1', 'session-2', 'session-3', 'session-4', 'sample-midterm-test']);
+    assert.deepEqual(Array.from(subjects.database.chapters, chapter => chapter.id), ['session-1', 'session-2', 'session-3', 'session-4', 'session-5', 'session-6', 'sample-midterm-test']);
 });
 
 test('homepage links to every subject and chapter cards open quizzes directly', async () => {

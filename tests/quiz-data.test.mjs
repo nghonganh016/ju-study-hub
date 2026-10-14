@@ -42,6 +42,8 @@ const expected = {
     'database/session-2': [57, 2, '9f5465bd5190fc5883fa32696dbdd9bb009cca669875d2db68b1cfd4f2db1090'],
     'database/session-3': [58, 1, 'b40aa51c29ba47c58bae3d66952614951cd3b552559e4368570c2de33218e1a1'],
     'database/session-4': [56, 1, '770d9e3f1b799995010a288e1622dc2c60a96851b8c8bc5536e433d04c9b7fa3'],
+    'database/session-5': [56, 1, '52aec9562bd05cbbfce8536e37dbf91e81673cdb6c617020e6c45d2074786601'],
+    'database/session-6': [50, 1, 'e9140610000b13c44a3eb1f13772816eaf9738c70bc80c2aeb25178f8740434b'],
     'database/sample-midterm-test': [40, 1, '07c8cdcfb25dcbc6a3a9ca550d4d7c08d54f71ce517506a97a6a0bcf4dfdabd9'],
 };
 
@@ -101,7 +103,7 @@ test('every rendered question has the supported schema and valid answer IDs', ()
             }
         }
     }
-    assert.equal(seenIds.size, 922);
+    assert.equal(seenIds.size, 1028);
 });
 
 test('sample midterm has all 40 MCQs, validated answers and available lecture sources', () => {
@@ -178,6 +180,69 @@ test('new Database Session 4 isolates progress, bookmarks and Review by current 
     });
     const refs = [current, retired, foreign];
     const catalog = chapter.questions.map(question => ({ ...ref(question.id),
+        subjectTitle: 'Database', chapterTitle: chapter.title, prompt: question.prompt, question }));
+    const sections = [{ id: 'database', title: 'Database', chapters: [{ id: chapter.id, title: chapter.title }] }];
+    const entries = bookmarkCatalog.resolveBookmarkEntries(bookmarks.parseBookmarks(JSON.stringify({ version: 1, items: refs })), catalog, sections);
+    assert.deepEqual(JSON.parse(JSON.stringify(entries.map(entry => entry.missing))), [false, true, true]);
+    assert.ok(entries[0].href?.includes(current.questionId));
+    assert.deepEqual(JSON.parse(JSON.stringify(mistakes.parseMistakes(JSON.stringify({ version: 1, items: refs })))), refs);
+    assert.deepEqual(JSON.parse(JSON.stringify(rounds.createReviewRound(refs, catalog, rounds.ALL_SCOPE).map(item => item.questionId))), [current.questionId]);
+});
+
+test('Database Session 5 progress and references use only current chapter question IDs', () => {
+    const chapter = subjects.database.chapters.find(item => item.id === 'session-5');
+    assert.ok(chapter);
+    const progress = load('lib/quiz-progress.ts');
+    const bookmarks = load('lib/bookmarks.ts');
+    const bookmarkCatalog = load('lib/bookmark-catalog.ts');
+    const mistakes = load('lib/mistakes.ts');
+    const rounds = load('lib/review-round.ts');
+    const ref = questionId => ({ subjectId: 'database', chapterId: chapter.id, questionId });
+    const current = ref(chapter.questions[0].id);
+    const retired = ref('db-s5-retired');
+    const foreign = { ...current, chapterId: 'session-4' };
+    assert.notEqual(progress.quizProgressKey('database', chapter.id), progress.quizProgressKey('database', 'session-4'));
+    const raw = JSON.stringify({ version: 1, currentQuestionId: retired.questionId, answers: {
+        [current.questionId]: { optionId: 'c', isSubmitted: true },
+        [retired.questionId]: { optionId: 'a', isSubmitted: true },
+    } });
+    assert.deepEqual(JSON.parse(JSON.stringify(progress.restoreProgress(raw, chapter.questions))), {
+        currentIndex: 0, answers: { [current.questionId]: { optionId: 'c', isSubmitted: true } },
+    });
+    assert.equal(progress.summarizeProgress(raw, chapter.questions).submitted, 1);
+    const refs = [current, retired, foreign];
+    const catalog = chapter.questions.map(question => ({ ...ref(question.id),
+        subjectTitle: 'Database', chapterTitle: chapter.title, prompt: question.prompt, question }));
+    const sections = [{ id: 'database', title: 'Database', chapters: [{ id: chapter.id, title: chapter.title }] }];
+    const entries = bookmarkCatalog.resolveBookmarkEntries(bookmarks.parseBookmarks(JSON.stringify({ version: 1, items: refs })), catalog, sections);
+    assert.deepEqual(JSON.parse(JSON.stringify(entries.map(entry => entry.missing))), [false, true, true]);
+    assert.ok(entries[0].href?.includes(current.questionId));
+    assert.deepEqual(JSON.parse(JSON.stringify(mistakes.parseMistakes(JSON.stringify({ version: 1, items: refs })))), refs);
+    assert.deepEqual(JSON.parse(JSON.stringify(rounds.createReviewRound(refs, catalog, rounds.ALL_SCOPE).map(item => item.questionId))), [current.questionId]);
+});
+
+test('Database Session 6 isolates progress, bookmarks and Review from old or foreign IDs', () => {
+    const chapter = subjects.database.chapters.find(item => item.id === 'session-6');
+    assert.ok(chapter);
+    const progress = load('lib/quiz-progress.ts');
+    const bookmarks = load('lib/bookmarks.ts');
+    const bookmarkCatalog = load('lib/bookmark-catalog.ts');
+    const mistakes = load('lib/mistakes.ts');
+    const rounds = load('lib/review-round.ts');
+    const current = { subjectId: 'database', chapterId: chapter.id, questionId: chapter.questions[0].id };
+    const retired = { ...current, questionId: 'db-s6-retired' };
+    const foreign = { ...current, chapterId: 'session-5' };
+    assert.notEqual(progress.quizProgressKey('database', chapter.id), progress.quizProgressKey('database', 'session-5'));
+    const raw = JSON.stringify({ version: 1, currentQuestionId: retired.questionId, answers: {
+        [current.questionId]: { optionId: 'b', isSubmitted: true },
+        [retired.questionId]: { optionId: 'a', isSubmitted: true },
+    } });
+    assert.deepEqual(JSON.parse(JSON.stringify(progress.restoreProgress(raw, chapter.questions))), {
+        currentIndex: 0, answers: { [current.questionId]: { optionId: 'b', isSubmitted: true } },
+    });
+    assert.equal(progress.summarizeProgress(raw, chapter.questions).submitted, 1);
+    const refs = [current, retired, foreign];
+    const catalog = chapter.questions.map(question => ({ ...current, questionId: question.id,
         subjectTitle: 'Database', chapterTitle: chapter.title, prompt: question.prompt, question }));
     const sections = [{ id: 'database', title: 'Database', chapters: [{ id: chapter.id, title: chapter.title }] }];
     const entries = bookmarkCatalog.resolveBookmarkEntries(bookmarks.parseBookmarks(JSON.stringify({ version: 1, items: refs })), catalog, sections);
