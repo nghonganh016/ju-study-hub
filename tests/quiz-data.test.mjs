@@ -41,6 +41,7 @@ const expected = {
     'database/session-1': [58, 2, 'bac08f7803ee87b92eb9a4305e0ad5dc9f7d56c2509ecacf6eeebfac2fd4d845'],
     'database/session-2': [57, 2, '9f5465bd5190fc5883fa32696dbdd9bb009cca669875d2db68b1cfd4f2db1090'],
     'database/session-3': [58, 1, 'b40aa51c29ba47c58bae3d66952614951cd3b552559e4368570c2de33218e1a1'],
+    'database/session-4': [56, 1, '770d9e3f1b799995010a288e1622dc2c60a96851b8c8bc5536e433d04c9b7fa3'],
     'database/sample-midterm-test': [40, 1, '07c8cdcfb25dcbc6a3a9ca550d4d7c08d54f71ce517506a97a6a0bcf4dfdabd9'],
 };
 
@@ -100,7 +101,7 @@ test('every rendered question has the supported schema and valid answer IDs', ()
             }
         }
     }
-    assert.equal(seenIds.size, 866);
+    assert.equal(seenIds.size, 922);
 });
 
 test('sample midterm has all 40 MCQs, validated answers and available lecture sources', () => {
@@ -146,6 +147,37 @@ test('sample midterm progress and references stay scoped to the new chapter', ()
     assert.equal(progress.summarizeProgress(raw, chapter.questions).submitted, 1);
     const refs = [current, foreign, retired];
     const catalog = chapter.questions.map(question => ({ ...current, questionId: question.id,
+        subjectTitle: 'Database', chapterTitle: chapter.title, prompt: question.prompt, question }));
+    const sections = [{ id: 'database', title: 'Database', chapters: [{ id: chapter.id, title: chapter.title }] }];
+    const entries = bookmarkCatalog.resolveBookmarkEntries(bookmarks.parseBookmarks(JSON.stringify({ version: 1, items: refs })), catalog, sections);
+    assert.deepEqual(JSON.parse(JSON.stringify(entries.map(entry => entry.missing))), [false, true, true]);
+    assert.ok(entries[0].href?.includes(current.questionId));
+    assert.deepEqual(JSON.parse(JSON.stringify(mistakes.parseMistakes(JSON.stringify({ version: 1, items: refs })))), refs);
+    assert.deepEqual(JSON.parse(JSON.stringify(rounds.createReviewRound(refs, catalog, rounds.ALL_SCOPE).map(item => item.questionId))), [current.questionId]);
+});
+
+test('new Database Session 4 isolates progress, bookmarks and Review by current IDs', () => {
+    const chapter = subjects.database.chapters.find(item => item.id === 'session-4');
+    assert.ok(chapter);
+    const progress = load('lib/quiz-progress.ts');
+    const bookmarks = load('lib/bookmarks.ts');
+    const bookmarkCatalog = load('lib/bookmark-catalog.ts');
+    const mistakes = load('lib/mistakes.ts');
+    const rounds = load('lib/review-round.ts');
+    const ref = questionId => ({ subjectId: 'database', chapterId: chapter.id, questionId });
+    const current = ref('db-s4-q001');
+    const retired = ref('db-s4-retired');
+    const foreign = { ...current, chapterId: 'sample-midterm-test' };
+    const raw = JSON.stringify({ version: 1, currentQuestionId: retired.questionId, answers: {
+        [current.questionId]: { optionId: 'b', isSubmitted: true },
+        [retired.questionId]: { optionId: 'a', isSubmitted: true },
+    } });
+    assert.notEqual(progress.quizProgressKey('database', chapter.id), progress.quizProgressKey('database', 'session-3'));
+    assert.deepEqual(JSON.parse(JSON.stringify(progress.restoreProgress(raw, chapter.questions))), {
+        currentIndex: 0, answers: { [current.questionId]: { optionId: 'b', isSubmitted: true } },
+    });
+    const refs = [current, retired, foreign];
+    const catalog = chapter.questions.map(question => ({ ...ref(question.id),
         subjectTitle: 'Database', chapterTitle: chapter.title, prompt: question.prompt, question }));
     const sections = [{ id: 'database', title: 'Database', chapters: [{ id: chapter.id, title: chapter.title }] }];
     const entries = bookmarkCatalog.resolveBookmarkEntries(bookmarks.parseBookmarks(JSON.stringify({ version: 1, items: refs })), catalog, sections);
