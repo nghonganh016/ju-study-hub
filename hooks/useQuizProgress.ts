@@ -11,17 +11,20 @@ type Options = {
     subjectId: string;
     chapterId: string;
     questions: readonly Question[];
-    isReview: boolean;
+    mode: "quiz" | "review" | "bookmark";
     pageSize: number;
     requestedQuestionId: string | null;
     initialReviewProgress?: string | null;
     onReviewProgressChange?: (raw: string) => void;
+    initialPracticeProgress?: string | null;
+    onPracticeProgressChange?: (currentQuestionId: string | null, answers: Record<string, Answer>) => void;
     onDeepLinkNavigate?: () => void;
 };
 
-export default function useQuizProgress({ subjectId, chapterId, questions, isReview, pageSize,
-    requestedQuestionId, initialReviewProgress, onReviewProgressChange, onDeepLinkNavigate }: Options) {
-    const storageKey = isReview ? REVIEW_PROGRESS_KEY : quizProgressKey(subjectId, chapterId);
+export default function useQuizProgress({ subjectId, chapterId, questions, mode, pageSize,
+    requestedQuestionId, initialReviewProgress, onReviewProgressChange, initialPracticeProgress,
+    onPracticeProgressChange, onDeepLinkNavigate }: Options) {
+    const storageKey = mode === "review" ? REVIEW_PROGRESS_KEY : mode === "bookmark" ? "bookmark-practice" : quizProgressKey(subjectId, chapterId);
     const [restoredKey, setRestoredKey] = useState<string | null>(null);
     const [currentIndex, setCurrentIndex] = useState(0);
     const [answers, setAnswers] = useState<Record<string, Answer>>({});
@@ -30,7 +33,9 @@ export default function useQuizProgress({ subjectId, chapterId, questions, isRev
     const submitting = useRef(new Set<string>());
     const latestRequestedQuestionId = useEffectEvent(() => requestedQuestionId);
     const latestInitialReviewProgress = useEffectEvent(() => initialReviewProgress);
+    const latestInitialPracticeProgress = useEffectEvent(() => initialPracticeProgress);
     const reportReviewProgress = useEffectEvent((raw: string) => onReviewProgressChange?.(raw));
+    const reportPracticeProgress = useEffectEvent((id: string | null, next: Record<string, Answer>) => onPracticeProgressChange?.(id, next));
     const reportDeepLinkNavigation = useEffectEvent(() => onDeepLinkNavigate?.());
 
     useEffect(() => {
@@ -39,12 +44,12 @@ export default function useQuizProgress({ subjectId, chapterId, questions, isRev
         queueMicrotask(() => {
             if (cancelled) return;
             let raw: string | null = null;
-            try {
-                raw = localStudyStorage.getItem(storageKey);
-            } catch {
-                // Storage may be blocked; the quiz still works in memory.
+            if (mode !== "bookmark") {
+                try { raw = localStudyStorage.getItem(storageKey); }
+                catch { /* Storage may be blocked; the quiz still works in memory. */ }
             }
-            const restored = restoreProgress(raw ?? (isReview ? latestInitialReviewProgress() : null) ?? null, questions);
+            const restored = restoreProgress(raw ?? (mode === "review" ? latestInitialReviewProgress()
+                : mode === "bookmark" ? latestInitialPracticeProgress() : null) ?? null, questions);
             const targetIndex = questionIndexFromLink(questions, latestRequestedQuestionId(), restored.currentIndex);
             submitting.current = new Set(Object.entries(restored.answers)
                 .filter(([, answer]) => answer.isSubmitted).map(([id]) => id));
@@ -54,7 +59,7 @@ export default function useQuizProgress({ subjectId, chapterId, questions, isRev
             setRestoredKey(storageKey);
         });
         return () => { cancelled = true; };
-    }, [storageKey, questions, isReview, pageSize]);
+    }, [storageKey, questions, mode, pageSize]);
 
     useEffect(() => {
         if (restoredKey !== storageKey || appliedQuestionId.current === requestedQuestionId) return;
@@ -80,17 +85,15 @@ export default function useQuizProgress({ subjectId, chapterId, questions, isRev
             currentQuestionId: questions[currentIndex]?.id ?? null,
             answers,
         });
-        try {
-            if (currentIndex === 0 && Object.keys(answers).length === 0) {
-                localStudyStorage.removeItem(storageKey);
-            } else {
-                localStudyStorage.setItem(storageKey, serialized);
-            }
-        } catch {
-            // Storage unavailable or full: keep the current in-memory progress.
+        if (mode === "bookmark") reportPracticeProgress(questions[currentIndex]?.id ?? null, answers);
+        else {
+            try {
+                if (currentIndex === 0 && Object.keys(answers).length === 0) localStudyStorage.removeItem(storageKey);
+                else localStudyStorage.setItem(storageKey, serialized);
+            } catch { /* Keep in-memory progress. */ }
+            if (mode === "review") reportReviewProgress(serialized);
         }
-        if (isReview) reportReviewProgress(serialized);
-    }, [answers, currentIndex, questions, restoredKey, storageKey, isReview]);
+    }, [answers, currentIndex, questions, restoredKey, storageKey, mode]);
 
     const statuses: QuestionStatus[] = questions.map((item) => {
         const answer = answers[item.id];
@@ -133,10 +136,9 @@ export default function useQuizProgress({ subjectId, chapterId, questions, isRev
     }
 
     function resetProgress() {
-        try {
-            localStudyStorage.removeItem(storageKey);
-        } catch {
-            // Reset the quiz even when browser storage is unavailable.
+        if (mode !== "bookmark") {
+            try { localStudyStorage.removeItem(storageKey); }
+            catch { /* Reset still works in memory. */ }
         }
         appliedQuestionId.current = requestedQuestionId;
         submitting.current.clear();

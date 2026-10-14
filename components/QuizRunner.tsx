@@ -16,12 +16,14 @@ import { recordAttempt, type ReviewItem, type MistakeRef } from "@/lib/mistakes"
 import { addBookmark, BOOKMARKS_KEY, flushBookmarks, isBookmarked, isBookmarkPending,
     removeBookmark } from "@/lib/bookmarks";
 import type { Question } from "@/types/quiz";
+import { bookmarkedQuestionHref } from "@/lib/bookmark-catalog";
+import type { Answer } from "@/lib/quiz-progress";
 
 import useQuizProgress from "@/hooks/useQuizProgress";
 
-export default function QuizRunner({ subjectId, subjectTitle, chapterId, chapterTitle, questions, reviewItems, reviewScopeLabel, onChangeReviewScope, onNewReviewRound, initialReviewProgress, onReviewProgressChange, mistakeCatalog = [], requestedQuestionId = null }: { subjectId: string; subjectTitle: string; chapterId: string; chapterTitle: string; questions: Question[]; reviewItems?: ReviewItem[]; reviewScopeLabel?: string; onChangeReviewScope?: (complete: boolean) => void; onNewReviewRound?: () => void; initialReviewProgress?: string | null; onReviewProgressChange?: (raw: string) => void; mistakeCatalog?: MistakeRef[]; requestedQuestionId?: string | null }) {
-    const isReview = reviewItems !== undefined;
-    const [showProgress, setShowProgress] = useState(false);
+export default function QuizRunner({ subjectId, subjectTitle, chapterId, chapterTitle, questions, reviewItems, mode = reviewItems ? "review" : "quiz", reviewScopeLabel, onChangeReviewScope, onNewReviewRound, initialReviewProgress, onReviewProgressChange, initialPracticeProgress, onPracticeProgressChange, initialComplete = false, onNewPracticeRound, mistakeCatalog = [], requestedQuestionId = null }: { subjectId: string; subjectTitle: string; chapterId: string; chapterTitle: string; questions: Question[]; reviewItems?: ReviewItem[]; mode?: "quiz" | "review" | "bookmark"; reviewScopeLabel?: string; onChangeReviewScope?: (complete: boolean) => void; onNewReviewRound?: () => void; initialReviewProgress?: string | null; onReviewProgressChange?: (raw: string) => void; initialPracticeProgress?: string | null; onPracticeProgressChange?: (id: string | null, answers: Record<string, Answer>) => void; initialComplete?: boolean; onNewPracticeRound?: () => void; mistakeCatalog?: MistakeRef[]; requestedQuestionId?: string | null }) {
+    const isReview = mode === "review";
+    const [showProgress, setShowProgress] = useState(initialComplete);
     const [motion, setMotion] = useState(true);
     const [navigationOpen, setNavigationOpen] = useState(false);
     const [reward, setReward] = useState<{ questionId: string; status: "correct" | "incorrect" } | null>(null);
@@ -29,8 +31,8 @@ export default function QuizRunner({ subjectId, subjectTitle, chapterId, chapter
     const screenRef = useRef<HTMLElement>(null);
     const { currentIndex, currentAnswer, ready, navigatorPage, setNavigatorPage, statuses,
         submittedCount, correctCount, canFinish, navigate, selectAnswer, submitAnswer, resetProgress } = useQuizProgress({
-        subjectId, chapterId, questions, isReview, pageSize: QUESTIONS_PER_PAGE,
-        requestedQuestionId, initialReviewProgress, onReviewProgressChange,
+        subjectId, chapterId, questions, mode, pageSize: QUESTIONS_PER_PAGE,
+        requestedQuestionId, initialReviewProgress, onReviewProgressChange, initialPracticeProgress, onPracticeProgressChange,
         onDeepLinkNavigate: () => { setReward(null); setShowProgress(false); },
     });
     const question = questions[currentIndex];
@@ -103,6 +105,7 @@ export default function QuizRunner({ subjectId, subjectTitle, chapterId, chapter
     }
 
     function handleRestart() {
+        if (mode === "bookmark") { onNewPracticeRound?.(); return; }
         if (isReview && onNewReviewRound) {
             onNewReviewRound();
             return;
@@ -175,15 +178,15 @@ export default function QuizRunner({ subjectId, subjectTitle, chapterId, chapter
                     </Link>
 
                     <Link
-                        href={isReview ? "/" : `/subjects/${subjectId}`}
+                        href={mode === "bookmark" ? "/bookmarks" : isReview ? "/" : `/subjects/${subjectId}`}
                         className={`${styles.consoleTab} ${styles.chapterTab}`}
                     >
                         <span aria-hidden="true">‹</span>
-                        {isReview ? "Chọn môn" : "Chọn chapter"}
+                        {mode === "bookmark" ? "Câu đã lưu" : isReview ? "Chọn môn" : "Chọn chapter"}
                     </Link>
 
                     {isReview ? <button type="button" className={`${styles.consoleTab} ${styles.chapterTab}`} onClick={() => onChangeReviewScope?.(canFinish)}>Đổi phạm vi</button>
-                        : <MistakeLink catalog={mistakeCatalog} className={`${styles.consoleTab} ${styles.chapterTab}`} />}
+                        : mode === "quiz" ? <MistakeLink catalog={mistakeCatalog} className={`${styles.consoleTab} ${styles.chapterTab}`} /> : null}
 
                     <button
                         type="button"
@@ -216,13 +219,13 @@ export default function QuizRunner({ subjectId, subjectTitle, chapterId, chapter
                         {reviewScopeLabel && <p className={styles.muted}>Phạm vi: {reviewScopeLabel}</p>}
                         {reviewItems && <p className={styles.muted}>
                             {reviewItems[currentIndex].subjectTitle} · {reviewItems[currentIndex].chapterTitle}
-                            {" · "}<Link href={`/quiz/${reviewItems[currentIndex].subjectId}/${reviewItems[currentIndex].chapterId}`}>Về bài gốc</Link>
+                            {" · "}<Link href={bookmarkedQuestionHref(reviewItems[currentIndex])}>Về bài gốc</Link>
                         </p>}
                         <div className={styles.progressLabels} aria-live="polite"><span>Đã chấm <strong>{submittedCount}/{questions.length}</strong> câu</span><span>Đúng: <strong>{correctCount}</strong></span></div>
                         <div className={styles.progressTrack} role="progressbar" aria-label="Tiến độ chấm câu hỏi" aria-valuenow={submittedCount} aria-valuemin={0} aria-valuemax={questions.length}><span style={{ width: `${submittedCount / questions.length * 100}%` }} /></div>
                         {showProgress ? (
                             <QuizResult correctCount={correctCount} submittedCount={submittedCount}
-                                isReview={isReview}
+                                mode={mode}
                                 totalQuestions={questions.length} onRestart={handleRestart}
                                 onContinue={() => { handleNavigate(currentIndex); setShowProgress(false); }} />
                         ) : (

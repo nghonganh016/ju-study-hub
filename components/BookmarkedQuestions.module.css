@@ -30,6 +30,8 @@
 .filters select { width: 100%; min-height: 44px; padding: 8px 12px; border: 1.5px solid #b39adc; border-radius: 11px; background: #fff; color: #352655; font: 700 14px var(--font-nunito), sans-serif; }
 .filters select:disabled { background: #f3eff8; color: #887b99; }
 .listCount { margin-bottom: 12px; color: #67587b; font-size: 13px; font-weight: 700; }
+.actions { display: flex; flex-wrap: wrap; gap: 12px; margin: 0 0 20px; }
+.actions button:disabled { cursor: not-allowed; opacity: .55; }
 .list { display: grid; gap: 14px; padding: 0; list-style: none; }
 .card { position: relative; min-width: 0; padding: 15px 18px; border: 1.5px solid #b9a3dd; border-radius: 18px; background: #fff; box-shadow: 0 4px 0 #ded3ee; }
 .card:has(.openLink:hover) { background: #fcfaff; }

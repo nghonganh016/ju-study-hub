@@ -33,7 +33,7 @@ function mount(initial = {}, seed = {}) {
     let cursor = 0;
     let dirty = false;
     let props = { subjectId: 'blockchain', chapterId: 'chapter-1', questions,
-        isReview: false, pageSize: 25, requestedQuestionId: null, ...initial };
+        mode: 'quiz', pageSize: 25, requestedQuestionId: null, ...initial };
     let result;
     const react = {
         useState(initialValue) {
@@ -163,7 +163,7 @@ test('review uses only its own key, restores memory fallback and remounts a new 
     const changes = [];
     const old = saved('q2', { q1: { optionId: 'a', isSubmitted: true } });
     const seed = { [normalKey]: 'normal untouched' };
-    const hook = mount({ isReview: true, initialReviewProgress: old,
+    const hook = mount({ mode: 'review', initialReviewProgress: old,
         onReviewProgressChange: raw => changes.push(raw) }, seed);
     hook.settle();
     assert.equal(hook.current.currentIndex, 1);
@@ -173,10 +173,30 @@ test('review uses only its own key, restores memory fallback and remounts a new 
     assert.ok(changes.length > 0);
 
     // ReviewMistakes changes its React key for a new round, creating a new hook instance.
-    const next = mount({ isReview: true, initialReviewProgress: null }, { [normalKey]: 'normal untouched' });
+    const next = mount({ mode: 'review', initialReviewProgress: null }, { [normalKey]: 'normal untouched' });
     next.settle();
     assert.equal(next.current.currentIndex, 0);
     assert.equal(next.current.submittedCount, 0);
+});
+
+test('bookmark mode restores from its record and reports progress without touching quiz or Review keys', () => {
+    const normalKey = progress.quizProgressKey('blockchain', 'chapter-1');
+    const changes = [];
+    const initial = saved('q2', { q1: { optionId: 'a', isSubmitted: true },
+        q2: { optionId: 'a', isSubmitted: false } });
+    const hook = mount({ mode: 'bookmark', initialPracticeProgress: initial,
+        onPracticeProgressChange: (id, answers) => changes.push({ id, answers: plain(answers) }) },
+    { [normalKey]: 'normal untouched', [reviewKey]: 'review untouched' });
+    assert.equal(changes.length, 0);
+    hook.settle();
+    assert.equal(hook.current.currentIndex, 1);
+    assert.equal(hook.current.submittedCount, 1);
+    assert.deepEqual(plain(hook.current.currentAnswer), { optionId: 'a', isSubmitted: false });
+    hook.act(current => current.submitAnswer());
+    assert.equal(changes.at(-1).answers.q2.isSubmitted, true);
+    assert.equal(hook.data.get(normalKey), 'normal untouched');
+    assert.equal(hook.data.get(reviewKey), 'review untouched');
+    assert.deepEqual(hook.writes, []);
 });
 
 test('blocked storage remains usable in memory and deep links yield to manual navigation', () => {

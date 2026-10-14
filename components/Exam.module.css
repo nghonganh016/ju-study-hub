@@ -1,0 +1,44 @@
+.config {
+  margin: 0 auto;
+  width: min(100%, 760px);
+  min-height: 430px;
+}
+.config > p { margin-top: 12px; }
+.fields {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+  margin: 24px 0;
+}
+.fields label { display: grid; gap: 6px; font-weight: 800; min-width: 0; }
+.fields select {
+  width: 100%; min-width: 0; padding: 11px;
+  border: 1px solid #b9a0d9; border-radius: 12px;
+  background: white; color: #352655;
+}
+.fields select:focus-visible, .secondary:focus-visible { outline: 3px solid #7955d7; outline-offset: 2px; }
+.actions { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; margin-top: 20px; }
+.secondary {
+  min-height: 42px; padding: 8px 14px;
+  border: 1px solid #9b80c5; border-radius: 12px;
+  background: #fff; color: #4c3377; font-weight: 800;
+}
+.secondary:disabled { opacity: .5; cursor: not-allowed; }
+.warning { padding: 10px; border: 1px solid #c96c81; border-radius: 10px; background: #fff0f4; color: #782b48; }
+.overview { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 8px; margin-top: 16px; font-weight: 700; }
+.result { margin: 16px 0; padding: 15px; border: 1px solid #b9a0d9; border-radius: 12px; background: #f9f5ff; }
+.result p + p { margin-top: 5px; }
+.question { margin-top: 22px; }
+.meta { margin-bottom: 12px; color: #705784; font-weight: 700; }
+.submitDock {
+  position: sticky; bottom: 10px; z-index: 3;
+  display: flex; justify-content: flex-end;
+  margin-top: 18px; padding: 8px;
+  border: 1px solid #b9a0d9; border-radius: 14px;
+  background: #f9f5fff2; box-shadow: 0 4px 14px #35265525;
+}
+@media (max-width: 760px) {
+  .fields { grid-template-columns: minmax(0, 1fr); }
+  .config { min-height: 0; }
+  .actions > button { max-width: 100%; }
+}

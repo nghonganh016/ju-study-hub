@@ -2,19 +2,25 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import styles from "@/components/BookmarkedQuestions.module.css";
 import { BOOKMARKS_KEY, bookmarkStorageStatus, flushBookmarks, readBookmarks,
     removeBookmark, type BookmarkRef } from "@/lib/bookmarks";
 import { filterBookmarkEntries, resolveBookmarkEntries,
     type BookmarkQuestion, type BookmarkSection } from "@/lib/bookmark-catalog";
+import { readPractice, selectPracticeItems, startPractice, type PracticeRecord } from "@/lib/bookmark-practice";
+import { mistakeId } from "@/lib/mistakes";
 
 type StorageStatus = ReturnType<typeof bookmarkStorageStatus>;
 
 export default function BookmarkedQuestions({ catalog, sections }: { catalog: BookmarkQuestion[]; sections: BookmarkSection[] }) {
+    const router = useRouter();
     const [refs, setRefs] = useState<BookmarkRef[] | null>(null);
     const [storageStatus, setStorageStatus] = useState<StorageStatus>("available");
     const [subjectId, setSubjectId] = useState("all");
     const [chapterId, setChapterId] = useState("all");
+    const [practice, setPractice] = useState<PracticeRecord | null>(null);
+    const [practiceSaved, setPracticeSaved] = useState(true);
 
     useEffect(() => {
         let cancelled = false;
@@ -22,6 +28,7 @@ export default function BookmarkedQuestions({ catalog, sections }: { catalog: Bo
             flushBookmarks();
             setRefs(readBookmarks());
             setStorageStatus(bookmarkStorageStatus());
+            setPractice(readPractice());
         };
         queueMicrotask(() => { if (!cancelled) sync(); });
         const onStorage = (event: StorageEvent) => {
@@ -38,6 +45,11 @@ export default function BookmarkedQuestions({ catalog, sections }: { catalog: Bo
 
     const entries = resolveBookmarkEntries(refs ?? [], catalog, sections);
     const visible = filterBookmarkEntries(entries, subjectId, chapterId);
+    const valid = selectPracticeItems(refs ?? [], catalog, {
+        subjectId: subjectId === "all" ? null : subjectId,
+        chapterId: chapterId === "all" ? null : chapterId,
+    });
+    const unfinished = practice && practice.items.some(item => !practice.answers[mistakeId(item)]?.isSubmitted);
     const subjectOptions = sections.map(section => ({ id: section.id, title: section.title }));
     for (const entry of entries) {
         if (!subjectOptions.some(item => item.id === entry.subjectId)) {
@@ -54,6 +66,18 @@ export default function BookmarkedQuestions({ catalog, sections }: { catalog: Bo
     function handleRemove(ref: BookmarkRef) {
         setRefs(removeBookmark({ subjectId: ref.subjectId, chapterId: ref.chapterId, questionId: ref.questionId }));
         setStorageStatus(bookmarkStorageStatus());
+    }
+
+    function beginPractice() {
+        if (refs === null || !valid.length) return;
+        if (unfinished && !window.confirm("Lượt luyện đang dở sẽ được thay bằng lượt mới. Bạn có muốn tiếp tục?")) return;
+        const result = startPractice(valid, {
+            subjectId: subjectId === "all" ? null : subjectId,
+            chapterId: chapterId === "all" ? null : chapterId,
+        });
+        setPractice(result.record);
+        setPracticeSaved(result.saved);
+        router.push("/bookmarks/practice");
     }
 
     return (
@@ -83,6 +107,7 @@ export default function BookmarkedQuestions({ catalog, sections }: { catalog: Bo
                                 : "Một số thay đổi chưa lưu được vào trình duyệt. Danh sách tạm thời sẽ được thử lưu lại khi bộ nhớ khả dụng."}
                         </p>
                     )}
+                    {refs !== null && !practiceSaved && <p className={styles.storageNotice} role="status">Lượt luyện chỉ đang giữ trong bộ nhớ phiên này; hãy tránh tải lại trang.</p>}
 
                     {refs !== null && refs.length > 0 && (
                         <div className={styles.filters} aria-label="Lọc câu đã lưu">
@@ -102,6 +127,11 @@ export default function BookmarkedQuestions({ catalog, sections }: { catalog: Bo
                             </label>
                         </div>
                     )}
+
+                    <div className={styles.actions}>
+                        <button type="button" className={styles.homeLink} disabled={refs === null || valid.length === 0} onClick={beginPractice}>Luyện {valid.length} câu đã lưu</button>
+                        {unfinished && <Link href="/bookmarks/practice" className={styles.homeLink}>Tiếp tục lượt luyện</Link>}
+                    </div>
 
                     {refs === null ? <p className={styles.empty} role="status">Đang tải câu đã lưu…</p>
                         : refs.length === 0 ? (

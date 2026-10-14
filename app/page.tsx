@@ -38,6 +38,7 @@ export default function Home() {
           <div className={styles.reviewActions}>
             <Link href="/bookmarks" className={styles.reviewLink}>Câu đã lưu</Link>
             <MistakeLink catalog={questionCatalog} className={styles.reviewLink} />
+            <Link href="/exam" className={styles.reviewLink}>Thi thử</Link>
           </div>
         </aside>
       </div>

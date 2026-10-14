@@ -24,6 +24,7 @@ let nextState = 0;
 let changedRefs;
 let removedRef;
 const fakeReact = {
+    useRouter() { return { push() {} }; },
     useState(initial) {
         const index = nextState++;
         return [stateValues[index] ?? initial, value => {
@@ -38,8 +39,17 @@ vm.runInNewContext(ts.transpileModule(fs.readFileSync('components/BookmarkedQues
 }).outputText, { exports: componentExports, require(id) {
     if (id === 'react') return fakeReact;
     if (id === 'next/link') return { default: props => React.createElement('a', props) };
+    if (id === 'next/navigation') return { useRouter: fakeReact.useRouter };
     if (id.endsWith('.css')) return { default: {} };
     if (id === '@/lib/bookmark-catalog') return catalogExports;
+    if (id === '@/lib/bookmark-practice') return {
+        selectPracticeItems(refs, items, scope) { return refs.filter(ref =>
+            items.some(item => JSON.stringify([item.subjectId, item.chapterId, item.questionId])
+                === JSON.stringify([ref.subjectId, ref.chapterId, ref.questionId]))
+            && (!scope.subjectId || ref.subjectId === scope.subjectId)
+            && (!scope.chapterId || ref.chapterId === scope.chapterId)); },
+    };
+    if (id === '@/lib/mistakes') return { mistakeId: ref => JSON.stringify([ref.subjectId, ref.chapterId, ref.questionId]) };
     if (id === '@/lib/bookmarks') return {
         BOOKMARKS_KEY: 'ju-study-hub:bookmarks:v1',
         removeBookmark(ref) { removedRef = ref; return []; },
