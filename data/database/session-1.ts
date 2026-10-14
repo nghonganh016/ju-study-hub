@@ -6,7 +6,7 @@ export const session1: Chapter = {
   "id": "session-1",
   "title": "Session 1: Advanced internals and programmability",
   "description": "58 câu hỏi tập trung vào lý thuyết, SQL và các note quan trọng trong slide: PostgreSQL, ARRAY, UUID, JSONB, views, materialized views, functions, procedures và triggers.",
-  "revision": 2,
+  "revision": 3,
   "questions": [
     {
       "id": "db-s1-001",
@@ -1839,7 +1839,7 @@ export const session1: Chapter = {
     },
     {
       "id": "db-s1-070",
-      "prompt": "A BEFORE UPDATE row trigger runs NEW.last_update := NOW(); RETURN NEW;. Why does the updated timestamp persist?",
+      "prompt": "A BEFORE UPDATE row trigger runs NEW.last_update := NOW(); RETURN NEW;. Why is the new timestamp value saved when the UPDATE is applied?",
       "options": [
         {
           "id": "a",
