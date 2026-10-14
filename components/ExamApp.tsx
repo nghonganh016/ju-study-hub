@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useEffectEvent, useRef, useState } from "react";
 import Link from "next/link";
+import GameArrow from "@/components/GameArrow";
 import MathText from "@/components/MathText";
 import QuizNavigation, { QUESTIONS_PER_PAGE, type QuestionStatus } from "@/components/QuizNavigation";
 import consoleStyles from "@/components/QuizConsole.module.css";
@@ -19,6 +20,15 @@ function duration(ms: number) {
     const hours = Math.floor(seconds / 3600);
     const minutes = Math.floor(seconds % 3600 / 60);
     return hours ? `${hours} giờ ${minutes} phút ${seconds % 60} giây` : `${minutes} phút ${seconds % 60} giây`;
+}
+
+function clockTime(ms: number) {
+    const seconds = Math.max(0, Math.ceil(ms / 1000));
+    const hours = Math.floor(seconds / 3600);
+    const minutes = Math.floor(seconds % 3600 / 60);
+    const minutesText = hours ? String(minutes).padStart(2, "0") : String(minutes);
+    const clock = `${minutesText}:${String(seconds % 60).padStart(2, "0")}`;
+    return hours ? `${hours}:${clock}` : clock;
 }
 
 export default function ExamApp({ catalog, sections, initialView }: {
@@ -205,14 +215,22 @@ export default function ExamApp({ catalog, sections, initialView }: {
         if (record.status === "working") return "draft";
         return option === item.question.correctOptionId ? "correct" : "incorrect";
     }) ?? [];
+    const scopeLabel = record?.config.chapterId === null
+        ? "Tất cả chapter" : record?.items[0]?.chapterTitle;
+    const remaining = record?.deadlineAt === null ? null : Math.max(0, (record?.deadlineAt ?? 0) - now);
 
-    return <main className={consoleStyles.scene}>
-        <section className={consoleStyles.console} aria-label="Thi thử">
+    return <main className={consoleStyles.scene} data-motion="off">
+        <div className={consoleStyles.ambient} aria-hidden="true"><i /><i /><i /><span>✦</span><span>✧</span></div>
+        <section className={`${consoleStyles.console} ${view === "config" ? styles.configConsole : ""}`} aria-label="Thi thử">
             <nav className={consoleStyles.consoleTabs} aria-label="Điều hướng thi thử">
                 <Link href="/" className={`${consoleStyles.consoleTab} ${consoleStyles.homeTab}`}>⌂ Trang chủ</Link>
                 <Link href="/exam" className={`${consoleStyles.consoleTab} ${consoleStyles.chapterTab}`} onClick={() => setView("config")}>‹ Cấu hình</Link>
             </nav>
-            <div className={consoleStyles.consoleTop}><span className={consoleStyles.powerLight} aria-hidden="true"><i /></span><span className={consoleStyles.consoleMark}>Ju Study Hub ✦ Thi thử</span></div>
+            <div className={consoleStyles.consoleTop}>
+                <span className={consoleStyles.powerLight} aria-hidden="true"><i /></span>
+                <div className={consoleStyles.speaker} aria-hidden="true"><b /><b /><b /><b /><b /></div>
+                <span className={consoleStyles.consoleMark}>Ju Study Hub <span aria-hidden="true">✦</span></span>
+            </div>
             {!loaded ? <div className={consoleStyles.screen} role="status">Đang khôi phục lượt thi…</div>
                 : view === "config" ? <section className={`${consoleStyles.screen} ${styles.config}`}>
                     <h1>Thi thử</h1>
@@ -238,8 +256,8 @@ export default function ExamApp({ catalog, sections, initialView }: {
                     {pool.length < 20 && <p role="status">Ngân hàng có ít hơn 20 câu. Hãy chọn số lượng hợp lệ; mặc định là toàn bộ.</p>}
                     <div className={styles.actions}>
                         <button type="button" className={consoleStyles.primary} disabled={pool.length === 0} onClick={() => start({ ...config, count: selectedCount })}>Bắt đầu thi</button>
-                        {record?.status === "working" && <button type="button" className={styles.secondary} onClick={() => { setView("attempt"); window.history.pushState(window.history.state, "", "/exam/attempt"); }}>Tiếp tục bài đang làm</button>}
-                        {record?.status === "submitted" && <button type="button" className={styles.secondary} onClick={() => { setView("attempt"); window.history.pushState(window.history.state, "", "/exam/attempt"); }}>Xem kết quả gần nhất</button>}
+                        {record?.status === "working" && <button type="button" className={consoleStyles.secondary} onClick={() => { setView("attempt"); window.history.pushState(window.history.state, "", "/exam/attempt"); }}>Tiếp tục bài đang làm</button>}
+                        {record?.status === "submitted" && <button type="button" className={consoleStyles.secondary} onClick={() => { setView("attempt"); window.history.pushState(window.history.state, "", "/exam/attempt"); }}>Xem kết quả gần nhất</button>}
                     </div>
                 </section> : !record ? <section className={consoleStyles.screen}>
                     <h1>Chưa có lượt thi</h1><p role="alert">{error ?? "Hãy cấu hình đề thi trước khi bắt đầu."}</p>
@@ -248,20 +266,23 @@ export default function ExamApp({ catalog, sections, initialView }: {
                     <section ref={screenRef} tabIndex={-1} className={consoleStyles.screen} aria-label="Nội dung bài thi">
                         <div className={consoleStyles.screenHeader}><span className={consoleStyles.subject}>{current?.subjectTitle}</span></div>
                         <h1>{record.status === "submitted" ? "Kết quả thi thử" : "Bài thi thử"}</h1>
+                        <p className={styles.scope}>Phạm vi: {scopeLabel}</p>
                         {!saved && <p className={styles.warning} role="status">Tiến độ chưa lưu được. Bài đang được giữ trong bộ nhớ của tab này.</p>}
                         {record.status === "working" ? <>
-                            <div className={styles.overview} aria-live="polite"><span>Đã trả lời <strong>{answered}/{record.items.length}</strong> câu</span>
-                                <span>{record.deadlineAt === null ? "Không giới hạn thời gian" : `Còn ${duration(record.deadlineAt - now)}`}</span></div>
-                            <progress className={consoleStyles.progress} value={answered} max={record.items.length} aria-label="Số câu đã trả lời" />
+                            <div className={consoleStyles.progressLabels} aria-live="polite"><span>Đã trả lời <strong>{answered}/{record.items.length}</strong> câu</span></div>
+                            <div className={consoleStyles.progressTrack} role="progressbar" aria-label="Số câu đã trả lời"
+                                aria-valuenow={answered} aria-valuemin={0} aria-valuemax={record.items.length}>
+                                <span style={{ width: `${answered / record.items.length * 100}%` }} />
+                            </div>
                         </> : <div className={styles.result} role="status">
-                            <p><strong>{record.result?.correct}/{record.items.length}</strong> câu đúng, {record.result?.percentage}% trên tổng số câu.</p>
+                            <p><strong className={styles.score}>{record.result?.correct}/{record.items.length}</strong> câu đúng, {record.result?.percentage}% trên tổng số câu.</p>
                             <p>Sai: {record.result?.incorrect} · Bỏ trống: {record.result?.unanswered}</p>
-                            <p>Thời gian làm: {duration(record.result?.elapsedMs ?? 0)} · {record.reason === "timeout" ? "Hết giờ" : "Nộp bài"}</p>
                             <div className={styles.actions}><button type="button" className={consoleStyles.primary} onClick={() => start(record.config)}>Thi lại với đề mới</button>
-                                <button type="button" className={styles.secondary} onClick={() => { setConfig(record.config); setView("config"); window.history.pushState(window.history.state, "", "/exam"); }}>Đổi cấu hình</button></div>
+                                <button type="button" className={consoleStyles.secondary} onClick={() => { setConfig(record.config); setView("config"); window.history.pushState(window.history.state, "", "/exam"); }}>Đổi cấu hình</button></div>
                         </div>}
                         {current && <div key={`${record.attemptId}:${record.currentIndex}`} className={styles.question}>
-                            <p className={styles.meta}>Câu {record.currentIndex + 1}/{record.items.length} · {current.chapterTitle}</p>
+                            <div className={consoleStyles.questionMeta}><span>Câu {record.currentIndex + 1} / {record.items.length}</span>
+                                {record.config.chapterId === null && <span>{current.chapterTitle}</span>}</div>
                             <fieldset disabled={record.status === "submitted"} className={consoleStyles.answers}>
                                 <legend><MathText text={current.question.prompt} /></legend>
                                 {current.question.options.map(option => {
@@ -282,21 +303,34 @@ export default function ExamApp({ catalog, sections, initialView }: {
                                 {current.question.source && <p>Nguồn: {/^https?:\/\/|^\//.test(current.question.source) ? <a href={current.question.source} target="_blank" rel="noopener noreferrer">Mở tài liệu ↗</a> : current.question.source}</p>}
                                 {current.question.sources?.map((source, index) => <p key={index}>Nguồn {index + 1}: {source.kind === "lecture" ? `${source.file}, trang PDF ${source.pdfPage}, slide ${source.slideNumber}: ${source.slideTitle}` : <a href={source.url} target="_blank" rel="noopener noreferrer">{source.title}, {source.section} ↗</a>}</p>)}
                             </div>}
-                            <div className={styles.actions}>
-                                <button type="button" className={styles.secondary} disabled={record.currentIndex === 0} onClick={() => navigate(record.currentIndex - 1)}>← Câu trước</button>
-                                <button type="button" className={styles.secondary} disabled={record.currentIndex === record.items.length - 1} onClick={() => navigate(record.currentIndex + 1)}>Câu tiếp →</button>
+                            <div className={styles.questionActions}>
+                                <div className={consoleStyles.stepButtons}>
+                                    <button type="button" aria-label="Câu trước" title="Câu trước" disabled={record.currentIndex === 0} onClick={() => navigate(record.currentIndex - 1)}><GameArrow direction="left" /></button>
+                                    <button type="button" aria-label="Câu tiếp theo" title="Câu tiếp theo" disabled={record.currentIndex === record.items.length - 1} onClick={() => navigate(record.currentIndex + 1)}><GameArrow direction="right" /></button>
+                                </div>
                             </div>
                         </div>}
                         {record.status === "working" && <div className={styles.submitDock}><button type="button" className={consoleStyles.primary} onClick={submit}>Nộp bài</button></div>}
                     </section>
                     <aside className={consoleStyles.sidePanel}>
+                        <section className={styles.timePanel} data-warning={record.status === "working" && remaining !== null && remaining <= 5 * 60_000}
+                            data-complete={record.status === "submitted"} aria-label={record.status === "working" ? "Thời gian thi" : "Thời gian làm bài"}>
+                            <h2>{record.status === "working" && remaining !== null ? "Thời gian còn lại" : "Thời gian làm bài"}</h2>
+                            <p className={styles.timeValue}>{record.status === "working"
+                                ? remaining === null ? "Không giới hạn" : clockTime(remaining)
+                                : duration(record.result?.elapsedMs ?? 0)}</p>
+                            {record.status === "submitted" && <p className={styles.timeNote}>{record.reason === "timeout" ? "Hết giờ" : "Nộp bài"}</p>}
+                        </section>
                         <div className={consoleStyles.navigation}>
                             <QuizNavigation statuses={statuses} currentIndex={record.currentIndex} page={page}
                                 onPageChange={setPage} onNavigate={navigate} />
-                            {record.status === "working" && <button type="button" className={consoleStyles.summaryButton} onClick={submit}>Nộp bài <span aria-hidden="true">✦</span></button>}
+                            {record.status === "working" && <button type="button" className={`${consoleStyles.summaryButton} ${styles.sideSubmit}`} onClick={submit}>
+                                <span>Nộp bài</span><span className={consoleStyles.summaryIcon} aria-hidden="true"><span className={consoleStyles.playTriangle} /></span>
+                            </button>}
                         </div>
                     </aside>
                 </div>}
+            <div className={consoleStyles.consoleBottom} aria-hidden="true"><span><i /></span><span>● ● ●</span></div>
         </section>
     </main>;
 }
