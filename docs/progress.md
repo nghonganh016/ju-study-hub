@@ -665,3 +665,17 @@
 - `ReviewMistakes` trước đây lọc các refs theo catalog rồi gọi `saveMistakes` với danh sách đã lọc, khiến ref orphan bị xem như lệnh xóa. Bỏ thao tác ghi khi mount; danh sách hợp lệ vẫn dùng cho UI và lượt Review, còn `recordAttempt` tiếp tục xóa đúng ref khi trả lời đúng. Không đổi key hoặc schema localStorage.
 - Thêm `tests/review-mistakes.test.mjs`: test đã tái hiện mất orphan trước sửa, sau sửa kiểm tra raw storage không đổi khi mở/reload, câu hợp lệ hiển thị và vào lượt, trả lời đúng chỉ xóa ref tương ứng.
 - `npm test` 90/90, TypeScript `--noEmit --incremental false`, ESLint cho hai file liên quan và `git diff --check` đạt. Dev server chạy nhưng browser trong phiên này không kết nối được `localhost:3177`; chưa xác nhận tương tác bằng browser. Không commit, push hoặc deploy.
+
+## 20/10/2026: Task 3, phân tích tính nhất quán lượt Review
+
+- Xác nhận hai nhánh lỗi: xóa progress thất bại vẫn mở lượt mới trong RAM và có thể khôi phục/ghi đè bằng answer cũ; ghi round thất bại sau khi xóa progress làm reload trở về round cũ nhưng mất progress. Round và progress v1 không có ID liên kết, nên khi câu trùng ID không thể xác định cặp lệch trên reload.
+- Theo yêu cầu dừng trước khi đổi schema, chưa sửa ứng dụng hay thêm regression tests. Ghi phương án migration, cách xử lý dữ liệu v1 mơ hồ và ma trận test dự kiến tại `docs/review-round-consistency-proposal.md` để Ju duyệt.
+- Baseline: `npm test` 90/90 đạt; TypeScript `--noEmit --incremental false` và `npm run lint` đạt. Chưa chạy browser vì chưa có bản sửa để kiểm tra tương tác. Không commit, push hoặc deploy.
+
+## 20/10/2026: Triển khai Task 3, Review state v2
+
+- Thêm `lib/review-state.ts` với key `ju-study-hub:review-state:v2`: một record chứa `version`, `roundId`, `scope`, snapshot refs `items` và `progress`. `ReviewMistakes` chỉ chuyển lượt sau khi ghi trọn record thành công; tiến độ ghi lỗi giữ trong RAM và hiện cảnh báo cùng nút thử lưu lại. Callback cũ bị chặn bằng `roundId`; không ghi/xóa hai key Review v1.
+- Migration ưu tiên v2 hợp lệ; v2 hỏng hoặc không đọc được thì báo lỗi, không fallback. Khi chỉ có v1, lượt và progress rỗng hợp lệ được nhập một lần; progress có đáp án/vị trí yêu cầu chọn tiếp tục hoặc bắt đầu mới. Dữ liệu v1 hỏng, lệch round/progress hoặc thiếu câu trong catalog được báo và giữ raw. Orphan mistakes không bị xóa.
+- Cập nhật `useQuizProgress` chỉ nhận progress Review từ parent và phát thay đổi sau khi restore; quiz thường và bookmark practice giữ luồng riêng. `QuizRunner` hiển thị cảnh báo Review. Cập nhật `docs/storage-architecture.md` và trạng thái tài liệu đề xuất.
+- Thêm 9 regression tests cho migration, v2 ưu tiên/không fallback, lỗi đọc/ghi, reload sau lỗi, reset/thay lượt, callback cũ, orphan và tab có round ID cũ. `npm test` 99/99, TypeScript `--noEmit --incremental false`, `npm run lint` và `git diff --check` đạt.
+- Browser trên dev server `127.0.0.1:3177`: tạo một mistake ở quiz Database Session 1, mở Review, tạo lượt mới, chọn nháp và reload khôi phục đúng nháp. Công cụ browser bị treo khi mở hộp xác nhận thay lượt nên chưa xác nhận tương tác cancel/accept hoặc lỗi storage trên browser; các trường hợp này có test tự động. LocalStorage vẫn không có CAS giữa hai tab cùng `roundId`, nên last writer wins trong tình huống đó. Không commit, push hoặc deploy.

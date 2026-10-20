@@ -21,7 +21,7 @@ import type { Answer } from "@/lib/quiz-progress";
 
 import useQuizProgress from "@/hooks/useQuizProgress";
 
-export default function QuizRunner({ subjectId, subjectTitle, chapterId, chapterTitle, questions, reviewItems, mode = reviewItems ? "review" : "quiz", reviewScopeLabel, onChangeReviewScope, onNewReviewRound, initialReviewProgress, onReviewProgressChange, initialPracticeProgress, onPracticeProgressChange, initialComplete = false, onNewPracticeRound, mistakeCatalog = [], requestedQuestionId = null }: { subjectId: string; subjectTitle: string; chapterId: string; chapterTitle: string; questions: Question[]; reviewItems?: ReviewItem[]; mode?: "quiz" | "review" | "bookmark"; reviewScopeLabel?: string; onChangeReviewScope?: (complete: boolean) => void; onNewReviewRound?: () => void; initialReviewProgress?: string | null; onReviewProgressChange?: (raw: string) => void; initialPracticeProgress?: string | null; onPracticeProgressChange?: (id: string | null, answers: Record<string, Answer>) => void; initialComplete?: boolean; onNewPracticeRound?: () => void; mistakeCatalog?: MistakeRef[]; requestedQuestionId?: string | null }) {
+export default function QuizRunner({ subjectId, subjectTitle, chapterId, chapterTitle, questions, reviewItems, mode = reviewItems ? "review" : "quiz", reviewScopeLabel, onChangeReviewScope, onNewReviewRound, initialReviewProgress, onReviewProgressChange, reviewSaveWarning, onRetryReviewSave, initialPracticeProgress, onPracticeProgressChange, initialComplete = false, onNewPracticeRound, mistakeCatalog = [], requestedQuestionId = null }: { subjectId: string; subjectTitle: string; chapterId: string; chapterTitle: string; questions: Question[]; reviewItems?: ReviewItem[]; mode?: "quiz" | "review" | "bookmark"; reviewScopeLabel?: string; onChangeReviewScope?: (complete: boolean) => void; onNewReviewRound?: () => void; initialReviewProgress?: string | null; onReviewProgressChange?: (raw: string) => void; reviewSaveWarning?: string | null; onRetryReviewSave?: () => void; initialPracticeProgress?: string | null; onPracticeProgressChange?: (id: string | null, answers: Record<string, Answer>) => void; initialComplete?: boolean; onNewPracticeRound?: () => void; mistakeCatalog?: MistakeRef[]; requestedQuestionId?: string | null }) {
     const isReview = mode === "review";
     const [showProgress, setShowProgress] = useState(initialComplete);
     const [motion, setMotion] = useState(true);
@@ -216,6 +216,10 @@ export default function QuizRunner({ subjectId, subjectTitle, chapterId, chapter
                     <section ref={screenRef} tabIndex={-1} className={styles.screen} aria-label="Nội dung bài học">
                         <div className={styles.screenHeader}><span className={styles.subject}>{subjectTitle}</span></div>
                         <h1>{chapterTitle}</h1>
+                        {isReview && reviewSaveWarning && <div role="alert" className="my-3 rounded-xl border border-amber-500 bg-amber-50 p-3 text-slate-900">
+                            <p>{reviewSaveWarning}</p>
+                            {onRetryReviewSave && <button type="button" className="mt-2 font-bold underline focus-visible:outline-2 focus-visible:outline-offset-2" onClick={onRetryReviewSave}>Thử lưu lại</button>}
+                        </div>}
                         {reviewScopeLabel && <p className={styles.muted}>Phạm vi: {reviewScopeLabel}</p>}
                         {reviewItems && <p className={styles.muted}>
                             {reviewItems[currentIndex].subjectTitle} · {reviewItems[currentIndex].chapterTitle}

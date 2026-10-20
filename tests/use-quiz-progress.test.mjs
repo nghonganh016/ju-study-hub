@@ -158,25 +158,31 @@ test('invalid storage is safe; selection, single submission and chapter reset ke
     assert.equal(hook.data.get(otherKey), 'untouched');
 });
 
-test('review uses only its own key, restores memory fallback and remounts a new round cleanly', () => {
+test('review restores only parent progress and reports changes without writing either v1 key', () => {
     const normalKey = progress.quizProgressKey('blockchain', 'chapter-1');
     const changes = [];
     const old = saved('q2', { q1: { optionId: 'a', isSubmitted: true } });
-    const seed = { [normalKey]: 'normal untouched' };
+    const seed = { [normalKey]: 'normal untouched', [reviewKey]: 'legacy untouched' };
     const hook = mount({ mode: 'review', initialReviewProgress: old,
         onReviewProgressChange: raw => changes.push(raw) }, seed);
     hook.settle();
     assert.equal(hook.current.currentIndex, 1);
     assert.equal(hook.current.submittedCount, 1);
     assert.equal(hook.data.get(normalKey), 'normal untouched');
-    assert.equal(hook.data.get(reviewKey), old);
-    assert.ok(changes.length > 0);
+    assert.equal(hook.data.get(reviewKey), 'legacy untouched');
+    assert.deepEqual(changes, []);
+    hook.act(current => current.selectAnswer('b'));
+    assert.equal(changes.length, 1);
+    assert.equal(JSON.parse(changes[0]).answers.q2.optionId, 'b');
+    assert.deepEqual(hook.writes, []);
 
     // ReviewMistakes changes its React key for a new round, creating a new hook instance.
-    const next = mount({ mode: 'review', initialReviewProgress: null }, { [normalKey]: 'normal untouched' });
+    const next = mount({ mode: 'review', initialReviewProgress: null },
+        { [normalKey]: 'normal untouched', [reviewKey]: old });
     next.settle();
     assert.equal(next.current.currentIndex, 0);
     assert.equal(next.current.submittedCount, 0);
+    assert.equal(next.data.get(reviewKey), old);
 });
 
 test('bookmark mode restores from its record and reports progress without touching quiz or Review keys', () => {

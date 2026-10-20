@@ -1,39 +1,44 @@
 # Ju Study Hub: hướng dẫn làm việc
 
-Cập nhật: 13/10/2026. Chủ dự án: Ju. Code trong repository là nguồn sự thật; tài liệu này mô tả checkout hiện tại, không thay thế việc đọc code trước mỗi task.
+Chủ dự án: Ju. Code trong repository là nguồn sự thật; kiểm tra checkout hiện tại trước khi dựa vào tài liệu hoặc lịch sử task.
 
 ## Mục tiêu và cách cộng tác
 
-Ju Study Hub là website ôn tập cá nhân theo môn và chapter. Codex trực tiếp sửa code để giúp Ju học phát triển web, nên mỗi thay đổi cần nhỏ, dễ kiểm tra và được giải thích rõ. Giao diện dùng tiếng Việt.
+Ju Study Hub là website ôn tập cá nhân theo môn và chapter. Codex giúp Ju học phát triển web, nên thay đổi cần nhỏ, dễ kiểm tra và được giải thích rõ. Giao diện dùng tiếng Việt.
 
-- Trả lời bằng tiếng Việt rõ ràng. Giữ thuật ngữ quen thuộc như component, props, state, route và commit. Giải thích thuật ngữ mới khi cần.
-- Mỗi lượt chỉ triển khai một task đã thống nhất; xong thì dừng để Ju review. Không tự chuyển sang task kế tiếp.
-- Trước khi sửa, nêu mục tiêu, file dự kiến và kết quả Ju sẽ thấy. Đọc các `AGENTS.md` áp dụng, `git status`, `package.json`, lockfile và source liên quan. Giữ nguyên thay đổi sẵn có của Ju.
-- Sau khi sửa, giải thích vai trò các file và luồng props/state/sự kiện quan trọng. Báo lệnh đã chạy, kết quả, phần chưa kiểm chứng, cách Ju kiểm tra và bước tiếp theo dự kiến.
-- Không refactor diện rộng, thêm dependency, backend, dịch vụ trả phí, commit, push hoặc deploy ngoài yêu cầu. Bug ngoài phạm vi phải báo vị trí và tác động trước khi sửa.
-- Giữ semantic HTML, keyboard, focus rõ, reduced motion và khả năng cuộn an toàn trên màn hình nhỏ khi làm UI. Không thay đổi nội dung học, ID, route hay dữ liệu đã lưu khi task không yêu cầu.
-- Không dùng dấu gạch ngang dài trong nội dung giải thích. Tiêu đề dùng sentence case.
+- Trả lời bằng tiếng Việt rõ ràng. Giữ thuật ngữ quen thuộc như component, props, state, route và commit. Giải thích thuật ngữ mới khi cần. Không dùng dấu gạch ngang dài; tiêu đề dùng sentence case.
+- Với task triển khai, chỉ làm một task đã thống nhất trong mỗi lượt rồi dừng để Ju review. Không tự chuyển sang task tiếp theo.
+- Trước khi sửa, nêu mục tiêu, file dự kiến và kết quả Ju sẽ thấy. Đọc các `AGENTS.md` áp dụng, `git status`, `package.json` và source liên quan; đọc lockfile, tài liệu và phần code khác khi task cần. Giữ nguyên thay đổi sẵn có của Ju.
+- Audit là kiểm tra và báo cáo, code review ưu tiên bug hoặc nguy cơ regression có vị trí cụ thể, planning đề xuất bước làm và rủi ro. Các task này không sửa file trừ khi Ju yêu cầu. Phân biệt phát hiện đã xác nhận với rủi ro cần kiểm thử.
+- Khi phát hiện tài liệu không khớp source, báo rõ sai lệch và đề xuất task cập nhật riêng. Không tự sửa tài liệu ngoài phạm vi.
+- Không refactor diện rộng, thêm dependency, backend, dịch vụ trả phí, commit, push hoặc deploy ngoài yêu cầu. Báo vị trí và tác động của bug ngoài phạm vi trước khi sửa.
+- Nếu môi trường có Skill phù hợp với task, kiểm tra và dùng hướng dẫn của Skill đó; không giả định Skill tồn tại hoặc chép lại toàn bộ hướng dẫn Skill vào file này.
+- Khi làm UI, giữ semantic HTML, keyboard, focus rõ, reduced motion và khả năng cuộn an toàn trên màn hình nhỏ.
 
-## Kiến trúc hiện tại
+## Ranh giới kiến trúc và dữ liệu
 
-- Next.js 16 App Router, React 19, TypeScript, Tailwind CSS 4 và npm. `app/layout.tsx` dùng Nunito, Baloo 2 và CSS KaTeX.
-- `data/subjects.ts` là registry môn `blockchain` và `database`; các mảng chapter nằm trong `data/<subject>/index.ts`. Khóa registry là subject ID trong URL và tiến độ. `types/quiz.ts` định nghĩa `Chapter`, `Question` và metadata nguồn tùy chọn.
-- Các route chính: `/`, `/subjects/[subjectId]`, `/subjects/[subjectId]/[chapterId]`, `/quiz/[subjectId]/[chapterId]`, `/review`, `/bookmarks`. Route `/dev/math` và `/dev/quiz-console` chỉ phục vụ development.
-- Trang quiz là Server Component kiểm tra subject/chapter và truyền dữ liệu sang `components/QuizRunner.tsx`. `hooks/useQuizProgress.ts` giữ state câu/đáp án, khôi phục và lưu tiến độ; `QuizRunner` là Client Component ghép UI, shortcut, focus, feedback, mistakes và bookmark. `QuizQuestion`, `QuizNavigation`, `QuizResult` và các component khác hiển thị từng phần.
-- `lib/storage.ts` là adapter đồng bộ duy nhất truy cập `window.localStorage`; các module dữ liệu tiếp tục sở hữu key, schema và xử lý lỗi. `lib/quiz-progress.ts` giữ khóa và quy tắc khôi phục/đếm tiến độ quiz thường. `components/LevelProgress.tsx` đọc tiến độ đó trên card. `lib/mistakes.ts` quản lý kho câu sai; `lib/review-round.ts` tạo lượt ôn theo phạm vi; `lib/bookmarks.ts` quản lý bookmark; `lib/bookmark-catalog.ts` đối chiếu bookmark với câu hiện có. Xem `docs/storage-architecture.md` để biết định dạng đã lưu.
-- Trạng thái lưu trong `localStorage` theo origin, dùng schema version 1: quiz thường theo `ju-study-hub:quiz-progress:<subjectId>:<chapterId>`, Review dùng các khóa riêng trong `lib/mistakes.ts`, bookmark dùng `ju-study-hub:bookmarks:v1`. Không có Supabase, auth hay database trong ứng dụng hiện tại.
-- `tests/*.test.mjs` dùng Node test runner và các dependency đã cài. `npm test` chạy bộ test này. Xem `README.md` và `docs/multi-subject-architecture.md` để biết cách chạy và luồng dữ liệu.
-
-## Ràng buộc khi sửa quiz và storage
-
-- Giữ ID môn/chapter/câu/đáp án, thứ tự và nội dung học. Không đổi schema hoặc key localStorage nếu chưa có kế hoạch tương thích dữ liệu cũ.
-- Quiz là luyện tập có phản hồi từng câu; chọn đáp án tạo nháp, bấm chấm mới khóa đáp án. Kết quả, làm lại, Review câu sai và bookmark phải tiếp tục hoạt động.
-- Đọc storage sau khi client mount để tránh ghi đè tiến độ trước khi khôi phục. Storage có thể lỗi hoặc bị chặn; UI vẫn phải dùng được trong bộ nhớ.
-- Với thay đổi tương tác, kiểm tra cả test và browser theo rủi ro thực tế: chọn/chấm, điều hướng, khôi phục, làm lại, Review, bookmark, keyboard, KaTeX và responsive khi có liên quan. Không nói đã xem giao diện nếu chỉ chạy kiểm tra tĩnh.
+- Ứng dụng dùng Next.js App Router, React, TypeScript, Tailwind CSS và npm. `data/subjects.ts` đăng ký môn; `data/<subject>/index.ts` tập hợp chapter; `types/quiz.ts` định nghĩa dữ liệu câu hỏi. ID môn, chapter, câu và đáp án được dùng trong URL và dữ liệu đã lưu.
+- Các luồng hiện có gồm quiz thường, Review câu sai, bookmark, luyện câu đã lưu và Thi thử. Route nằm trong `app/`; phần tương tác nằm trong `components/`, `hooks/` và `lib/`. Xem `docs/multi-subject-architecture.md` để hiểu luồng nhiều môn, nhưng đối chiếu source trước khi dùng thông tin có thể thay đổi.
+- Dữ liệu người học hiện thuộc `localStorage` theo origin, chưa có Supabase, auth hoặc database trong ứng dụng. `lib/storage.ts` là adapter đồng bộ truy cập `window.localStorage`; từng module sở hữu key, schema và quy tắc khôi phục. Xem `docs/storage-architecture.md` và source liên quan để biết các record hiện tại. Tài liệu trong `docs/supabase/` là thiết kế, không phải chức năng đã triển khai.
+- Giữ ID, thứ tự và nội dung học nếu task không yêu cầu đổi. Không đổi key hoặc schema dữ liệu đã lưu nếu chưa có kế hoạch tương thích dữ liệu cũ. Giữ tiến độ quiz thường, Review, bookmark practice và Thi thử đúng phạm vi riêng của từng chế độ.
+- Đọc dữ liệu lưu sau khi client mount và chỉ ghi sau khi khôi phục để không ghi đè tiến độ cũ. Storage có thể bị chặn hoặc lỗi; tương tác vẫn phải dùng được trong bộ nhớ và UI không được gọi dữ liệu chưa lưu là đã lưu bền.
+- Quiz thường chọn đáp án nháp rồi mới chấm. Thi thử chỉ hiện đáp án, giải thích và kết quả sau khi nộp. Kết quả, làm lại, Review câu sai và bookmark phải tiếp tục hoạt động khi thay đổi liên quan.
 
 ## Kiểm tra và bàn giao
 
-Đọc scripts trong `package.json` trước khi chạy. Baseline hiện tại:
+Đọc scripts trong `package.json` trước khi chạy. Chọn kiểm tra theo tác động và nguy cơ mất dữ liệu, không chỉ theo đuôi file:
+
+| Loại thay đổi | Kiểm tra phù hợp |
+| --- | --- |
+| Chỉ tài liệu | Đối chiếu nội dung với source liên quan; `git diff --check` nếu có sửa file. |
+| CSS/UI | Lint phần liên quan và kiểm tra browser cho bố cục, keyboard, focus, responsive hoặc reduced motion bị tác động. Thêm typecheck/test khi có đổi TS hoặc logic. |
+| Logic TypeScript | Typecheck, lint và test liên quan. |
+| Quiz, ID hoặc storage | Test regression liên quan, kiểm tra tương thích dữ liệu cũ và browser cho luồng bị tác động; mở rộng sang full suite khi phạm vi hoặc rủi ro đòi hỏi. |
+| Trước deploy hoặc thay đổi diện rộng được duyệt | Full test suite, lint, typecheck, production build và `git diff --check`. |
+
+Khi sửa module dùng chung cho nhiều chế độ học, xác định các consumer có thể bị ảnh hưởng và ưu tiên chạy full test suite nếu có nguy cơ regression giữa các chế độ.
+
+Các lệnh hiện có:
 
 ```sh
 npm test
@@ -43,6 +48,18 @@ node node_modules/next/dist/bin/next build --webpack
 git diff --check
 ```
 
-Production build dùng `--webpack` trong checklist hiện tại. Nếu `.next/types` chưa có, chạy build hoặc Next type generation trước khi kết luận TypeScript lỗi. Ghi ngắn kết quả task vào `docs/progress.md`; không ghi đè lịch sử. `docs/source-audit.md` là snapshot nguồn ở thời điểm ghi, không tự coi là tổng số câu hiện tại.
+Production build trong checklist dùng `--webpack`. Nếu TypeScript báo thiếu `.next/types`, chạy Next type generation hoặc build trước khi kết luận code lỗi. Với thay đổi tương tác, test tĩnh không thay thế kiểm tra browser; chỉ báo đã kiểm tra những gì thực sự chạy. Nếu không thể thực hiện kiểm tra cần thiết, nêu rõ lý do và giới hạn.
 
-Báo cáo cuối task gồm: đã làm, file thay đổi và lý do, kiểm tra Codex đã chạy, thao tác Ju có thể kiểm tra, giới hạn còn lại và một bước kế tiếp dự kiến. Dừng sau task để Ju review.
+Sau task triển khai, ghi ngắn kết quả vào `docs/progress.md` mà không ghi đè lịch sử. Không cập nhật nhật ký cho audit, planning hoặc code review chỉ đọc, trừ khi Ju yêu cầu. `docs/source-audit.md` là snapshot nguồn tại thời điểm ghi, không phải tổng số câu hiện tại.
+
+Báo cáo cuối task ngắn gọn: đã làm, file thay đổi và lý do, kết quả kiểm tra, phần chưa kiểm chứng, cách Ju kiểm tra và một bước tiếp theo dự kiến. Với code thay đổi, giải thích logic và lý do thiết kế; chỉ giải thích luồng props, state và event khi có liên quan hoặc Ju yêu cầu. Dừng để Ju review.
+
+<!-- BEGIN:nextjs-agent-rules -->
+
+# This is NOT the Next.js you know
+
+This version has breaking changes — APIs, conventions, and file structure may all differ from your training data. Read the relevant guide in `node_modules/next/dist/docs/` (resolved from this file's directory; in monorepos the `next` package may not be visible from the repo root) before writing any code. Heed deprecation notices.
+
+This block is written and re-added by `next dev` — verify at `node_modules/next/dist/server/lib/generate-agent-files.js`. Removing it from a diff only re-creates the uncommitted change; committing it with your work keeps the tree clean.
+
+<!-- END:nextjs-agent-rules -->

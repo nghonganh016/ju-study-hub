@@ -3,7 +3,6 @@
 import { useEffect, useEffectEvent, useRef, useState } from "react";
 import type { QuestionStatus } from "@/components/QuizNavigation";
 import { questionIndexFromLink, quizProgressKey, restoreProgress, type Answer } from "@/lib/quiz-progress";
-import { REVIEW_PROGRESS_KEY } from "@/lib/mistakes";
 import { localStudyStorage } from "@/lib/storage";
 import type { Question } from "@/types/quiz";
 
@@ -24,13 +23,14 @@ type Options = {
 export default function useQuizProgress({ subjectId, chapterId, questions, mode, pageSize,
     requestedQuestionId, initialReviewProgress, onReviewProgressChange, initialPracticeProgress,
     onPracticeProgressChange, onDeepLinkNavigate }: Options) {
-    const storageKey = mode === "review" ? REVIEW_PROGRESS_KEY : mode === "bookmark" ? "bookmark-practice" : quizProgressKey(subjectId, chapterId);
+    const storageKey = mode === "review" ? "review-state" : mode === "bookmark" ? "bookmark-practice" : quizProgressKey(subjectId, chapterId);
     const [restoredKey, setRestoredKey] = useState<string | null>(null);
     const [currentIndex, setCurrentIndex] = useState(0);
     const [answers, setAnswers] = useState<Record<string, Answer>>({});
     const [navigatorPage, setNavigatorPage] = useState(0);
     const appliedQuestionId = useRef(requestedQuestionId);
     const submitting = useRef(new Set<string>());
+    const lastReviewProgress = useRef<string | null>(null);
     const latestRequestedQuestionId = useEffectEvent(() => requestedQuestionId);
     const latestInitialReviewProgress = useEffectEvent(() => initialReviewProgress);
     const latestInitialPracticeProgress = useEffectEvent(() => initialPracticeProgress);
@@ -44,7 +44,7 @@ export default function useQuizProgress({ subjectId, chapterId, questions, mode,
         queueMicrotask(() => {
             if (cancelled) return;
             let raw: string | null = null;
-            if (mode !== "bookmark") {
+            if (mode === "quiz") {
                 try { raw = localStudyStorage.getItem(storageKey); }
                 catch { /* Storage may be blocked; the quiz still works in memory. */ }
             }
@@ -86,12 +86,17 @@ export default function useQuizProgress({ subjectId, chapterId, questions, mode,
             answers,
         });
         if (mode === "bookmark") reportPracticeProgress(questions[currentIndex]?.id ?? null, answers);
-        else {
+        else if (mode === "review") {
+            // The parent owns the full v2 record. Never rewrite legacy progress on mount.
+            if (lastReviewProgress.current !== null && lastReviewProgress.current !== serialized) {
+                reportReviewProgress(serialized);
+            }
+            lastReviewProgress.current = serialized;
+        } else {
             try {
                 if (currentIndex === 0 && Object.keys(answers).length === 0) localStudyStorage.removeItem(storageKey);
                 else localStudyStorage.setItem(storageKey, serialized);
             } catch { /* Keep in-memory progress. */ }
-            if (mode === "review") reportReviewProgress(serialized);
         }
     }, [answers, currentIndex, questions, restoredKey, storageKey, mode]);
 
@@ -136,7 +141,7 @@ export default function useQuizProgress({ subjectId, chapterId, questions, mode,
     }
 
     function resetProgress() {
-        if (mode !== "bookmark") {
+        if (mode === "quiz") {
             try { localStudyStorage.removeItem(storageKey); }
             catch { /* Reset still works in memory. */ }
         }
