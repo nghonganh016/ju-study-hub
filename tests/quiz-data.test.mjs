@@ -38,7 +38,7 @@ const expected = {
     'blockchain/session-6': [83, 0, 'b9a2d868792f4656c24342127fd19cb9110e9bfe7f2953c5cf726d6a2d5c004e'],
     'blockchain/session-7': [68, 0, '0e5938da49c28d449d72c89a3f555c25573721dd9789b5fba983fe90de3efeee'],
     'blockchain/session-8': [80, 0, '3f50ea53ab91916024f5d1d6af8057899f128fb070f7c0fd7eb39139301a9e9e'],
-    'database/session-1': [58, 2, 'bac08f7803ee87b92eb9a4305e0ad5dc9f7d56c2509ecacf6eeebfac2fd4d845'],
+    'database/session-1': [58, 3, 'bac08f7803ee87b92eb9a4305e0ad5dc9f7d56c2509ecacf6eeebfac2fd4d845'],
     'database/session-2': [57, 2, '9f5465bd5190fc5883fa32696dbdd9bb009cca669875d2db68b1cfd4f2db1090'],
     'database/session-3': [58, 1, 'b40aa51c29ba47c58bae3d66952614951cd3b552559e4368570c2de33218e1a1'],
     'database/session-4': [56, 1, '770d9e3f1b799995010a288e1622dc2c60a96851b8c8bc5536e433d04c9b7fa3'],
@@ -258,7 +258,7 @@ test('Database Session 1 preserves supplied questions and links to actual lectur
     const digest = value => createHash('sha256').update(JSON.stringify(value)).digest('hex');
     const preserved = session1.questions.map(({ id, prompt, options, correctOptionId, explanation, topic, difficulty, sources }) =>
         ({ id, prompt, options, correctOptionId, explanation, topic, difficulty, sources }));
-    assert.equal(digest(preserved), 'fd3d34ec299a7b87da18f00dd5cecfe0b6e423d8021df3ff63912f91c2831401');
+    assert.equal(digest(preserved), '57a3c22ed2233fa20afadd8f7dd3b0e41716cd6e0ce2ae259816b6e345ee8636');
     assert.equal(session1.questions.flatMap(question => question.sources).length, 91);
     const pdf = path.resolve('public/references/database-session-1-slides.pdf');
     assert.equal(fs.readFileSync(pdf).subarray(0, 5).toString(), '%PDF-');

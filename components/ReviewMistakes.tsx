@@ -5,7 +5,7 @@ import Link from "next/link";
 import QuizRunner from "@/components/QuizRunner";
 import styles from "@/components/QuizConsole.module.css";
 import { isProgressComplete } from "@/lib/quiz-progress";
-import { mistakeId, readMistakes, saveMistakes, ROUND_KEY, REVIEW_PROGRESS_KEY, type ReviewItem } from "@/lib/mistakes";
+import { mistakeId, readMistakes, ROUND_KEY, REVIEW_PROGRESS_KEY, type ReviewItem } from "@/lib/mistakes";
 import { ALL_SCOPE, createReviewRound, filterReviewItems, parseReviewRound, reviewScopeLabel,
     serializeReviewRound, type ReviewScope } from "@/lib/review-round";
 import { localStudyStorage } from "@/lib/storage";
@@ -26,8 +26,8 @@ export default function ReviewMistakes({ catalog, sections }: { catalog: ReviewI
         let cancelled = false;
         queueMicrotask(() => {
             if (cancelled) return;
+            // Resolve for display only; missing catalog refs stay in the mistakes store.
             const current = createReviewRound(readMistakes(), catalog, ALL_SCOPE);
-            saveMistakes(current.map(({ subjectId, chapterId, questionId }) => ({ subjectId, chapterId, questionId })));
             let saved: ReturnType<typeof parseReviewRound> = { refs: [], scope: ALL_SCOPE };
             let progress: string | null = null;
             try {

@@ -649,3 +649,19 @@
 - `components/ExamApp.tsx` và `components/Exam.module.css` dùng lại khung console, họa tiết tĩnh, thanh tiến độ, mũi tên điều hướng và kiểu nút của quiz thường. Màn cấu hình gọn hơn; lượt thi có panel thời gian riêng phía trên bảng câu hỏi, nút nộp bài ở panel bên phải trên desktop và dock trong màn câu hỏi trên mobile; kết quả có khối điểm và thời gian hoàn thành riêng. Không đổi chọn đề, snapshot, deadline, chấm điểm, phím tắt, route hoặc storage.
 - Browser production `localhost:3147`: kiểm tra cấu hình, bài đang làm và kết quả ở 1440×900, 1366×768, 1180×820, 820×1180 và 390×844; không tràn ngang và chỉ một nút nộp bài hiển thị mỗi kích thước. Kiểm tra câu dài trên mobile, công thức KaTeX trong câu Session 3 trên desktop/mobile, đề 30 phút và không giới hạn, nộp bài rồi xem điểm/đáp án/thời gian. Chưa kiểm tra trực quan trạng thái cảnh báo còn dưới 5 phút hoặc storage bị chặn trong browser.
 - 88/88 Node tests đạt; ESLint, TypeScript `--noEmit --incremental false`, production build Webpack và `git diff --check` đạt. Không thêm dependency; không commit, push hoặc deploy.
+
+## 18/10/2026: Audit trước khi triển khai Supabase
+
+- Tạo `docs/pre-supabase-audit.md` để đối chiếu bảy nhóm localStorage với thiết kế bốn bảng, phân loại bug/rủi ro, quyết định còn thiếu và các task có acceptance criteria. Không sửa code ứng dụng, schema hay dữ liệu câu hỏi.
+- `npm test`: 86/88 đạt; hai test baseline Database Session 1 sai revision và hash so với source hiện tại. TypeScript `--noEmit --incremental false` đạt; `npm run lint` không trả kết quả sau hơn hai phút nên đã dừng. Chưa chạy browser hoặc Supabase integration trong lượt audit.
+
+## 18/10/2026: Đồng bộ fixture test Database Session 1 với source đã commit
+
+- Git commit `ce625eb` chỉ đổi prompt `db-s1-070` và tăng `session-1` revision từ 2 lên 3; không đổi ID, option, đáp án, explanation hoặc nguồn. Hash nội dung trước commit khớp fixture cũ, hash sau commit khớp source hiện tại. Cập nhật đúng revision và hash ở `tests/quiz-data.test.mjs`, không sửa ngân hàng câu hỏi.
+- `npm test`: 88/88 đạt. TypeScript `--noEmit --incremental false`, `node --check tests/quiz-data.test.mjs` và `git diff --check` đạt. ESLint riêng file test không trả kết quả sau hơn một phút nên đã dừng, chưa xác nhận lint. Không commit, push hoặc deploy.
+
+## 20/10/2026: Giữ orphan mistakes khi mở Review
+
+- `ReviewMistakes` trước đây lọc các refs theo catalog rồi gọi `saveMistakes` với danh sách đã lọc, khiến ref orphan bị xem như lệnh xóa. Bỏ thao tác ghi khi mount; danh sách hợp lệ vẫn dùng cho UI và lượt Review, còn `recordAttempt` tiếp tục xóa đúng ref khi trả lời đúng. Không đổi key hoặc schema localStorage.
+- Thêm `tests/review-mistakes.test.mjs`: test đã tái hiện mất orphan trước sửa, sau sửa kiểm tra raw storage không đổi khi mở/reload, câu hợp lệ hiển thị và vào lượt, trả lời đúng chỉ xóa ref tương ứng.
+- `npm test` 90/90, TypeScript `--noEmit --incremental false`, ESLint cho hai file liên quan và `git diff --check` đạt. Dev server chạy nhưng browser trong phiên này không kết nối được `localhost:3177`; chưa xác nhận tương tác bằng browser. Không commit, push hoặc deploy.
