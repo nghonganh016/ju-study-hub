@@ -51,6 +51,7 @@ export interface RawStorageReader {
 
 export interface StagingRepository {
     findByFingerprint(fingerprint: string): Promise<ImportStagingDescriptor | null>;
+    getSnapshotByFingerprint(fingerprint: string): Promise<RawSnapshot | null>;
     getDescriptor(stagingId: string): Promise<ImportStagingDescriptor | null>;
     getSnapshot(captureId: string): Promise<RawSnapshot | null>;
     addPair(snapshot: RawSnapshot, descriptor: ImportStagingDescriptor): Promise<void>;
@@ -253,6 +254,10 @@ export async function captureRaw(options: CaptureOptions): Promise<CaptureResult
             const latest = readRawSource(source);
             return samePass(second, latest) ? reused : { status: "source-changed", snapshot: reused.snapshot };
         }
+        // A raw snapshot without its staging descriptor cannot be safely reused or replaced.
+        if (await repository.getSnapshotByFingerprint(fingerprint)) {
+            return { status: "invalid-descriptor", errorName: "MissingDescriptor" };
+        }
         const descriptor: ImportStagingDescriptor = {
             schemaVersion: 1, stagingId: randomUUID(), captureId, sourceFingerprint: fingerprint,
             state: "captured", revision: 1, targetUserId: null, previewFingerprint: null, createdAt: capturedAt,
@@ -261,7 +266,11 @@ export async function captureRaw(options: CaptureOptions): Promise<CaptureResult
         catch (error) {
             if (errorName(error) !== "ConstraintError") throw error;
             const winner = await repository.findByFingerprint(fingerprint);
-            if (!winner) return { status: "transaction-aborted", errorName: "ConstraintError" };
+            if (!winner) {
+                return await repository.getSnapshotByFingerprint(fingerprint)
+                    ? { status: "invalid-descriptor", errorName: "MissingDescriptor" }
+                    : { status: "transaction-aborted", errorName: "ConstraintError" };
+            }
             const reused = await validatePair(winner, repository, fingerprint, origin, subtle);
             if (reused.status !== "reused") return reused;
             const latest = readRawSource(source);

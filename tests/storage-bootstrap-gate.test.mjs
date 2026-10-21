@@ -49,9 +49,9 @@ function setup() {
     });
     return {
         calls,
-        render() {
+        render(child = { type: 'consumer', props: {} }) {
             index = 0;
-            const node = exports.default({ children: { type: 'consumer', props: {} } });
+            const node = exports.default({ children: child });
             while (effects.length) effects.shift()();
             return node;
         },
@@ -116,4 +116,16 @@ test('late result from cancelled Strict Mode effect cannot open gate', async () 
     fixture.resolve({ status: 'captured', snapshot: {}, descriptor: {} });
     await flush();
     assert.equal(fixture.render().props.role, 'status');
+});
+
+test('route child changes during capture remain blocked and do not restart capture', async () => {
+    const fixture = setup();
+    assert.equal(fixture.render({ type: 'read-route' }).props.role, 'status');
+    assert.equal(fixture.render({ type: 'quiz-route' }).props.role, 'status');
+    assert.deepEqual(fixture.calls, ['capture-start']);
+    fixture.resolve({ status: 'reused', snapshot: {}, descriptor: {} });
+    await flush();
+    assert.equal(fixture.render({ type: 'quiz-route' }).props.children.type, 'quiz-route');
+    assert.equal(fixture.render({ type: 'another-route' }).props.children.type, 'another-route');
+    assert.deepEqual(fixture.calls, ['capture-start']);
 });

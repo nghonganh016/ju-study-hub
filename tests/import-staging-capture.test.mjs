@@ -38,6 +38,9 @@ function repository() {
         async findByFingerprint(fingerprint) { return [...descriptors.values()].find((item) => item.sourceFingerprint === fingerprint) ?? null; },
         async getDescriptor(id) { return descriptors.get(id) ?? null; },
         async getSnapshot(id) { return snapshots.get(id) ?? null; },
+        async getSnapshotByFingerprint(fingerprint) {
+            return [...snapshots.values()].find((item) => item.sourceFingerprint === fingerprint) ?? null;
+        },
         async addPair(snapshot, descriptor) {
             if (failure) throw new DOMException('storage error', failure);
             if ([...descriptors.values()].some((item) => item.sourceFingerprint === descriptor.sourceFingerprint)) {
@@ -141,6 +144,37 @@ test('corrupt snapshot and inconsistent descriptor block reuse without fallback'
     staging.snapshots.set(first.snapshot.captureId, first.snapshot);
     staging.descriptors.get(first.descriptor.stagingId).revision = 0;
     assert.equal((await capture.captureRaw(input)).status, 'invalid-descriptor');
+});
+
+test('orphan snapshot blocks capture and retry without overwriting raw', async () => {
+    const rawSource = source();
+    const staging = repository();
+    const input = options(rawSource, staging);
+    const first = await capture.captureRaw(input);
+    staging.descriptors.delete(first.descriptor.stagingId);
+    for (let retry = 0; retry < 2; retry += 1) {
+        const result = await capture.captureRaw(input);
+        assert.equal(result.status, 'invalid-descriptor');
+        assert.equal(result.errorName, 'MissingDescriptor');
+    }
+    assert.equal(staging.snapshots.size, 1);
+    assert.equal(staging.snapshots.get(first.snapshot.captureId).captureId, first.snapshot.captureId);
+    assert.deepEqual(rawSource.writes, []);
+});
+
+test('constraint race with an orphan snapshot reports missing descriptor', async () => {
+    const rawSource = source();
+    const staging = repository();
+    const addPair = staging.addPair;
+    staging.addPair = async (snapshot) => {
+        staging.snapshots.set(snapshot.captureId, structuredClone(snapshot));
+        throw new DOMException('duplicate', 'ConstraintError');
+    };
+    const result = await capture.captureRaw(options(rawSource, staging));
+    assert.equal(result.status, 'invalid-descriptor');
+    assert.equal(result.errorName, 'MissingDescriptor');
+    assert.equal(staging.snapshots.size, 1);
+    staging.addPair = addPair;
 });
 
 test('resume targets one descriptor and checks current source without replacing its raw', async () => {

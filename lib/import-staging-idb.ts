@@ -71,6 +71,20 @@ export class IndexedDbStagingRepository implements StagingRepository {
         } finally { database.close(); }
     }
 
+    async getSnapshotByFingerprint(fingerprint: string): Promise<RawSnapshot | null> {
+        const database = await this.open();
+        try {
+            const transaction = database.transaction("raw_snapshots", "readonly");
+            const done = transactionDone(transaction);
+            const [result] = await Promise.all([
+                requestResult<RawSnapshot | undefined>(
+                    transaction.objectStore("raw_snapshots").index("by_fingerprint").get(fingerprint),
+                ), done,
+            ]);
+            return result ?? null;
+        } finally { database.close(); }
+    }
+
     async getDescriptor(stagingId: string): Promise<ImportStagingDescriptor | null> {
         const database = await this.open();
         try {
