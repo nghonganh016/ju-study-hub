@@ -1,0 +1,952 @@
+{
+  "session": "Session 8: Distributed Databases and the CAP Theorem",
+  "source": "DB8 (1).pdf",
+  "page_numbering": "PDF page (1–34)",
+  "questions": [
+    {
+      "id": "s8-q001",
+      "topic": "Why distributed?",
+      "page": 4,
+      "question": "What limitation of the single-node PostgreSQL setup motivates distributed databases in the lecture?",
+      "options": {
+        "A": "Single nodes cannot enforce ACID properties.",
+        "B": "Hardware failure or excessive demand can disrupt the whole service.",
+        "C": "A single instance cannot create B-Tree indexes.",
+        "D": "Single-node databases cannot store AI features."
+      },
+      "answer": "B",
+      "explanation": "The recap raises SSD failure and one million simultaneous requests as single-machine risks.",
+      "source": "DB8 (1).pdf"
+    },
+    {
+      "id": "s8-q002",
+      "topic": "Why distributed?",
+      "page": 6,
+      "question": "A team adds CPU cores and RAM to its existing database server without introducing other nodes. Which strategy is this?",
+      "options": {
+        "A": "Horizontal scaling",
+        "B": "Database sharding",
+        "C": "Vertical scaling",
+        "D": "Read replication"
+      },
+      "answer": "C",
+      "explanation": "Scale-up adds resources to an existing server rather than adding servers.",
+      "source": "DB8 (1).pdf"
+    },
+    {
+      "id": "s8-q003",
+      "topic": "Why distributed?",
+      "page": 6,
+      "question": "Which combination is identified as a drawback of vertical scaling?",
+      "options": {
+        "A": "Hardware ceiling and a remaining single point of failure",
+        "B": "Additional cross-shard joins and resharding",
+        "C": "Replica lag and replica read-only errors",
+        "D": "Complex routing among hundreds of nodes"
+      },
+      "answer": "A",
+      "explanation": "Scale-up faces physical hardware limits and does not eliminate the single point of failure.",
+      "source": "DB8 (1).pdf"
+    },
+    {
+      "id": "s8-q004",
+      "topic": "Why distributed?",
+      "page": 7,
+      "question": "Which change best illustrates horizontal scaling?",
+      "options": {
+        "A": "Replacing a disk with a larger SSD",
+        "B": "Increasing RAM on the primary",
+        "C": "Changing the isolation level",
+        "D": "Adding standard servers that operate as one logical service"
+      },
+      "answer": "D",
+      "explanation": "Scale-out connects multiple commodity servers to act as a logical unit.",
+      "source": "DB8 (1).pdf"
+    },
+    {
+      "id": "s8-q005",
+      "topic": "Why distributed?",
+      "page": 7,
+      "question": "Which benefit of horizontal scaling is especially relevant when one server unexpectedly fails?",
+      "options": {
+        "A": "All requests must wait for the failed node to recover.",
+        "B": "Other nodes can continue serving the workload.",
+        "C": "Transactions automatically become Serializable.",
+        "D": "The system no longer requires network communication."
+      },
+      "answer": "B",
+      "explanation": "The lecture associates scale-out with high availability through multiple nodes.",
+      "source": "DB8 (1).pdf"
+    },
+    {
+      "id": "s8-q006",
+      "topic": "Why distributed?",
+      "page": 8,
+      "question": "A single-server service goes offline whenever its operating system must reboot for security patches. Which problem does this illustrate?",
+      "options": {
+        "A": "A hash collision",
+        "B": "A cross-shard transaction",
+        "C": "A single point of failure",
+        "D": "Eventual consistency"
+      },
+      "answer": "C",
+      "explanation": "A single node creates maintenance downtime as well as hardware and software failure exposure.",
+      "source": "DB8 (1).pdf"
+    },
+    {
+      "id": "s8-q007",
+      "topic": "Why distributed?",
+      "page": 9,
+      "question": "Compared with scale-up, what additional operational cost is emphasized for scale-out?",
+      "options": {
+        "A": "Increased network and coordination complexity",
+        "B": "A strict limit imposed by one motherboard",
+        "C": "An inability to use inexpensive servers",
+        "D": "The need to store everything on one disk"
+      },
+      "answer": "A",
+      "explanation": "The comparison table notes that horizontal scaling has greater complexity because of network overhead.",
+      "source": "DB8 (1).pdf"
+    },
+    {
+      "id": "s8-q008",
+      "topic": "Replication",
+      "page": 11,
+      "question": "In database replication, what is copied between servers?",
+      "options": {
+        "A": "Only SQL execution plans",
+        "B": "Only user authentication settings",
+        "C": "Distinct nonoverlapping subsets of rows",
+        "D": "Copies of database information maintained on different machines"
+      },
+      "answer": "D",
+      "explanation": "Replication maintains multiple copies of data on different physical servers.",
+      "source": "DB8 (1).pdf"
+    },
+    {
+      "id": "s8-q009",
+      "topic": "Replication",
+      "page": 11,
+      "question": "Which pair of objectives motivates replication in the slides?",
+      "options": {
+        "A": "Removing all indexes and eliminating transactions",
+        "B": "Improving fault tolerance and read performance",
+        "C": "Avoiding schemas and preventing any network failure",
+        "D": "Reducing database size through horizontal partitioning"
+      },
+      "answer": "B",
+      "explanation": "The lecture lists reliability/fault tolerance and read performance as motivations.",
+      "source": "DB8 (1).pdf"
+    },
+    {
+      "id": "s8-q010",
+      "topic": "Replication",
+      "page": 12,
+      "question": "In the primary-replica model presented, which node normally accepts INSERT, UPDATE, and DELETE?",
+      "options": {
+        "A": "The primary",
+        "B": "Any read-only replica",
+        "C": "Only the newest replica",
+        "D": "A dedicated backup server disconnected from the cluster"
+      },
+      "answer": "A",
+      "explanation": "The primary is the write-capable source of truth; replicas serve reads and synchronize.",
+      "source": "DB8 (1).pdf"
+    },
+    {
+      "id": "s8-q011",
+      "topic": "Replication",
+      "page": 12,
+      "question": "What role do replicas play in the lecture’s primary-replica architecture?",
+      "options": {
+        "A": "Assign unique subsets of user IDs",
+        "B": "Commit independent authoritative writes",
+        "C": "Serve reads and synchronize changes from the primary",
+        "D": "Replace all write-ahead logging"
+      },
+      "answer": "C",
+      "explanation": "Replicas are synchronized read-serving nodes.",
+      "source": "DB8 (1).pdf"
+    },
+    {
+      "id": "s8-q012",
+      "topic": "Replication",
+      "page": 13,
+      "question": "A recommendation API has approximately 100 reads per write. What is the lecture’s proposed way to reduce primary load?",
+      "options": {
+        "A": "Execute all reads within a single write transaction.",
+        "B": "Send all feature lookups to the primary.",
+        "C": "Shard the schema into separate databases on the same server.",
+        "D": "Distribute SELECT queries over multiple read replicas."
+      },
+      "answer": "D",
+      "explanation": "Read-scale architecture distributes SELECT operations among replicas so the primary can focus on writes.",
+      "source": "DB8 (1).pdf"
+    },
+    {
+      "id": "s8-q013",
+      "topic": "Replication",
+      "page": 13,
+      "question": "Why are read replicas useful during model inference?",
+      "options": {
+        "A": "They guarantee that each feature vector is globally unique.",
+        "B": "They can serve feature-vector retrieval requests.",
+        "C": "They eliminate the need for all database indexes.",
+        "D": "They automatically synchronize model weights."
+      },
+      "answer": "B",
+      "explanation": "The AI inference use case in the slide fetches feature vectors through replicas.",
+      "source": "DB8 (1).pdf"
+    },
+    {
+      "id": "s8-q014",
+      "topic": "Replication",
+      "page": 14,
+      "question": "When does the primary acknowledge a commit under the synchronous replication model described in the slides?",
+      "options": {
+        "A": "Before producing any WAL records",
+        "B": "Immediately after receiving a client query",
+        "C": "After receiving the required replica confirmation",
+        "D": "Only after every replica has been restarted"
+      },
+      "answer": "C",
+      "explanation": "Synchronous replication requires a replica acknowledgement before commit completion.",
+      "source": "DB8 (1).pdf"
+    },
+    {
+      "id": "s8-q015",
+      "topic": "Replication",
+      "page": 14,
+      "question": "What failure risk is highlighted for synchronous replication if the required replica is unavailable?",
+      "options": {
+        "A": "Writes may be blocked while the primary waits for confirmation.",
+        "B": "Previously committed rows are automatically deleted.",
+        "C": "The primary silently switches to sharding.",
+        "D": "Read-only queries on the primary become illegal."
+      },
+      "answer": "A",
+      "explanation": "The trade-off described is increased write latency and potential write unavailability.",
+      "source": "DB8 (1).pdf"
+    },
+    {
+      "id": "s8-q016",
+      "topic": "Replication",
+      "page": 15,
+      "question": "In asynchronous replication, what may happen before a replica receives the latest update?",
+      "options": {
+        "A": "The replica must reject every SELECT.",
+        "B": "The primary waits for all replicas to confirm.",
+        "C": "The cluster changes its sharding key.",
+        "D": "The primary successfully commits locally."
+      },
+      "answer": "D",
+      "explanation": "Asynchronous replication commits first and ships changes to replicas afterward.",
+      "source": "DB8 (1).pdf"
+    },
+    {
+      "id": "s8-q017",
+      "topic": "Replication",
+      "page": 15,
+      "question": "An asynchronous primary crashes just after committing, before sending its newest change. What risk follows?",
+      "options": {
+        "A": "The last commit must already be on all replicas.",
+        "B": "The newest committed change may be missing from replicas.",
+        "C": "All replica reads become serializable.",
+        "D": "The primary automatically rolls back all earlier commits."
+      },
+      "answer": "B",
+      "explanation": "The slide identifies data-loss risk if the primary fails before propagation.",
+      "source": "DB8 (1).pdf"
+    },
+    {
+      "id": "s8-q018",
+      "topic": "Replication",
+      "page": 15,
+      "question": "A replica briefly returns an older customer balance while the primary has the new balance. Which replication trade-off does this show?",
+      "options": {
+        "A": "A local partitioning error",
+        "B": "A SQL parser malfunction",
+        "C": "Replication lag under asynchronous propagation",
+        "D": "A guaranteed two-phase commit failure"
+      },
+      "answer": "C",
+      "explanation": "Asynchronous replicas can temporarily lag behind the primary.",
+      "source": "DB8 (1).pdf"
+    },
+    {
+      "id": "s8-q019",
+      "topic": "Replication",
+      "page": 16,
+      "question": "What is failover in a primary-replica cluster?",
+      "options": {
+        "A": "Promoting a replica to become the new writable primary",
+        "B": "Moving every row to a newly selected shard",
+        "C": "Increasing the RAM on the failed node",
+        "D": "Restarting all nodes in a fixed round-robin order"
+      },
+      "answer": "A",
+      "explanation": "Failover replaces a failed primary by promoting a replica.",
+      "source": "DB8 (1).pdf"
+    },
+    {
+      "id": "s8-q020",
+      "topic": "Replication",
+      "page": 16,
+      "question": "Which sequence follows the failover workflow described in the slides?",
+      "options": {
+        "A": "Promotion → detection → election → reconfiguration",
+        "B": "Election → reconfiguration → detection → promotion",
+        "C": "Reconfiguration → promotion → election → detection",
+        "D": "Detection → election → promotion → reconfiguration"
+      },
+      "answer": "D",
+      "explanation": "The four listed steps occur in that order.",
+      "source": "DB8 (1).pdf"
+    },
+    {
+      "id": "s8-q021",
+      "topic": "Replication",
+      "page": 16,
+      "question": "Which tools are explicitly mentioned as options for automating PostgreSQL failover?",
+      "options": {
+        "A": "pgAdmin and psql",
+        "B": "Patroni and Repmgr",
+        "C": "Docker and SQLAlchemy",
+        "D": "HBase and CouchDB"
+      },
+      "answer": "B",
+      "explanation": "Patroni and Repmgr appear in the failover slide.",
+      "source": "DB8 (1).pdf"
+    },
+    {
+      "id": "s8-q022",
+      "topic": "Replication",
+      "page": 17,
+      "question": "For large AI training jobs, what deployment choice is recommended in the lecture?",
+      "options": {
+        "A": "Perform every bulk read against the writable primary.",
+        "B": "Disable replication to maximize concurrency.",
+        "C": "Read large datasets from read replicas to reduce pressure on production.",
+        "D": "Place all training features on a single unreplicated node."
+      },
+      "answer": "C",
+      "explanation": "Training data can be read from replicas to avoid stressing the production primary.",
+      "source": "DB8 (1).pdf"
+    },
+    {
+      "id": "s8-q023",
+      "topic": "Replication",
+      "page": 17,
+      "question": "Why might a global inference service deploy replicas in multiple geographic regions?",
+      "options": {
+        "A": "To reduce data-access latency near users",
+        "B": "To force all writes to cross every region",
+        "C": "To avoid using network links",
+        "D": "To make row identifiers sequential"
+      },
+      "answer": "A",
+      "explanation": "Geographic replication is used to reduce latency for local inference users.",
+      "source": "DB8 (1).pdf"
+    },
+    {
+      "id": "s8-q024",
+      "topic": "Sharding",
+      "page": 19,
+      "question": "Which statement correctly distinguishes sharding from replication?",
+      "options": {
+        "A": "Sharding copies every row to every node; replication splits rows.",
+        "B": "Both strategies necessarily keep identical data on every node.",
+        "C": "Sharding affects only indexes, while replication affects tables.",
+        "D": "Sharding distributes different subsets; replication maintains copies."
+      },
+      "answer": "D",
+      "explanation": "Shards hold unique subsets of a logical dataset, unlike replicas that maintain copies.",
+      "source": "DB8 (1).pdf"
+    },
+    {
+      "id": "s8-q025",
+      "topic": "Sharding",
+      "page": 19,
+      "question": "A dataset of ten billion rows is split into ten data subsets on different servers. Which concept best matches the lecture?",
+      "options": {
+        "A": "Synchronous replication",
+        "B": "Database sharding",
+        "C": "Vertical scaling",
+        "D": "Materialized views"
+      },
+      "answer": "B",
+      "explanation": "The slide presents the ten-billion-row example as a use case for sharding.",
+      "source": "DB8 (1).pdf"
+    },
+    {
+      "id": "s8-q026",
+      "topic": "Sharding",
+      "page": 20,
+      "question": "A table is divided into smaller tables, but all partitions remain in the same PostgreSQL instance. What is this called?",
+      "options": {
+        "A": "Local horizontal partitioning",
+        "B": "Distributed sharding",
+        "C": "Read replication",
+        "D": "Cross-region failover"
+      },
+      "answer": "A",
+      "explanation": "Local horizontal partitioning operates within one database instance; sharding distributes pieces across nodes.",
+      "source": "DB8 (1).pdf"
+    },
+    {
+      "id": "s8-q027",
+      "topic": "Sharding",
+      "page": 20,
+      "question": "Compared with local horizontal partitioning, what capability is added by sharding?",
+      "options": {
+        "A": "Automatic foreign keys across all servers",
+        "B": "Guaranteed zero-latency joins",
+        "C": "Scaling CPU and RAM resources across multiple machines",
+        "D": "A requirement that each server has identical rows"
+      },
+      "answer": "C",
+      "explanation": "Sharding can distribute work and data over multiple physical servers.",
+      "source": "DB8 (1).pdf"
+    },
+    {
+      "id": "s8-q028",
+      "topic": "Sharding",
+      "page": 21,
+      "question": "What determines the destination shard for an individual record?",
+      "options": {
+        "A": "The newest available replica",
+        "B": "The transaction isolation level",
+        "C": "The number of SELECT columns",
+        "D": "The value and routing rule of the sharding key"
+      },
+      "answer": "D",
+      "explanation": "The sharding key is the column used to assign a row to a shard.",
+      "source": "DB8 (1).pdf"
+    },
+    {
+      "id": "s8-q029",
+      "topic": "Sharding",
+      "page": 21,
+      "question": "New customer IDs grow sequentially, and the newest IDs always land on the last range shard. What risk is highlighted?",
+      "options": {
+        "A": "The last shard cannot store indexes.",
+        "B": "That shard becomes a write hotspot.",
+        "C": "All shards receive exactly the same load.",
+        "D": "Every query automatically needs two-phase commit."
+      },
+      "answer": "B",
+      "explanation": "Range-based sharding can concentrate new users on one shard.",
+      "source": "DB8 (1).pdf"
+    },
+    {
+      "id": "s8-q030",
+      "topic": "Sharding",
+      "page": 21,
+      "question": "Which formula illustrates hash-based shard assignment in the slides?",
+      "options": {
+        "A": "hash(customer_id) % N",
+        "B": "customer_id + N",
+        "C": "MAX(customer_id) / replica_lag",
+        "D": "SUM(customer_id) OVER (PARTITION BY N)"
+      },
+      "answer": "A",
+      "explanation": "The slide uses hash(customer_id) modulo number of shards to distribute rows.",
+      "source": "DB8 (1).pdf"
+    },
+    {
+      "id": "s8-q031",
+      "topic": "Sharding",
+      "page": 21,
+      "question": "Why is choosing the wrong sharding key expensive to correct later?",
+      "options": {
+        "A": "It forces synchronous replication forever.",
+        "B": "It makes every index unusable by definition.",
+        "C": "Changing placement may require resharding existing records.",
+        "D": "It permanently disables failover."
+      },
+      "answer": "C",
+      "explanation": "Correcting poor distribution can require a costly resharding process.",
+      "source": "DB8 (1).pdf"
+    },
+    {
+      "id": "s8-q032",
+      "topic": "Sharding",
+      "page": 22,
+      "question": "Why should applications avoid frequent cross-shard joins when possible?",
+      "options": {
+        "A": "A join becomes a full database backup.",
+        "B": "Cross-shard joins never return consistent rows.",
+        "C": "SQL does not support JOIN syntax in distributed systems.",
+        "D": "Combining data stored on different servers can be very slow."
+      },
+      "answer": "D",
+      "explanation": "The slide identifies expensive cross-shard joins as an important complexity cost.",
+      "source": "DB8 (1).pdf"
+    },
+    {
+      "id": "s8-q033",
+      "topic": "Sharding",
+      "page": 22,
+      "question": "Which integrity problem is identified when related tables reside on separate shards?",
+      "options": {
+        "A": "All local foreign keys stop working.",
+        "B": "Cross-shard foreign keys are usually not enforced by the DBMS.",
+        "C": "Every shard automatically gains duplicate primary keys.",
+        "D": "Indexes cannot reference any local column."
+      },
+      "answer": "B",
+      "explanation": "The lecture notes that foreign-key constraints across shards are generally unsupported.",
+      "source": "DB8 (1).pdf"
+    },
+    {
+      "id": "s8-q034",
+      "topic": "Sharding",
+      "page": 22,
+      "question": "What is identified as a mechanism for coordinating ACID transactions spanning shards?",
+      "options": {
+        "A": "Two-phase commit",
+        "B": "A simple read replica",
+        "C": "A local B-Tree index",
+        "D": "An HTTP cache"
+      },
+      "answer": "A",
+      "explanation": "The lecture cites two-phase commit for distributed transactions and highlights its performance cost.",
+      "source": "DB8 (1).pdf"
+    },
+    {
+      "id": "s8-q035",
+      "topic": "Sharding",
+      "page": 23,
+      "question": "A social network stores each user’s profile and associated activity on the same shard. What is the intended advantage?",
+      "options": {
+        "A": "The primary never needs to commit writes.",
+        "B": "All users necessarily share one global shard.",
+        "C": "User-profile queries can access related data locally.",
+        "D": "The system no longer requires authentication."
+      },
+      "answer": "C",
+      "explanation": "Sharding by user_id co-locates a user’s data and speeds profile retrieval.",
+      "source": "DB8 (1).pdf"
+    },
+    {
+      "id": "s8-q036",
+      "topic": "Sharding",
+      "page": 23,
+      "question": "Which AI-oriented dataset is explicitly cited as a candidate for sharding?",
+      "options": {
+        "A": "A single local configuration file",
+        "B": "One SQL connection string",
+        "C": "A small static lookup table",
+        "D": "Billions of embeddings in a feature store"
+      },
+      "answer": "D",
+      "explanation": "Feature stores holding billions of vectors are a stated sharding example.",
+      "source": "DB8 (1).pdf"
+    },
+    {
+      "id": "s8-q037",
+      "topic": "CAP theorem",
+      "page": 25,
+      "question": "According to the lecture, what is the key CAP trade-off when a network partition occurs?",
+      "options": {
+        "A": "Choose whether to keep ACID or SQL support.",
+        "B": "Choose between consistency and availability.",
+        "C": "Choose between indexing and replication.",
+        "D": "Choose between vertical and horizontal scaling."
+      },
+      "answer": "B",
+      "explanation": "The CAP constraint during partitions is the conflict between strong consistency and availability.",
+      "source": "DB8 (1).pdf"
+    },
+    {
+      "id": "s8-q038",
+      "topic": "CAP theorem",
+      "page": 25,
+      "question": "Who is credited in the lecture with proposing the CAP theorem in 2000?",
+      "options": {
+        "A": "Eric Brewer",
+        "B": "Edgar F. Codd",
+        "C": "Jim Gray",
+        "D": "Michael Stonebraker"
+      },
+      "answer": "A",
+      "explanation": "The introduction credits Eric Brewer in 2000.",
+      "source": "DB8 (1).pdf"
+    },
+    {
+      "id": "s8-q039",
+      "topic": "CAP theorem",
+      "page": 26,
+      "question": "Which outcome satisfies the lecture’s definition of strong consistency?",
+      "options": {
+        "A": "Every read gets an answer, but it may be arbitrarily old.",
+        "B": "A read can return a newer value on one node and an older value on another.",
+        "C": "Each read returns the latest write or an error.",
+        "D": "Every write is acknowledged before any node stores it."
+      },
+      "answer": "C",
+      "explanation": "Strong consistency is defined as receiving the most recent write or an error.",
+      "source": "DB8 (1).pdf"
+    },
+    {
+      "id": "s8-q040",
+      "topic": "CAP theorem",
+      "page": 26,
+      "question": "After a bank withdrawal is committed, a remote read is required to reflect the new balance or fail. Which CAP property is prioritized?",
+      "options": {
+        "A": "Availability",
+        "B": "Partition-free execution",
+        "C": "Replica count",
+        "D": "Consistency"
+      },
+      "answer": "D",
+      "explanation": "The bank-account analogy illustrates strong consistency across nodes.",
+      "source": "DB8 (1).pdf"
+    },
+    {
+      "id": "s8-q041",
+      "topic": "CAP theorem",
+      "page": 27,
+      "question": "Which behavior is consistent with the lecture’s definition of availability?",
+      "options": {
+        "A": "Every request gets a non-error response, potentially with stale data.",
+        "B": "Every response must contain the most recent value.",
+        "C": "The service may reject requests until all nodes synchronize.",
+        "D": "All nodes must commit the same write simultaneously."
+      },
+      "answer": "A",
+      "explanation": "Availability emphasizes a response to every request, even when replicas are out of sync.",
+      "source": "DB8 (1).pdf"
+    },
+    {
+      "id": "s8-q042",
+      "topic": "CAP theorem",
+      "page": 27,
+      "question": "A feed still opens during a partition but shows an older Like count. Which guarantee is being favored?",
+      "options": {
+        "A": "Strong consistency",
+        "B": "Availability",
+        "C": "Serializability",
+        "D": "Zero-lag replication"
+      },
+      "answer": "B",
+      "explanation": "The slide’s social-feed analogy shows an available but potentially stale response.",
+      "source": "DB8 (1).pdf"
+    },
+    {
+      "id": "s8-q043",
+      "topic": "CAP theorem",
+      "page": 28,
+      "question": "What does partition tolerance mean in the CAP theorem as defined in the slides?",
+      "options": {
+        "A": "All servers must store unique subsets of rows.",
+        "B": "The database cannot operate without a primary.",
+        "C": "The system continues operating despite dropped or delayed messages between nodes.",
+        "D": "Network latency is guaranteed to be zero."
+      },
+      "answer": "C",
+      "explanation": "Partition tolerance concerns continued operation when communication between nodes is disrupted.",
+      "source": "DB8 (1).pdf"
+    },
+    {
+      "id": "s8-q044",
+      "topic": "CAP theorem",
+      "page": 28,
+      "question": "Why does the lecture treat partition tolerance as effectively mandatory for distributed systems?",
+      "options": {
+        "A": "It improves the speed of every SQL join.",
+        "B": "It replaces all consistency constraints.",
+        "C": "It is a setting that users can turn off.",
+        "D": "Real networks can fail or split unexpectedly."
+      },
+      "answer": "D",
+      "explanation": "Partitions are treated as unavoidable network faults in real deployments.",
+      "source": "DB8 (1).pdf"
+    },
+    {
+      "id": "s8-q045",
+      "topic": "CAP theorem",
+      "page": 29,
+      "question": "A partition separates two replicas. One side rejects requests rather than risk serving inconsistent data. Which design priority does this best represent?",
+      "options": {
+        "A": "CP",
+        "B": "AP",
+        "C": "CA irrespective of partition",
+        "D": "Pure read scaling"
+      },
+      "answer": "A",
+      "explanation": "In the lecture, CP preserves consistency during partitions by sacrificing availability for some requests.",
+      "source": "DB8 (1).pdf"
+    },
+    {
+      "id": "s8-q046",
+      "topic": "CAP theorem",
+      "page": 29,
+      "question": "During a network partition, both sides continue responding even though values may disagree. Which design priority is illustrated?",
+      "options": {
+        "A": "Synchronous replication only",
+        "B": "AP",
+        "C": "CP",
+        "D": "Serializable execution"
+      },
+      "answer": "B",
+      "explanation": "AP maintains non-error responses but permits temporary inconsistency.",
+      "source": "DB8 (1).pdf"
+    },
+    {
+      "id": "s8-q047",
+      "topic": "CAP theorem",
+      "page": 29,
+      "question": "Which application is placed under CP use cases in the lecture?",
+      "options": {
+        "A": "A social-media Like counter",
+        "B": "A public comment cache",
+        "C": "A stock-trading system",
+        "D": "A feed of noncritical recommendations"
+      },
+      "answer": "C",
+      "explanation": "Banking, stock trading and medical records are examples in the CP column.",
+      "source": "DB8 (1).pdf"
+    },
+    {
+      "id": "s8-q048",
+      "topic": "CAP theorem",
+      "page": 29,
+      "question": "Which application is listed as an AP-oriented use case?",
+      "options": {
+        "A": "Bank balance transfers",
+        "B": "Trading account settlement",
+        "C": "Medical patient records",
+        "D": "Video comments and caching"
+      },
+      "answer": "D",
+      "explanation": "YouTube comments, Facebook feeds, and caches appear under AP.",
+      "source": "DB8 (1).pdf"
+    },
+    {
+      "id": "s8-q049",
+      "topic": "CAP theorem",
+      "page": 30,
+      "question": "How is single-node PostgreSQL characterized in the lecture’s CAP mapping table?",
+      "options": {
+        "A": "A CA-oriented relational system",
+        "B": "An intrinsically AP distributed system",
+        "C": "A CP system that never allows reads",
+        "D": "A sharded NoSQL system"
+      },
+      "answer": "A",
+      "explanation": "The table labels PostgreSQL (Single Node) as CA / Pure ACID; this is a lecture classification of a non-distributed setup.",
+      "source": "DB8 (1).pdf"
+    },
+    {
+      "id": "s8-q050",
+      "topic": "CAP theorem",
+      "page": 30,
+      "question": "Which pair is placed in the AP category in the lecture’s database comparison?",
+      "options": {
+        "A": "PostgreSQL and HBase",
+        "B": "Cassandra and CouchDB",
+        "C": "MongoDB and Redis",
+        "D": "Redis and HBase"
+      },
+      "answer": "B",
+      "explanation": "The CAP-mapping table lists Cassandra and CouchDB under AP.",
+      "source": "DB8 (1).pdf"
+    },
+    {
+      "id": "s8-q051",
+      "topic": "CAP theorem",
+      "page": 30,
+      "question": "What qualification does the lecture provide about mapping database products to CAP categories?",
+      "options": {
+        "A": "Every product permanently belongs to a single CAP class.",
+        "B": "CAP classification depends exclusively on SQL syntax.",
+        "C": "Configurations such as PostgreSQL replication can shift the consistency/availability trade-off.",
+        "D": "Replication settings never influence distributed behavior."
+      },
+      "answer": "C",
+      "explanation": "The slide notes that databases with replication can be tuned toward CP or AP depending on configuration.",
+      "source": "DB8 (1).pdf"
+    },
+    {
+      "id": "s8-q052",
+      "topic": "Hands-on lab",
+      "page": 32,
+      "question": "In the dvdrental Docker lab, which port is assigned to the read-only replica?",
+      "options": {
+        "A": "5432",
+        "B": "3306",
+        "C": "6379",
+        "D": "5433"
+      },
+      "answer": "D",
+      "explanation": "The lab assigns port 5432 to the primary and 5433 to the replica.",
+      "source": "DB8 (1).pdf"
+    },
+    {
+      "id": "s8-q053",
+      "topic": "Hands-on lab",
+      "page": 32,
+      "question": "Which component is used to start the preconfigured primary-replica environment?",
+      "options": {
+        "A": "A Docker Compose configuration",
+        "B": "A PostgreSQL materialized view",
+        "C": "A sharding-key trigger",
+        "D": "A standalone machine-learning notebook"
+      },
+      "answer": "A",
+      "explanation": "The lab uses Docker Compose to start nodes with streaming replication.",
+      "source": "DB8 (1).pdf"
+    },
+    {
+      "id": "s8-q054",
+      "topic": "Hands-on lab",
+      "page": 32,
+      "question": "Where does the lab direct students to restore the dvdrental sample database?",
+      "options": {
+        "A": "The replica before the primary",
+        "B": "The primary node",
+        "C": "Every application client",
+        "D": "The Docker host outside PostgreSQL"
+      },
+      "answer": "B",
+      "explanation": "The specified restore command targets the primary database.",
+      "source": "DB8 (1).pdf"
+    },
+    {
+      "id": "s8-q055",
+      "topic": "Hands-on lab",
+      "page": 33,
+      "question": "Which PostgreSQL configuration setting enables the WAL information needed for replica streaming in the lecture?",
+      "options": {
+        "A": "archive_mode = off",
+        "B": "max_connections = 1",
+        "C": "wal_level = replica",
+        "D": "default_transaction_read_only = off"
+      },
+      "answer": "C",
+      "explanation": "The primary postgresql.conf slide explicitly sets wal_level = replica.",
+      "source": "DB8 (1).pdf"
+    },
+    {
+      "id": "s8-q056",
+      "topic": "Hands-on lab",
+      "page": 33,
+      "question": "What is the role of max_wal_senders = 10 in the lecture’s primary configuration?",
+      "options": {
+        "A": "Limit SQL query results to ten rows",
+        "B": "Create ten independent sharding keys",
+        "C": "Reserve ten application users",
+        "D": "Configure capacity for WAL-sending processes"
+      },
+      "answer": "D",
+      "explanation": "max_wal_senders controls how many WAL sender processes may run.",
+      "source": "DB8 (1).pdf"
+    },
+    {
+      "id": "s8-q057",
+      "topic": "Hands-on lab",
+      "page": 33,
+      "question": "Which file contains the lab’s network authentication entry for a replication user?",
+      "options": {
+        "A": "pg_hba.conf",
+        "B": "pg_stat_statements",
+        "C": "docker-compose.log",
+        "D": "pg_indexes"
+      },
+      "answer": "A",
+      "explanation": "The slide places host replication replicator ... md5 in pg_hba.conf.",
+      "source": "DB8 (1).pdf"
+    },
+    {
+      "id": "s8-q058",
+      "topic": "Hands-on lab",
+      "page": 33,
+      "question": "How does the replica obtain changes from the primary in the lab’s streaming setup?",
+      "options": {
+        "A": "By periodically copying query screenshots",
+        "B": "By receiving and replaying streamed WAL records",
+        "C": "By independently executing web-form SQL",
+        "D": "By rebuilding all tables from CSV per request"
+      },
+      "answer": "B",
+      "explanation": "The primary streams WAL, which is replayed at the replica.",
+      "source": "DB8 (1).pdf"
+    },
+    {
+      "id": "s8-q059",
+      "topic": "Hands-on lab",
+      "page": 34,
+      "question": "After updating customer.active on the primary, what is the intended verification on the replica?",
+      "options": {
+        "A": "Run pg_restore again before every read.",
+        "B": "Change the replica into a writable shard.",
+        "C": "Query the same customer and observe the propagated value.",
+        "D": "Delete the customer so both nodes match."
+      },
+      "answer": "C",
+      "explanation": "The lab checks that the new active value can be read on the replica after replication.",
+      "source": "DB8 (1).pdf"
+    },
+    {
+      "id": "s8-q060",
+      "topic": "Hands-on lab",
+      "page": 34,
+      "question": "Why should DELETE FROM rental fail when executed on the read-only replica in the lab?",
+      "options": {
+        "A": "The rental table has no primary key.",
+        "B": "Only SELECT queries can be parameterized.",
+        "C": "Cross-shard joins are unsupported.",
+        "D": "The replica rejects writes in a read-only transaction."
+      },
+      "answer": "D",
+      "explanation": "The lab shows a cannot execute DELETE in a read-only transaction error.",
+      "source": "DB8 (1).pdf"
+    },
+    {
+      "id": "s8-q061",
+      "topic": "Hands-on lab",
+      "page": 14,
+      "question": "A project requires low write latency even if a replica is temporarily behind. Which option matches the lecture’s trade-off?",
+      "options": {
+        "A": "Asynchronous replication, accepting possible lag",
+        "B": "Synchronous replication, waiting for replica acknowledgement",
+        "C": "A single-node setup with no redundancy",
+        "D": "Two-phase commit over all read replicas"
+      },
+      "answer": "A",
+      "explanation": "Asynchronous mode favors fast commits but admits replication lag; synchronous waits for acknowledgement.",
+      "source": "DB8 (1).pdf"
+    },
+    {
+      "id": "s8-q062",
+      "topic": "Hands-on lab",
+      "page": 21,
+      "question": "An application suffers uneven shard load because new IDs all fall into the highest range. Which alternative does the slide present for more even distribution?",
+      "options": {
+        "A": "Replacing all replicas with one server",
+        "B": "Hash-based assignment of customer IDs",
+        "C": "Ordering every table by customer_id",
+        "D": "Enabling synchronous replication everywhere"
+      },
+      "answer": "B",
+      "explanation": "Hash-based sharding is presented as a way to distribute keys more evenly than ranges.",
+      "source": "DB8 (1).pdf"
+    },
+    {
+      "id": "s8-q063",
+      "topic": "Hands-on lab",
+      "page": 25,
+      "question": "Which statement avoids a common misunderstanding of the CAP theorem?",
+      "options": {
+        "A": "Every distributed system always chooses exactly two properties regardless of failures.",
+        "B": "A non-partitioned system must reject either all reads or all writes.",
+        "C": "When a partition occurs, maintaining strong consistency can require rejecting some requests.",
+        "D": "Partition tolerance means the network will never lose messages."
+      },
+      "answer": "C",
+      "explanation": "The lecture specifically frames the C-versus-A choice in the presence of a network partition.",
+      "source": "DB8 (1).pdf"
+    }
+  ]
+}

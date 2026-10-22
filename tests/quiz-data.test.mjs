@@ -45,6 +45,7 @@ const expected = {
     'database/session-5': [56, 1, '52aec9562bd05cbbfce8536e37dbf91e81673cdb6c617020e6c45d2074786601'],
     'database/session-6': [50, 1, 'e9140610000b13c44a3eb1f13772816eaf9738c70bc80c2aeb25178f8740434b'],
     'database/session-7': [49, 1, '5c225e013fcd695c2d499cf204bf966b08b67dc99b073d7a656bc72c8c2f6b0b'],
+    'database/session-8': [63, 1, 'a930cfb21d1131739efccbf75d6ba0ec83e461664cce44c1fd2536d1e8578bc8'],
     'database/sample-midterm-test': [40, 1, '07c8cdcfb25dcbc6a3a9ca550d4d7c08d54f71ce517506a97a6a0bcf4dfdabd9'],
 };
 
@@ -104,7 +105,7 @@ test('every rendered question has the supported schema and valid answer IDs', ()
             }
         }
     }
-    assert.equal(seenIds.size, 1077);
+    assert.equal(seenIds.size, 1140);
 });
 
 test('sample midterm has all 40 MCQs, validated answers and available lecture sources', () => {
@@ -286,6 +287,42 @@ test('Database Session 7 keeps progress and study-mode references scoped to curr
     assert.deepEqual(JSON.parse(JSON.stringify(practice.selectPracticeItems(refs, catalog, { subjectId: 'database', chapterId: chapter.id })
         .map(item => item.questionId))), [current.questionId]);
     assert.equal(exam.examPool(catalog, { subjectId: 'database', chapterId: chapter.id, count: 'all', minutes: null }).length, 49);
+});
+
+test('Database Session 8 keeps progress and study-mode references scoped to current IDs', () => {
+    const chapter = subjects.database.chapters.find(item => item.id === 'session-8');
+    assert.ok(chapter);
+    const progress = load('lib/quiz-progress.ts');
+    const bookmarks = load('lib/bookmarks.ts');
+    const bookmarkCatalog = load('lib/bookmark-catalog.ts');
+    const mistakes = load('lib/mistakes.ts');
+    const rounds = load('lib/review-round.ts');
+    const practice = load('lib/bookmark-practice.ts');
+    const exam = load('lib/exam.ts');
+    const current = { subjectId: 'database', chapterId: chapter.id, questionId: chapter.questions[0].id };
+    const retired = { ...current, questionId: 'db-s8-retired' };
+    const foreign = { ...current, chapterId: 'session-7' };
+    assert.notEqual(progress.quizProgressKey('database', chapter.id), progress.quizProgressKey('database', 'session-7'));
+    const raw = JSON.stringify({ version: 1, currentQuestionId: retired.questionId, answers: {
+        [current.questionId]: { optionId: 'b', isSubmitted: true },
+        [retired.questionId]: { optionId: 'a', isSubmitted: true },
+    } });
+    assert.deepEqual(JSON.parse(JSON.stringify(progress.restoreProgress(raw, chapter.questions))), {
+        currentIndex: 0, answers: { [current.questionId]: { optionId: 'b', isSubmitted: true } },
+    });
+    assert.equal(progress.summarizeProgress(raw, chapter.questions).submitted, 1);
+    const refs = [current, retired, foreign];
+    const catalog = chapter.questions.map(question => ({ ...current, questionId: question.id,
+        subjectTitle: 'Database', chapterTitle: chapter.title, contentRevision: chapter.revision,
+        prompt: question.prompt, question }));
+    const sections = [{ id: 'database', title: 'Database', chapters: [{ id: chapter.id, title: chapter.title }] }];
+    const entries = bookmarkCatalog.resolveBookmarkEntries(bookmarks.parseBookmarks(JSON.stringify({ version: 1, items: refs })), catalog, sections);
+    assert.deepEqual(JSON.parse(JSON.stringify(entries.map(entry => entry.missing))), [false, true, true]);
+    assert.deepEqual(JSON.parse(JSON.stringify(mistakes.parseMistakes(JSON.stringify({ version: 1, items: refs })))), refs);
+    assert.deepEqual(JSON.parse(JSON.stringify(rounds.createReviewRound(refs, catalog, rounds.ALL_SCOPE).map(item => item.questionId))), [current.questionId]);
+    assert.deepEqual(JSON.parse(JSON.stringify(practice.selectPracticeItems(refs, catalog, { subjectId: 'database', chapterId: chapter.id })
+        .map(item => item.questionId))), [current.questionId]);
+    assert.equal(exam.examPool(catalog, { subjectId: 'database', chapterId: chapter.id, count: 'all', minutes: null }).length, 63);
 });
 
 test('Database Session 1 preserves supplied questions and links to actual lecture pages', () => {
