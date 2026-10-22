@@ -1,0 +1,179 @@
+-- Stage 3B PoC: database-enforced CAS for quiz_progress only.
+-- The caller supplies no user_id. This migration intentionally does not touch
+-- bookmarks, mistakes, review_rounds, or the previously applied core migration.
+begin;
+
+create role studyhub_quiz_rpc nologin noinherit nobypassrls;
+grant usage on schema public, auth to studyhub_quiz_rpc;
+grant execute on function auth.uid() to studyhub_quiz_rpc;
+grant select on public.quiz_progress to studyhub_quiz_rpc;
+grant insert (user_id, subject_id, chapter_id, current_question_id, answers,
+    reset_at, last_operation_id) on public.quiz_progress to studyhub_quiz_rpc;
+grant update (current_question_id, answers, reset_at, last_operation_id)
+    on public.quiz_progress to studyhub_quiz_rpc;
+
+-- The function owner is not the table owner and cannot bypass RLS. Policies
+-- also constrain the definer role to the JWT owner, independently of the
+-- explicit owner predicates inside the function.
+create policy quiz_progress_rpc_select_own on public.quiz_progress
+    for select to studyhub_quiz_rpc using (user_id = (select auth.uid()));
+create policy quiz_progress_rpc_insert_own on public.quiz_progress
+    for insert to studyhub_quiz_rpc with check (user_id = (select auth.uid()));
+create policy quiz_progress_rpc_update_own on public.quiz_progress
+    for update to studyhub_quiz_rpc
+    using (user_id = (select auth.uid()))
+    with check (user_id = (select auth.uid()));
+
+create function public.cas_quiz_progress(
+    p_subject_id text,
+    p_chapter_id text,
+    p_expected_revision bigint,
+    p_operation_id uuid,
+    p_action text,
+    p_current_question_id text,
+    p_answers jsonb
+)
+returns jsonb
+language plpgsql
+volatile
+security definer
+set search_path = ''
+as $$
+declare
+    v_user_id uuid := auth.uid();
+    v_row public.quiz_progress%rowtype;
+    v_reset_at timestamptz;
+    v_snapshot_matches boolean;
+begin
+    if v_user_id is null then
+        raise exception 'authentication required' using errcode = '28000';
+    end if;
+    if p_subject_id is null or pg_catalog.btrim(p_subject_id) = ''
+        or p_chapter_id is null or pg_catalog.btrim(p_chapter_id) = '' then
+        raise exception 'subject_id and chapter_id are required' using errcode = '22023';
+    end if;
+    if p_expected_revision is null or p_expected_revision < 0
+        or p_expected_revision = 9223372036854775807 then
+        raise exception 'invalid expected_revision' using errcode = '22023';
+    end if;
+    if p_operation_id is null
+        or p_operation_id = '00000000-0000-0000-0000-000000000000'::uuid then
+        raise exception 'invalid operation_id' using errcode = '22023';
+    end if;
+    if p_action is null or p_action not in ('save', 'reset') then
+        raise exception 'invalid action' using errcode = '22023';
+    end if;
+    if p_answers is null or pg_catalog.jsonb_typeof(p_answers) <> 'object' then
+        raise exception 'answers must be a JSON object' using errcode = '22023';
+    end if;
+    if p_current_question_id is not null
+        and pg_catalog.btrim(p_current_question_id) = '' then
+        raise exception 'invalid current_question_id' using errcode = '22023';
+    end if;
+    if p_action = 'reset' and (p_current_question_id is not null
+        or p_answers <> '{}'::jsonb) then
+        raise exception 'reset requires an empty snapshot' using errcode = '22023';
+    end if;
+
+    if p_action = 'reset' then
+        v_reset_at := pg_catalog.statement_timestamp();
+    end if;
+
+    if p_expected_revision = 0 then
+        insert into public.quiz_progress (
+            user_id, subject_id, chapter_id, current_question_id, answers,
+            reset_at, last_operation_id
+        ) values (
+            v_user_id, p_subject_id, p_chapter_id, p_current_question_id,
+            p_answers, v_reset_at, p_operation_id
+        )
+        on conflict (user_id, subject_id, chapter_id) do nothing
+        returning * into v_row;
+        if found then
+            return pg_catalog.jsonb_build_object(
+                'status', 'applied', 'revision', v_row.revision,
+                'current', pg_catalog.to_jsonb(v_row));
+        end if;
+        -- A separate statement sees the winner of a concurrent INSERT under
+        -- READ COMMITTED. The PK arbitrates create-if-absent.
+    end if;
+
+    select * into v_row from public.quiz_progress
+    where user_id = v_user_id and subject_id = p_subject_id
+        and chapter_id = p_chapter_id
+    for update;
+    if not found then
+        return pg_catalog.jsonb_build_object(
+            'status', 'conflict', 'revision', null, 'current', null);
+    end if;
+
+    if p_action = 'save' then
+        v_snapshot_matches := v_row.reset_at is null
+            and v_row.current_question_id is not distinct from p_current_question_id
+            and v_row.answers = p_answers;
+    else
+        v_snapshot_matches := v_row.reset_at is not null
+            and v_row.current_question_id is null
+            and v_row.answers = '{}'::jsonb;
+    end if;
+
+    if v_row.last_operation_id = p_operation_id then
+        if not v_snapshot_matches then
+            raise exception 'operation_id_reused_with_different_payload'
+                using errcode = '22023';
+        end if;
+        if v_row.revision = p_expected_revision + 1 then
+            return pg_catalog.jsonb_build_object(
+                'status', 'already_applied', 'revision', v_row.revision,
+                'current', pg_catalog.to_jsonb(v_row));
+        end if;
+        return pg_catalog.jsonb_build_object(
+            'status', 'conflict', 'revision', v_row.revision,
+            'current', pg_catalog.to_jsonb(v_row));
+    end if;
+
+    if v_row.revision <> p_expected_revision then
+        return pg_catalog.jsonb_build_object(
+            'status', 'conflict', 'revision', v_row.revision,
+            'current', pg_catalog.to_jsonb(v_row));
+    end if;
+
+    -- The row remains locked through this mutation. The existing BEFORE
+    -- trigger alone increments revision, preserves created_at, and owns
+    -- updated_at/reset_at. Do not assign those fields here.
+    update public.quiz_progress
+    set current_question_id = p_current_question_id,
+        answers = p_answers,
+        reset_at = v_reset_at,
+        last_operation_id = p_operation_id
+    where user_id = v_user_id and subject_id = p_subject_id
+        and chapter_id = p_chapter_id and revision = p_expected_revision
+    returning * into v_row;
+    if not found then
+        raise exception 'CAS invariant failed after row lock' using errcode = 'P0001';
+    end if;
+    return pg_catalog.jsonb_build_object(
+        'status', 'applied', 'revision', v_row.revision,
+        'current', pg_catalog.to_jsonb(v_row));
+end;
+$$;
+
+-- PostgreSQL requires the new function owner to have CREATE on its schema at
+-- ownership transfer time. The temporary grant is removed before commit.
+grant create on schema public to studyhub_quiz_rpc;
+alter function public.cas_quiz_progress(text, text, bigint, uuid, text, text, jsonb)
+    owner to studyhub_quiz_rpc;
+revoke create on schema public from studyhub_quiz_rpc;
+
+revoke all on function public.cas_quiz_progress(text, text, bigint, uuid, text, text, jsonb)
+    from public, anon, authenticated, service_role;
+grant execute on function public.cas_quiz_progress(text, text, bigint, uuid, text, text, jsonb)
+    to authenticated;
+
+-- Remove every ordinary client write path, including the column grants from
+-- the core migration. SELECT remains available for own-row refetch.
+revoke update (current_question_id, answers, reset_at, last_operation_id)
+    on public.quiz_progress from authenticated;
+revoke insert, update on public.quiz_progress from public, anon, authenticated;
+
+commit;

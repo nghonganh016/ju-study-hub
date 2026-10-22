@@ -753,3 +753,27 @@
 - Xác nhận lại manifest `linux/amd64` `sha256:31c11d93...`; image backup `ec2ad414...` và reference theo digest `31c11d93...` đều `linux/amd64`, có cùng danh sách 14 RootFS layer theo thứ tự. Không suy ra lỗi upstream hoặc local cache chỉ từ ID/layers.
 - Docker context `default` và `desktop-linux` đều trỏ tới cùng Engine ID Docker Desktop; không phát hiện host có image store độc lập được cấu hình. Không pull lại, không khởi động WSL hoặc tạo host mới. Kết quả file 0 byte và lỗi Node chỉ thuộc Engine hiện tại; phép thử độc lập chưa thực hiện, hai giả thuyết vẫn chưa xác định.
 - Cập nhật báo cáo với điều kiện thiếu và hai hướng đọc thêm ít rủi ro để Ju chọn. Không sửa image/tag, volume, database, source, SQL hoặc CLI; dừng trước Stage 2B. `git diff --check` đạt.
+
+## 22/10/2026: Stage 2B, chuẩn bị migration core để review
+
+- Theo thông tin Ju cung cấp, Supabase local tối giản đã chạy PostgreSQL và Studio; Storage, Realtime, Analytics tạm tắt. Tạo `supabase/migrations/20261022100804_create_core_schema.sql` bằng `supabase migration new`, rồi viết bốn bảng core từ SQL draft và D1–D10. Chưa áp migration hoặc thay đổi database.
+- Giữ PK/FK tới `auth.users`, RLS owner và tombstone; đổi Review round ID sang `text`, dùng trigger để đặt revision, audit/reset/clear timestamps phía server và yêu cầu operation UUID mới khi UPDATE. Giới hạn quyền UPDATE theo cột, không cấp DELETE cho client thông thường. Direct owner UPDATE vẫn có thể bỏ expected revision, nên CAS chưa được cưỡng chế tại database; RPC PoC thuộc Stage 3.
+- Kiểm tra tĩnh: bốn bảng, bốn FK, bốn trigger, bốn lệnh bật RLS, 12 policies owner; không có grant/policy DELETE hoặc bảng practice/exam. `psql`, `pg_format`, `pgsanity` không có trong PATH; chưa parse/thực thi SQL bằng PostgreSQL. Cần Stage 2C thử migration trên database thử, RLS với A/B/anon, trigger/tombstone và direct UPDATE bypass. `git diff --check` đạt; không commit, push hoặc deploy.
+
+## 22/10/2026: Stage 2C, kiểm chứng migration core và RLS local
+
+- Xác nhận PostgreSQL Supabase local chưa có core tables, migration history hoặc Auth users; Storage, Realtime và Analytics tắt. `supabase start` được chạy khi tạm giữ migration để kiểm tra preflight; file được khôi phục với SHA-256 không đổi. Sau đó `npx --no-install supabase migration up --local` áp dụng migration một lần thành công, không reset database.
+- Catalog xác nhận bốn bảng core, PK/FK/CHECK, RLS, 12 owner policies, trigger và grants. REST tests với hai Auth session A/B và role `anon` xác nhận isolation, chặn DELETE/sửa cột server-managed, revision/operation ID, tombstone và JSONB checks. Direct UPDATE cùng owner không kiểm tra expected revision và tái hiện lost update như giới hạn Stage 2B; Stage 3 cần RPC CAS và xem xét thu hồi direct UPDATE.
+- Ghi ma trận PASS/FAIL/NOT TESTED cùng bằng chứng tại `docs/supabase/core-migration-validation.md`. Dữ liệu thử local còn 4 Auth users và 11 core rows; không xóa/reset. Không sửa migration, SQL draft hoặc application source; không commit, push hay deploy. `git diff --check` đạt.
+
+## 22/10/2026: Stage 3A, thiết kế RPC CAS cho quiz progress
+
+- Tạo `docs/supabase/cas-rpc-design.md` từ quyết định D6/D8, migration và kết quả Stage 2C: contract create/update/reset theo expected revision, operation ID, tombstone, row lock/transaction và trigger hiện hành.
+- Ghi giới hạn `last_operation_id` chỉ nhận retry khi operation vẫn là cuối, phương án `SECURITY DEFINER` với role riêng/RLS và yêu cầu thu hồi direct INSERT/UPDATE trước khi gọi database-enforced CAS. Lập ma trận test Stage 3B/3C và các quyết định cần Ju duyệt.
+- Chỉ sửa Markdown; chưa tạo hoặc thực thi SQL/migration, không đổi 4 Auth users và 11 rows test local. `git diff --check` đạt; chưa kiểm chứng RPC, quyền hay concurrency trên database. Không commit, push hoặc deploy.
+
+## 22/10/2026: Stage 3B, thử triển khai RPC CAS bị chặn ở ownership
+
+- Preflight local xác nhận PostgreSQL healthy, migration core đã áp, RLS bật và dữ liệu thử còn 4 Auth users, 11 core rows. Viết bản SQL cho `cas_quiz_progress` với role `NOLOGIN`/`NOBYPASSRLS`, RLS riêng và thu hồi direct quiz INSERT/UPDATE; không sửa migration core hoặc ba bảng khác.
+- `supabase migration up --local` thất bại tại `ALTER FUNCTION ... OWNER TO studyhub_quiz_rpc` với SQLSTATE `42501` (`must be able to SET ROLE`). Kiểm tra read-only sau lỗi xác nhận transaction rollback: không có migration mới trong history, role/function/policies mới không tồn tại, direct write grants cũ vẫn còn và số row không đổi. Dừng, không thử phương án owner bypass RLS hoặc reset database.
+- Giữ bản SQL dưới đuôi `.sql.stage3b-blocked` để CLI không tự áp lại khi khởi động local; ghi nguyên nhân và phương án membership tạm cần Ju review trong `docs/supabase/cas-rpc-design.md`. Chưa chạy test RPC hoặc Stage 3C. Không commit, push hoặc deploy.
