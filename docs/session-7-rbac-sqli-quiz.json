@@ -1,0 +1,703 @@
+[
+  {
+    "n": 1,
+    "q": "Which description of an RLS policy in PostgreSQL is most accurate?",
+    "options": [
+      "A trigger that copies allowed rows into a separate private table",
+      "A rule in the app code that removes rows after the query returns",
+      "A filter condition the database adds to queries automatically",
+      "A view that each developer must call instead of the base table"
+    ],
+    "answer": "C",
+    "pdf_page": 1,
+    "page": 23,
+    "topic": "Original Quiz 5",
+    "explanation": "A policy acts like a silent WHERE clause that the engine adds to every query from the affected roles, so no application code has to change."
+  },
+  {
+    "n": 2,
+    "q": "Why do prepared statements stop SQL Injection?",
+    "options": [
+      "The database removes all quote characters from the input",
+      "The query structure is fixed before the user values arrive",
+      "The query runs with superuser rights, so no errors can occur",
+      "The user input is encrypted before it is sent to the server"
+    ],
+    "answer": "B",
+    "pdf_page": 1,
+    "page": 13,
+    "topic": "Original Quiz 5",
+    "explanation": "The SQL template is parsed first and the query tree is locked. Values sent later are treated only as literal data, so they cannot change the logic of the query."
+  },
+  {
+    "n": 3,
+    "q": "One RLS policy on rental uses the condition staff_id = (SELECT staff_id FROM staff WHERE username = current_user). Why does this single policy show Mike only his rentals and Jon only his rentals?",
+    "options": [
+      "The application adds a WHERE clause for each user before it sends the query",
+      "The policy is rebuilt by the DBA each time a different staff member logs in",
+      "current_user is read per session, so each user gets a different filter",
+      "Postgres makes one copy of the rental table for every member of store_clerk"
+    ],
+    "answer": "C",
+    "pdf_page": 2,
+    "page": 24,
+    "topic": "Original Quiz 5",
+    "explanation": "current_user returns the role of the current database session, so the same policy expression produces a different filter for each logged-in user. No application code or extra policies are needed."
+  },
+  {
+    "n": 4,
+    "q": "The DVD store website hides all SQL error messages. An attacker sends customer_id=5 AND 1=1 and then customer_id=5 AND 1=2. In this Boolean-based blind SQLi, what signal does the attacker rely on?",
+    "options": [
+      "A copy of the database backup left on the server",
+      "Detailed SQL error messages printed on the web page",
+      "Differences in the page content for TRUE vs FALSE",
+      "The exact time the server takes to send a reply"
+    ],
+    "answer": "C",
+    "pdf_page": 2,
+    "page": 9,
+    "topic": "Original Quiz 5",
+    "explanation": "Boolean-based blind SQLi asks TRUE/FALSE questions and reads the answer from how the page changes (profile loads vs. profile disappears). No error messages are needed."
+  },
+  {
+    "n": 5,
+    "q": "In modern PostgreSQL (since 8.1), what is the relationship between a \"user\" and a \"group\"?",
+    "options": [
+      "Groups can log in, but users can only receive privileges",
+      "Both are roles; a user is simply a role with LOGIN",
+      "Users are stored in tables; groups are stored in files",
+      "They are separate objects that cannot be linked together"
+    ],
+    "answer": "B",
+    "pdf_page": 2,
+    "page": 17,
+    "topic": "Original Quiz 5",
+    "explanation": "Users and groups were merged into one concept: ROLE. A role with LOGIN acts as a user; a role without LOGIN that other roles are members of acts as a group."
+  },
+  {
+    "n": 6,
+    "q": "Which command is equivalent to CREATE USER alice WITH PASSWORD 'x';?",
+    "options": [
+      "CREATE ROLE alice WITH NOLOGIN PASSWORD 'x';",
+      "CREATE ROLE alice WITH LOGIN PASSWORD 'x';",
+      "CREATE GROUP alice WITH INHERIT PASSWORD 'x';",
+      "CREATE ROLE alice WITH SUPERUSER PASSWORD 'x';"
+    ],
+    "answer": "B",
+    "pdf_page": 3,
+    "page": 17,
+    "topic": "Original Quiz 5",
+    "explanation": "CREATE USER is the same as CREATE ROLE, except that LOGIN is added by default."
+  },
+  {
+    "n": 7,
+    "q": "RLS is enabled on rental, with a policy that applies only to store_clerk. The DBA connects as postgres (superuser) and runs SELECT COUNT(*) FROM rental;. What happens?",
+    "options": [
+      "It fails, because RLS blocks every role except store_clerk",
+      "It counts all rows, because superusers always bypass RLS",
+      "It returns only the rows whose staff_id is equal to 1",
+      "It returns zero rows, because postgres has no matching policy"
+    ],
+    "answer": "B",
+    "pdf_page": 3,
+    "page": 22,
+    "topic": "Original Quiz 5",
+    "explanation": "Superusers (and roles with BYPASSRLS) always bypass row-level security, so the count includes every row. This is another reason why apps must never connect as postgres."
+  },
+  {
+    "n": 8,
+    "q": "Which statement best describes Second-Order SQL Injection?",
+    "options": [
+      "The attacker uses two different users to log in at once",
+      "The attack is sent twice to make sure that the server accepts it",
+      "The payload runs at once in the first query that reads it",
+      "The payload is stored first and runs later in another query"
+    ],
+    "answer": "D",
+    "pdf_page": 3,
+    "page": 11,
+    "topic": "Original Quiz 5",
+    "explanation": "In second-order SQLi the payload is stored safely first (e.g. as a last name), then executed later when another part of the system reads it and concatenates it into a new query."
+  },
+  {
+    "n": 9,
+    "q": "What is the root cause of SQL Injection?",
+    "options": [
+      "The tables do not have primary keys or indexes",
+      "The database engine has a bug in its own SQL parser",
+      "User input is mixed into SQL code as plain text",
+      "The server runs an outdated PostgreSQL version"
+    ],
+    "answer": "C",
+    "pdf_page": 4,
+    "page": 7,
+    "topic": "Original Quiz 5",
+    "explanation": "SQL Injection is an application-level flaw: raw user input is concatenated into the SQL string, so the engine cannot tell data apart from code."
+  },
+  {
+    "n": 10,
+    "q": "In which situation would an attacker choose time-based blind SQLi (for example, using pg_sleep(10)) instead of Boolean-based blind SQLi?",
+    "options": [
+      "When the page looks the same for TRUE and FALSE",
+      "When the attacker already knows the admin password",
+      "When the website shows full SQL errors to visitors",
+      "When the database uses the Serializable isolation level"
+    ],
+    "answer": "A",
+    "pdf_page": 4,
+    "page": 10,
+    "topic": "Original Quiz 5",
+    "explanation": "When the page is identical for TRUE and FALSE, there is no visual clue. The attacker then uses response time as the signal: a 10-second delay means the condition was TRUE."
+  },
+  {
+    "n": 11,
+    "q": "An AI pre-processing script reads actor names from the actor table and builds an UPDATE statement with a Python f-string. Which statement is true?",
+    "options": [
+      "Data from your own tables is safe because it was checked on insert",
+      "Only data from web forms needs parameters, not data from tables",
+      "f-strings are safe in Python because they escape quotes by default",
+      "Data from your own tables can still carry an injection payload"
+    ],
+    "answer": "D",
+    "pdf_page": 4,
+    "page": 12,
+    "topic": "Original Quiz 5",
+    "explanation": "Golden rule: never fully trust data, even from your own tables. A stored value can carry a payload that runs when it is concatenated into a new query (second-order SQLi). f-strings do no escaping."
+  },
+  {
+    "n": 12,
+    "q": "The store_clerk role was never granted DELETE on rental. A DBA then runs: REVOKE DELETE ON rental FROM store_clerk; What is the effect of this command?",
+    "options": [
+      "It blocks DELETE even when a member gets DELETE in another way",
+      "It raises an error, so the rest of the script stops running",
+      "It has no effect, since PostgreSQL has no explicit deny rule",
+      "It removes the store_clerk role from all of its member users"
+    ],
+    "answer": "C",
+    "pdf_page": 5,
+    "page": 20,
+    "topic": "Original Quiz 5",
+    "explanation": "PostgreSQL privileges are additive; there is no \"deny\" entry. REVOKE only removes a privilege that was granted. If it was never granted, nothing changes, and a member could still get DELETE through a direct grant or another role."
+  },
+  {
+    "n": 13,
+    "q": "According to the Principle of Least Privilege, why is it dangerous to connect a web app or AI pipeline using the postgres account?",
+    "options": [
+      "The postgres account cannot run SELECT on normal tables",
+      "The postgres account is not allowed to use prepared statements",
+      "Superuser connections are slower than normal connections",
+      "A single SQL injection gives the attacker full control"
+    ],
+    "answer": "D",
+    "pdf_page": 5,
+    "page": 16,
+    "topic": "Original Quiz 5",
+    "explanation": "If the app connects as a superuser, any SQL Injection inherits superuser power: the attacker can drop databases, read local files or even run OS commands."
+  },
+  {
+    "n": 14,
+    "q": "Which limitation of traditional RBAC does Row-Level Security solve?",
+    "options": [
+      "RBAC cannot control INSERT, only SELECT and DELETE commands",
+      "RBAC only works when the app uses an ORM such as SQLAlchemy",
+      "RBAC cannot give the same privilege to more than one user at once",
+      "RBAC controls table access, not which rows a user can see"
+    ],
+    "answer": "D",
+    "pdf_page": 5,
+    "page": 21,
+    "topic": "Original Quiz 5",
+    "explanation": "RBAC works at the table level (can this user access the table?). RLS answers a finer question: which specific rows can this user access?"
+  },
+  {
+    "n": 15,
+    "q": "A DBA runs ALTER TABLE rental ENABLE ROW LEVEL SECURITY; but forgets to create any policy. store_clerk still has SELECT on rental. What does a normal (non-owner) member of store_clerk get from SELECT * FROM rental;?",
+    "options": [
+      "Only rows where staff_id is NULL, as a safe default value",
+      "All rows, because RLS only starts working once a policy exists",
+      "No rows, because RLS denies access when no policy matches",
+      "An error, because a table with RLS must have a policy first"
+    ],
+    "answer": "C",
+    "pdf_page": 6,
+    "page": 23,
+    "topic": "Original Quiz 5",
+    "explanation": "When RLS is enabled and no policy applies, PostgreSQL uses a default-deny rule: no rows are visible, and no error is raised."
+  },
+  {
+    "n": 16,
+    "q": "Under PostgreSQL's default isolation level, which anomaly may still occur between two reads in the same transaction?",
+    "options": [
+      "Dirty reads of uncommitted updates",
+      "Non-repeatable reads after another transaction commits",
+      "Uncommitted data becoming durable",
+      "All transactions appearing serial"
+    ],
+    "answer": "B",
+    "page": 4,
+    "topic": "Isolation recap",
+    "explanation": "Read Committed prevents dirty reads but permits non-repeatable reads, as the recap states."
+  },
+  {
+    "n": 17,
+    "q": "An attacker changes labels in an AI training table before a model is retrained. Which risk is illustrated?",
+    "options": [
+      "Index fragmentation",
+      "Transaction deadlock",
+      "Data poisoning",
+      "Query-plan instability"
+    ],
+    "answer": "C",
+    "page": 5,
+    "topic": "AI security",
+    "explanation": "Manipulated training labels can contaminate the data used to train the model."
+  },
+  {
+    "n": 18,
+    "q": "In the slide's vulnerable staff-login example, what is the combined purpose of OR 1=1 and the SQL comment marker?",
+    "options": [
+      "Force the predicate true and comment out the password condition",
+      "Encrypt the username and escape the password",
+      "Create a new staff role and revoke its password",
+      "Delay execution and trigger an error message"
+    ],
+    "answer": "A",
+    "page": 8,
+    "topic": "Classic SQLi",
+    "explanation": "The tautology makes the condition true, and the comment suppresses the remaining password predicate."
+  },
+  {
+    "n": 19,
+    "q": "What role does the single quote in an injected username play in the vulnerable login query?",
+    "options": [
+      "It grants SELECT on staff",
+      "It requests an implicit transaction",
+      "It invokes a PostgreSQL function",
+      "It closes the surrounding SQL string literal"
+    ],
+    "answer": "D",
+    "page": 8,
+    "topic": "Classic SQLi",
+    "explanation": "The quote escapes the intended data string, allowing subsequent input to be interpreted as SQL syntax."
+  },
+  {
+    "n": 20,
+    "q": "A page loads when an injected condition is TRUE and disappears when FALSE. What could an attacker infer by repeatedly changing a substring test?",
+    "options": [
+      "The database engine's physical index layout",
+      "Secret text one character at a time",
+      "The duration of database checkpoints",
+      "The number of open transactions"
+    ],
+    "answer": "B",
+    "page": 9,
+    "topic": "Boolean blind SQLi",
+    "explanation": "The slide shows substring(version(),1,1) as an example of character-by-character inference."
+  },
+  {
+    "n": 21,
+    "q": "A site returns identical page content for TRUE and FALSE. Which observation can still carry information about an injected condition?",
+    "options": [
+      "Whether an index is visible in pgAdmin",
+      "Whether a trigger definition was updated",
+      "A reproducible response-time delay",
+      "A change to the application's CSS"
+    ],
+    "answer": "C",
+    "page": 10,
+    "topic": "Time-based blind SQLi",
+    "explanation": "Time-based blind SQLi uses conditional delay as a side channel when content gives no clue."
+  },
+  {
+    "n": 22,
+    "q": "In the lecture example, what is the purpose of testing current_user in a conditional delay?",
+    "options": [
+      "To discover the database role used by the connection",
+      "To change the active user's password",
+      "To grant access to the payment table",
+      "To list every role in the cluster"
+    ],
+    "answer": "A",
+    "page": 10,
+    "topic": "Time-based blind SQLi",
+    "explanation": "The example conditions the delay on whether current_user is postgres, revealing the connection role through timing."
+  },
+  {
+    "n": 23,
+    "q": "A malicious surname is stored safely but later appended to a reporting query. At which stage does the SQL Injection vulnerability become exploitable?",
+    "options": [
+      "When an index is created for surname",
+      "When the string is inserted using safe parameters",
+      "When the database takes a backup",
+      "When the reporting query mixes the stored value into SQL text"
+    ],
+    "answer": "D",
+    "page": 11,
+    "topic": "Second-order SQLi",
+    "explanation": "Second-order SQLi arises when previously stored content is later treated as executable SQL."
+  },
+  {
+    "n": 24,
+    "q": "An AI pipeline reads actor names from a trusted-looking database table. Which coding change best addresses the lecture's second-order SQLi risk?",
+    "options": [
+      "Use a larger VARCHAR field",
+      "Build an UPDATE with f-string formatting",
+      "Bind actor names as query parameters when issuing UPDATE",
+      "Disable all indexes on the actor table"
+    ],
+    "answer": "C",
+    "page": 12,
+    "topic": "AI pipeline",
+    "explanation": "Stored strings are not inherently safe; parameter binding prevents actor names from modifying the UPDATE statement structure."
+  },
+  {
+    "n": 25,
+    "q": "In PREPARE staff_login(text, text), what do $1 and $2 represent?",
+    "options": [
+      "Column positions in the staff table",
+      "Parameter placeholders populated at execution time",
+      "The first two rows returned by the query",
+      "Two role identifiers granted LOGIN"
+    ],
+    "answer": "B",
+    "page": 13,
+    "topic": "Prepared statements",
+    "explanation": "The prepared query uses placeholders for username and password, with values bound later at EXECUTE."
+  },
+  {
+    "n": 26,
+    "q": "A malicious username contains quote characters and OR 1=1, but is sent as a bound parameter. What happens to the query's intended predicate?",
+    "options": [
+      "It is replaced with an always-true expression",
+      "It becomes a new SQL comment",
+      "It is executed as an independent statement",
+      "It remains unchanged because the payload is treated as data"
+    ],
+    "answer": "D",
+    "page": 13,
+    "topic": "Prepared statements",
+    "explanation": "The prepared statement's SQL structure is fixed; the payload is treated as a literal username value."
+  },
+  {
+    "n": 27,
+    "q": "A search endpoint expects customer_id to be an integer. Which additional application-layer control matches the slide's guidance?",
+    "options": [
+      "Validate that customer_id has an integer type before querying",
+      "Grant the application SUPERUSER temporarily",
+      "Use string concatenation only for numeric inputs",
+      "Allow all customer_id values and rely on hidden errors"
+    ],
+    "answer": "A",
+    "page": 14,
+    "topic": "Defense in depth",
+    "explanation": "Input validation should enforce integer types for customer_id in addition to parameterized queries."
+  },
+  {
+    "n": 28,
+    "q": "Which combination most closely reflects the defense-in-depth approach in the lecture?",
+    "options": [
+      "Only remove database error messages",
+      "Only assign a password to the postgres role",
+      "Use parameterized queries, input validation, and least-privilege connections",
+      "Make all tables read-only for the database owner"
+    ],
+    "answer": "C",
+    "page": 14,
+    "topic": "Defense in depth",
+    "explanation": "The slide combines ORM/prepared statement use, validation, and least privilege rather than relying on a single layer."
+  },
+  {
+    "n": 29,
+    "q": "An inference service only reads feature records. Under PoLP, which account configuration is most appropriate?",
+    "options": [
+      "A superuser account so queries never fail",
+      "A restricted role with only the required read privileges",
+      "A role with CREATE ROLE and DROP permissions",
+      "A table owner account with unrestricted write access"
+    ],
+    "answer": "B",
+    "page": 16,
+    "topic": "Least privilege",
+    "explanation": "The Principle of Least Privilege requires only the minimum access needed for the service to function."
+  },
+  {
+    "n": 30,
+    "q": "What is the immediate effect of CREATE ROLE data_analyst; as written in the lecture?",
+    "options": [
+      "It creates a role without LOGIN by default",
+      "It creates a role that can log in automatically",
+      "It creates a database named data_analyst",
+      "It grants SELECT on all public tables"
+    ],
+    "answer": "A",
+    "page": 17,
+    "topic": "Role basics",
+    "explanation": "CREATE ROLE defaults to NOLOGIN, so the example acts as a group-style role."
+  },
+  {
+    "n": 31,
+    "q": "Why does RBAC usually assign privileges to group roles before users?",
+    "options": [
+      "It automatically turns RLS off",
+      "It replaces the need for table grants",
+      "It forces all users to share one password",
+      "It centralizes permission management for multiple users"
+    ],
+    "answer": "D",
+    "page": 18,
+    "topic": "RBAC design",
+    "explanation": "Permissions can be granted once to the role and reused via membership by Mike, Jon, and others."
+  },
+  {
+    "n": 32,
+    "q": "Which command adds jon to the existing store_clerk role?",
+    "options": [
+      "GRANT jon TO store_clerk;",
+      "GRANT store_clerk TO jon;",
+      "ALTER ROLE store_clerk OWNER TO jon;",
+      "CREATE USER store_clerk FOR jon;"
+    ],
+    "answer": "B",
+    "page": 19,
+    "topic": "Role membership",
+    "explanation": "GRANT store_clerk TO jon assigns membership in the group role to Jon."
+  },
+  {
+    "n": 33,
+    "q": "A DBA wants to remove Jon's membership in store_clerk without deleting either role. Which command matches the lecture?",
+    "options": [
+      "DROP ROLE jon;",
+      "REVOKE jon FROM store_clerk;",
+      "REVOKE store_clerk FROM jon;",
+      "DROP OWNED BY store_clerk;"
+    ],
+    "answer": "C",
+    "page": 19,
+    "topic": "Role membership",
+    "explanation": "Role membership is removed by revoking the granted group role from the member."
+  },
+  {
+    "n": 34,
+    "q": "Which SQL command grants clerks permission to read film records without allowing film changes?",
+    "options": [
+      "GRANT SELECT ON film TO store_clerk;",
+      "GRANT INSERT ON film TO store_clerk;",
+      "GRANT UPDATE ON film TO store_clerk;",
+      "GRANT ALL ON film TO store_clerk;"
+    ],
+    "answer": "A",
+    "page": 20,
+    "topic": "Table privileges",
+    "explanation": "SELECT permits reading; INSERT and UPDATE change data, while ALL grants broader permissions."
+  },
+  {
+    "n": 35,
+    "q": "According to the lecture's RBAC setup, which privilege set is granted on rental to store_clerk?",
+    "options": [
+      "SELECT and DELETE",
+      "INSERT and DELETE",
+      "UPDATE and DELETE",
+      "SELECT, INSERT, and UPDATE"
+    ],
+    "answer": "D",
+    "page": 20,
+    "topic": "Table privileges",
+    "explanation": "The rental grant includes SELECT, INSERT, UPDATE, while DELETE is not granted."
+  },
+  {
+    "n": 36,
+    "q": "Mike and Jon both inherit SELECT ON rental from store_clerk. Without RLS, what is the relevant privacy problem?",
+    "options": [
+      "Only the role creator can query rental",
+      "Each clerk can read rentals belonging to the other clerk",
+      "Membership revokes SELECT from both users",
+      "The database copies rental into separate tables"
+    ],
+    "answer": "B",
+    "page": 21,
+    "topic": "RBAC limitation",
+    "explanation": "Table-level RBAC permits access to the table, not different subsets of its rows."
+  },
+  {
+    "n": 37,
+    "q": "Why is RLS especially useful for a multi-tenant application sharing one table?",
+    "options": [
+      "It eliminates every need for application authentication",
+      "It guarantees queries use index scans",
+      "It restricts which rows each tenant's role can access",
+      "It encrypts every row with a different key"
+    ],
+    "answer": "C",
+    "page": 22,
+    "topic": "RLS use cases",
+    "explanation": "RLS applies database-enforced row filters so tenants can share tables while maintaining data isolation."
+  },
+  {
+    "n": 38,
+    "q": "Which sequence correctly implements the basic two-step RLS approach?",
+    "options": [
+      "Enable RLS on a table, then create a policy for permitted rows",
+      "Create an index, then update the table's owner",
+      "Create separate tables per user, then hide the originals",
+      "Revoke LOGIN from every user, then enable autocommit"
+    ],
+    "answer": "A",
+    "page": 23,
+    "topic": "RLS setup",
+    "explanation": "The lecture first enables row-level security and then defines a policy that controls visibility."
+  },
+  {
+    "n": 39,
+    "q": "In CREATE POLICY ... FOR ALL TO store_clerk USING (...), which clause identifies the roles covered by the policy?",
+    "options": [
+      "USING",
+      "FOR ALL",
+      "ON rental",
+      "TO store_clerk"
+    ],
+    "answer": "D",
+    "page": 24,
+    "topic": "RLS syntax",
+    "explanation": "TO selects the role or roles to which the policy applies; USING provides the row filter."
+  },
+  {
+    "n": 40,
+    "q": "What does FOR ALL signify in the slide's rental policy definition?",
+    "options": [
+      "The policy ignores row filters",
+      "The policy targets all four command categories named in the slide",
+      "The policy grants ALL table privileges",
+      "The policy applies to every database in the cluster"
+    ],
+    "answer": "B",
+    "page": 24,
+    "topic": "RLS syntax",
+    "explanation": "The slide explicitly explains FOR ALL as applying to SELECT, INSERT, UPDATE, and DELETE policy behavior."
+  },
+  {
+    "n": 41,
+    "q": "Which condition is used in the rental policy to match a row to the currently active staff role?",
+    "options": [
+      "rental_id = current_user",
+      "customer_id = current_user",
+      "staff_id = (SELECT staff_id FROM staff WHERE username = current_user)",
+      "staff_id IS NOT NULL"
+    ],
+    "answer": "C",
+    "page": 24,
+    "topic": "RLS syntax",
+    "explanation": "The policy looks up the staff_id for the current database role and compares it with each rental row's staff_id."
+  },
+  {
+    "n": 42,
+    "q": "After SET ROLE mike, why can SELECT * FROM rental return Mike's records without a manual WHERE clause?",
+    "options": [
+      "The database applies the matching RLS policy automatically",
+      "SET ROLE physically deletes Jon's rows",
+      "PostgreSQL creates a materialized view for Mike",
+      "The application adds a special staff filter"
+    ],
+    "answer": "A",
+    "page": 25,
+    "topic": "Testing RLS",
+    "explanation": "PostgreSQL automatically enforces the policy condition when the query runs in Mike's role context."
+  },
+  {
+    "n": 43,
+    "q": "In Lab 1, which table permissions should cashier_role have on payment?",
+    "options": [
+      "SELECT only",
+      "INSERT and UPDATE only",
+      "SELECT, UPDATE, and DELETE",
+      "SELECT and INSERT"
+    ],
+    "answer": "D",
+    "page": 28,
+    "topic": "RBAC lab",
+    "explanation": "Lab 1 requires SELECT and INSERT on payment; UPDATE and DELETE are not part of this grant."
+  },
+  {
+    "n": 44,
+    "q": "Which statement grants cashier_role read access to both film and staff in the lecture's solution?",
+    "options": [
+      "GRANT SELECT ON payment TO cashier_role;",
+      "GRANT SELECT ON film, staff TO cashier_role;",
+      "GRANT SELECT ON DATABASE dvdrental TO cashier_role;",
+      "GRANT ALL ON film, staff TO cashier_role;"
+    ],
+    "answer": "B",
+    "page": 29,
+    "topic": "RBAC lab",
+    "explanation": "The lab's solution grants SELECT on both named tables in one command."
+  },
+  {
+    "n": 45,
+    "q": "In the payment isolation lab, which table is the target of ENABLE ROW LEVEL SECURITY?",
+    "options": [
+      "staff",
+      "rental",
+      "payment",
+      "film"
+    ],
+    "answer": "C",
+    "page": 30,
+    "topic": "RLS lab",
+    "explanation": "Lab 2 enables RLS on the payment table to restrict each cashier's payment visibility."
+  },
+  {
+    "n": 46,
+    "q": "Which RLS command scope is used for isolate_cashier_payments in the solution?",
+    "options": [
+      "FOR SELECT TO cashier_role",
+      "FOR ALL TO PUBLIC",
+      "FOR UPDATE TO store_manager",
+      "FOR INSERT TO postgres"
+    ],
+    "answer": "A",
+    "page": 31,
+    "topic": "RLS lab",
+    "explanation": "The solution creates a SELECT policy that applies to cashier_role specifically."
+  },
+  {
+    "n": 47,
+    "q": "According to the Lab 2 solution, which output pair corresponds to SELECT COUNT(*) FROM payment under SET ROLE mike and SET ROLE jon?",
+    "options": [
+      "Mike: 7304; Jon: 7292",
+      "Mike: 8000; Jon: 8000",
+      "Mike: 0; Jon: 0",
+      "Mike: 7292; Jon: 7304"
+    ],
+    "answer": "D",
+    "page": 31,
+    "topic": "RLS lab",
+    "explanation": "The slide reports 7292 visible payments for Mike and 7304 for Jon after switching roles."
+  },
+  {
+    "n": 48,
+    "q": "Which set best represents the three database-security pillars emphasized at the end of Session 7?",
+    "options": [
+      "Indexing, sharding, and replication",
+      "Prevent SQLi, enforce least privilege, and isolate rows with RLS",
+      "Autocommit, write-ahead logging, and vacuum",
+      "Partitioning, hashing, and sorting"
+    ],
+    "answer": "B",
+    "page": 32,
+    "topic": "Security summary",
+    "explanation": "The final takeaways bring together SQLi prevention, RBAC/least privilege, and RLS."
+  },
+  {
+    "n": 49,
+    "q": "A student deploys an AI model backed by PostgreSQL. Which implementation choice best applies the session's project guidance?",
+    "options": [
+      "Connect with postgres to simplify administration",
+      "Keep all features in a publicly writable table",
+      "Use a restricted application role and parameterized database access",
+      "Disable all user roles and manage security in CSS"
+    ],
+    "answer": "C",
+    "page": 33,
+    "topic": "Project integration",
+    "explanation": "The project integration slide promotes applying database security practices in a real AI application rather than relying on a superuser connection."
+  }
+]
