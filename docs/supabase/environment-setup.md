@@ -1,8 +1,8 @@
 # Chuẩn bị môi trường Supabase thử nghiệm trước Stage 2
 
-Trạng thái: **hướng dẫn chuẩn bị, chưa tạo project, cài công cụ, tạo migration hay chạy SQL**. Đối chiếu checkout và tài liệu Supabase chính thức ngày 21/10/2026. [decisions.md](decisions.md) là nguồn D1–D10; [data-model.md](data-model.md) và [implementation-plan.md](implementation-plan.md) xác định phạm vi Stage 2. File [schema-draft.sql](schema-draft.sql) mở đầu bằng cảnh báo không áp dụng: `review_rounds.round_id uuid` còn trái D7 yêu cầu `text`, và direct `UPDATE` chưa cưỡng chế CAS tại database.
+Trạng thái: **Stage 2A đã tạo cấu hình local nhưng stack chưa chạy được** (22/10/2026). Supabase CLI `2.121.0` đã được cài làm dev dependency và `supabase/config.toml` đã được tạo bằng `npx supabase init`. Sau khi Ju mở lại Docker Desktop, `docker version` và `docker info` xác nhận Engine `29.9.2` hoạt động. Tuy nhiên, `npx supabase start` trả `DbSetupError` (`error running container: exit 1`); không có container Supabase đang chạy. Dung lượng trống ổ C sau lần thử khoảng 38,3 GiB, chưa đủ chứng minh hoặc loại trừ lỗi dung lượng bên trong Docker. Chưa tạo project cloud, migration, seed hay chạy SQL. Không dùng `db reset` hoặc `stop --no-backup` để xử lý lỗi này. [decisions.md](decisions.md) là nguồn D1–D10; [data-model.md](data-model.md) và [implementation-plan.md](implementation-plan.md) xác định phạm vi Stage 2. File [schema-draft.sql](schema-draft.sql) mở đầu bằng cảnh báo không áp dụng: `review_rounds.round_id uuid` còn trái D7 yêu cầu `text`, và direct `UPDATE` chưa cưỡng chế CAS tại database.
 
-## 1. Git checkpoint hiện tại
+## 1. Git checkpoint ngày 21/10/2026
 
 `master` đang bằng `origin/master` tại `1ce5246`. Không có file mới chưa được Git theo dõi hoặc file đã stage. Sáu file modified trước task chuẩn bị này thuộc **Stage 1B.3**: `lib/import-staging-capture.ts`, `lib/import-staging-idb.ts`, hai test tương ứng, `docs/supabase/import-staging-design.md` và `docs/progress.md`. Không có dữ liệu thử nghiệm trong Git diff; `.next/`, `.env*` và `*.tsbuildinfo` được ignore. Browser probe tạm đã gỡ khỏi source; bản ghi thử trong IndexedDB trên máy vẫn tồn tại, không nằm trong Git và không được tự xóa theo chính sách Stage 1.
 
@@ -39,13 +39,11 @@ Hai biến `NEXT_PUBLIC_` được đóng vào bundle client, nên publishable k
 
 ## 4. Công cụ và quy trình migration dự kiến cho Stage 2B
 
-**Chưa chạy các lệnh dưới đây trong task này.** Trên Windows, local stack cần Supabase CLI cùng Docker Desktop hoặc container runtime tương thích. Cách npm do Supabase hướng dẫn là cài CLI làm dev dependency, yêu cầu Node.js 20+ và chạy qua `npx`; việc cài đó cần task riêng vì hiện bị giới hạn không thêm dependency. Nếu Ju muốn tránh dependency trong repo, dùng CLI cài riêng theo hướng dẫn Windows của Supabase và ghi lại version dùng khi tạo migration. [Nguồn: Supabase CLI](https://supabase.com/docs/guides/local-development/cli/getting-started?platform=npm&queryGroups=platform), [Local development](https://supabase.com/docs/guides/local-development).
+**Trạng thái Stage 2A:** CLI đã cài trong project, `npx supabase init` đã chạy; `npx supabase start` chưa thành công do lỗi setup database container dù Docker Engine đã chạy. Các lệnh migration, test, login, link và push bên dưới chưa chạy. Trên Windows, local stack cần Docker Engine hoạt động; CLI qua npm yêu cầu Node.js 20+ và chạy bằng `npx`. [Nguồn: Supabase CLI](https://supabase.com/docs/guides/local-development/cli/getting-started?platform=npm&queryGroups=platform), [Local development](https://supabase.com/docs/guides/local-development).
 
 Sau khi Ju duyệt Stage 2B và công cụ:
 
 ```text
-supabase init
-supabase start
 supabase migration new create_core_schema
 supabase db reset
 supabase test db
@@ -69,7 +67,7 @@ Lưu test SQL/pgTAP tại `supabase/tests/database/` và chạy `supabase test d
 ## 6. Điểm Ju cần duyệt trước Stage 2B
 
 1. Xác nhận project thử riêng và organization/region Ju chọn; không dùng project đang có dữ liệu thật.
-2. Chọn cách cài Supabase CLI: dev dependency có version pin trong repo, hoặc CLI riêng trên máy. Local stack cần container runtime phù hợp nếu chọn test local bằng `supabase start`.
+2. Supabase CLI đã được pin làm dev dependency. Trước Stage 2B, cần Docker Engine hoạt động và `npx supabase start` hoàn tất; kiểm tra các service local trước khi viết migration.
 3. Duyệt bản SQL core mới trước khi tạo migration: `round_id text`, constraints, RLS/grants và giới hạn direct `UPDATE` phải được ghi rõ. `schema-draft.sql` hiện chỉ là tài liệu tham khảo.
 4. Chốt phương án tạo hai user thử, dữ liệu giả và cách reset **project thử**; giữ secret ngoài repo. OAuth/Next.js SDK thuộc stage sau, chưa phải điều kiện để kiểm tra RLS ở Stage 2B.
 

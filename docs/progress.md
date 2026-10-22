@@ -724,3 +724,32 @@
 - Kiểm tra `git status`, `git diff --stat`, file untracked và lịch sử: `master` bằng `origin/master` tại `1ce5246`; trước task chỉ còn sáu file modified của Stage 1B.3, không có file untracked/staged. Fixture quiz và orphan mistakes đã gộp ở `804631f`, Review v2 ở `a528d60`, tài liệu Supabase/capture/gate ở `1ce5246`; đề xuất một checkpoint mới cho phần còn lại thay vì sửa lịch sử commit cũ.
 - Tạo `docs/supabase/environment-setup.md` để hướng dẫn Ju tạo project thử riêng, giữ URL/publishable key và secret đúng ranh giới, chuẩn bị CLI/Docker, migration local rồi remote dev, rollback thử, RLS với A/B và anon, cùng các quyết định phải duyệt trước Stage 2B. Đối chiếu tài liệu Supabase chính thức hiện hành. Không tạo project, `.env`, migration, SQL hay dependency; không chạy Auth/cloud/Stage 2B.
 - Chỉ sửa tài liệu trong task này; giữ nguyên sáu file modified Stage 1B.3. `git diff --check` đạt. Không commit, push hoặc deploy.
+
+## 22/10/2026: Stage 2A, thiết lập Supabase local chưa hoàn tất
+
+- Xác minh Node.js `24.21.0`, npm `11.19.0`, Docker Client/Engine `29.9.2` và Docker Desktop `4.96.2`. Docker Engine ban đầu phản hồi ngoài sandbox; sandbox không có quyền truy cập named pipe.
+- Bổ sung ignore rules cho `supabase/.temp/`, `.branches/`; `.env*` đã được ignore. Cài và pin Supabase CLI `2.121.0` trong devDependencies, cập nhật lockfile; chạy `npx supabase init` để tạo `supabase/config.toml` và `.gitignore` của CLI. Không có migration, seed hoặc credential gán trực tiếp trong cấu hình đang bật.
+- `npx supabase start` không hoàn tất: Docker chuyển sang trả HTTP 500 và `Docker Desktop is unable to start`; đã ngắt lệnh treo, không reset/xóa dữ liệu. Cổng PostgreSQL `127.0.0.1:54322` đóng, chưa xác minh được các service local. Chưa chạy SQL draft, migration, Auth, cloud hay Stage 2B. Cần Ju xử lý Docker Desktop rồi kiểm tra lại Engine và khởi động local stack.
+- Kiểm tra: `npm test` 115/115 đạt, `npm run lint` đạt, version CLI trong `package.json` và lockfile nhất quán, `git diff --check` đạt. Chưa chạy typecheck/build vì không đổi application code; chưa có kiểm thử SQL hoặc service do stack chưa khởi động.
+
+## 22/10/2026: Thử lại Supabase local sau khi giải phóng dung lượng
+
+- Xác nhận Docker Client/Engine đều `29.9.2`, `docker info` phản hồi; ổ C còn khoảng 41,1 GiB trước lần thử. Giữ nguyên cấu hình CLI, không thêm migration hoặc seed.
+- Thử `npx supabase start` hai lần với output được lọc credentials: cả hai mã thoát 1; lần sau báo `DbSetupError` (`error running container: exit 1`). Docker Engine vẫn phản hồi, không còn container Supabase; ổ C còn khoảng 38,3 GiB sau khi tải image. Chưa xác định root cause bên trong Docker, chưa xác nhận PostgreSQL hoặc service nào. Không reset/xóa dữ liệu hay sửa cấu hình hệ thống; dừng trước Stage 2B.
+
+## 22/10/2026: Chẩn đoán `DbSetupError` của Supabase local
+
+- Tạo `docs/supabase/local-startup-diagnostics.md`. Một lần `npx supabase start --debug` với output lọc secrets và Docker events cho thấy PostgreSQL 17 đạt health check; helper Storage API `v1.82.1` thoát mã 1 với `Invalid package config /app/package.json`, rồi CLI dọn container. Chưa chứng minh vì sao file trong image không parse được; không suy diễn thiếu dung lượng, RAM hoặc lỗi WSL.
+- Chỉ thu thập thông tin read-only và một lần khởi động debug được phép; không sửa cấu hình, image, volume, SQL hoặc dữ liệu. PostgreSQL 54322 vẫn đóng; Stage 2B chưa bắt đầu. `git diff --check` đạt.
+
+## 22/10/2026: Recovery có kiểm soát cho Storage API image
+
+- Xác minh không có container đang chạy; Docker có 13 images, 0 container và 0 local volume trước thao tác. Gắn tag backup `ju-study-hub/storage-api-diagnostic:before-repull` cho image cũ `sha256:ec2ad414...`. Registry xác nhận manifest `linux/amd64` `sha256:31c11d93...`; chỉ pull theo digest này, giữ tag gốc trỏ tới image cũ.
+- Image theo digest có ID `sha256:31c11d93...` nhưng dùng chung 14 RootFS layers với backup. `/app/package.json` vẫn rỗng; Node `--check` độc lập báo `ERR_INVALID_PACKAGE_CONFIG`. Phép pull này không tạo bản filesystem độc lập, nên chưa phân biệt được lỗi upstream với cache/filesystem local. Không đổi tag gốc, không chạy Supabase, không xóa image/volume/database hoặc thay đổi source/config.
+- Cập nhật `docs/supabase/local-startup-diagnostics.md`, gồm sửa nhận định cũ về manifest digest, config digest và Docker image ID. Cần Ju duyệt bước kiểm tra image trên host độc lập hoặc tải lại layer có kiểm soát trước khi thử thay tag và khởi động stack. `git diff --check` đạt; Stage 2B chưa bắt đầu.
+
+## 22/10/2026: Kiểm tra điều kiện xác minh image trên host độc lập
+
+- Xác nhận lại manifest `linux/amd64` `sha256:31c11d93...`; image backup `ec2ad414...` và reference theo digest `31c11d93...` đều `linux/amd64`, có cùng danh sách 14 RootFS layer theo thứ tự. Không suy ra lỗi upstream hoặc local cache chỉ từ ID/layers.
+- Docker context `default` và `desktop-linux` đều trỏ tới cùng Engine ID Docker Desktop; không phát hiện host có image store độc lập được cấu hình. Không pull lại, không khởi động WSL hoặc tạo host mới. Kết quả file 0 byte và lỗi Node chỉ thuộc Engine hiện tại; phép thử độc lập chưa thực hiện, hai giả thuyết vẫn chưa xác định.
+- Cập nhật báo cáo với điều kiện thiếu và hai hướng đọc thêm ít rủi ro để Ju chọn. Không sửa image/tag, volume, database, source, SQL hoặc CLI; dừng trước Stage 2B. `git diff --check` đạt.
