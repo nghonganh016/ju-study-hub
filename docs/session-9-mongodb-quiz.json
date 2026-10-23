@@ -1,0 +1,1931 @@
+{
+  "session": 9,
+  "title": "NoSQL I: Document Stores with MongoDB",
+  "source": "DB9_MongoDB.pdf",
+  "pageNumbering": "Physical PDF pages (1–43)",
+  "totalQuestions": 62,
+  "questions": [
+    {
+      "id": "db-s9-q001",
+      "topic": "Why NoSQL?",
+      "question": "Which combination best explains why the lecture introduces document stores?",
+      "options": [
+        {
+          "id": "A",
+          "text": "Relational engines cannot store JSON and do not support indexes."
+        },
+        {
+          "id": "B",
+          "text": "Frequent schema changes, object–relational mismatch, difficult distributed JOINs, and varied data."
+        },
+        {
+          "id": "C",
+          "text": "All relational transactions must be serialized, preventing any concurrent work."
+        },
+        {
+          "id": "D",
+          "text": "SQL cannot represent relationships between actors and films."
+        }
+      ],
+      "answer": "B",
+      "explanation": "The slide identifies rigid schemas, reconstructing application objects via JOINs, scaling multi-table operations, and semi-structured inputs as pain points.",
+      "source": {
+        "file": "DB9_MongoDB.pdf",
+        "pdfPages": [
+          6
+        ]
+      }
+    },
+    {
+      "id": "db-s9-q002",
+      "topic": "Why NoSQL?",
+      "question": "Why does the lecture connect the document model to sharding?",
+      "options": [
+        {
+          "id": "A",
+          "text": "Document models guarantee cross-shard foreign keys."
+        },
+        {
+          "id": "B",
+          "text": "Sharding makes multi-table JOINs free but forces schema changes."
+        },
+        {
+          "id": "C",
+          "text": "Embedding frequently accessed related data can reduce expensive cross-shard JOINs."
+        },
+        {
+          "id": "D",
+          "text": "Documents automatically place every related entity on the same shard."
+        }
+      ],
+      "answer": "C",
+      "explanation": "The recap motivates document storage by asking whether data can be organized to avoid frequent JOINs when distributed.",
+      "source": {
+        "file": "DB9_MongoDB.pdf",
+        "pdfPages": [
+          4
+        ]
+      }
+    },
+    {
+      "id": "db-s9-q003",
+      "topic": "Why NoSQL?",
+      "question": "Which pairing correctly identifies a NoSQL family and its typical data unit?",
+      "options": [
+        {
+          "id": "A",
+          "text": "Graph — nodes and relationships."
+        },
+        {
+          "id": "B",
+          "text": "Wide-column — binary embedding vectors."
+        },
+        {
+          "id": "C",
+          "text": "Key–value — JSON-like documents only."
+        },
+        {
+          "id": "D",
+          "text": "Document — one fixed relational row."
+        }
+      ],
+      "answer": "A",
+      "explanation": "The family table maps graph databases to nodes/relationships, key–value to keys and values, and document stores to JSON-like documents.",
+      "source": {
+        "file": "DB9_MongoDB.pdf",
+        "pdfPages": [
+          7
+        ]
+      }
+    },
+    {
+      "id": "db-s9-q004",
+      "topic": "Why NoSQL?",
+      "question": "A service uses PostgreSQL for orders, Redis for cache entries, and MongoDB for variable product metadata. What lecture concept best describes this?",
+      "options": [
+        {
+          "id": "A",
+          "text": "Schema-on-write"
+        },
+        {
+          "id": "B",
+          "text": "Single-model persistence"
+        },
+        {
+          "id": "C",
+          "text": "Horizontal partitioning"
+        },
+        {
+          "id": "D",
+          "text": "Polyglot persistence"
+        }
+      ],
+      "answer": "D",
+      "explanation": "Polyglot persistence uses different databases for the access patterns each serves best.",
+      "source": {
+        "file": "DB9_MongoDB.pdf",
+        "pdfPages": [
+          7
+        ]
+      }
+    },
+    {
+      "id": "db-s9-q005",
+      "topic": "Why NoSQL?",
+      "question": "Which statement about MongoDB transactions matches the slide?",
+      "options": [
+        {
+          "id": "A",
+          "text": "Every write to multiple documents is automatically atomic without a transaction."
+        },
+        {
+          "id": "B",
+          "text": "Writes to one document are atomic, and multi-document ACID transactions are supported but costlier."
+        },
+        {
+          "id": "C",
+          "text": "MongoDB cannot use ACID transactions in any version."
+        },
+        {
+          "id": "D",
+          "text": "MongoDB supports atomicity only if every document has an ObjectId key."
+        }
+      ],
+      "answer": "B",
+      "explanation": "The ACID vs. BASE slide notes single-document atomicity and multi-document ACID transaction support from version 4.0, with extra cost.",
+      "source": {
+        "file": "DB9_MongoDB.pdf",
+        "pdfPages": [
+          8
+        ]
+      }
+    },
+    {
+      "id": "db-s9-q006",
+      "topic": "Why NoSQL?",
+      "question": "In the lecture, what does BASE emphasize?",
+      "options": [
+        {
+          "id": "A",
+          "text": "Blocking writes until every replica has identical values."
+        },
+        {
+          "id": "B",
+          "text": "Binary storage, automatic sharding, extensibility."
+        },
+        {
+          "id": "C",
+          "text": "Basically Available, Soft state, Eventually consistent."
+        },
+        {
+          "id": "D",
+          "text": "Backups, Atomicity, Serialization, Encryption."
+        }
+      ],
+      "answer": "C",
+      "explanation": "BASE expands to Basically Available, Soft state, Eventually consistent; replicas may converge over time.",
+      "source": {
+        "file": "DB9_MongoDB.pdf",
+        "pdfPages": [
+          8
+        ]
+      }
+    },
+    {
+      "id": "db-s9-q007",
+      "topic": "Why NoSQL?",
+      "question": "An ML experiment records variable hyperparameter sets, metrics, and raw API JSON. Which relational-model pain point is most relevant?",
+      "options": [
+        {
+          "id": "A",
+          "text": "Semi-structured records have variable shapes that fit awkwardly into fixed tables."
+        },
+        {
+          "id": "B",
+          "text": "Every ML experiment requires a graph traversal across sharded replicas."
+        },
+        {
+          "id": "C",
+          "text": "PostgreSQL forbids text and numeric fields in the same table."
+        },
+        {
+          "id": "D",
+          "text": "The only way to store JSON is to serialize it to disk outside any database."
+        }
+      ],
+      "answer": "A",
+      "explanation": "The slide explicitly names model configurations, experiment metadata, LLM histories, and raw JSON as semi-structured data.",
+      "source": {
+        "file": "DB9_MongoDB.pdf",
+        "pdfPages": [
+          6
+        ]
+      }
+    },
+    {
+      "id": "db-s9-q008",
+      "topic": "Why NoSQL?",
+      "question": "Which statement best captures the meaning of “Not Only SQL” in this lecture?",
+      "options": [
+        {
+          "id": "A",
+          "text": "It requires replacing relational storage completely."
+        },
+        {
+          "id": "B",
+          "text": "It refers exclusively to MongoDB and Redis."
+        },
+        {
+          "id": "C",
+          "text": "It means every NoSQL system has the same query model."
+        },
+        {
+          "id": "D",
+          "text": "It describes multiple non-relational families optimized for different access patterns."
+        }
+      ],
+      "answer": "D",
+      "explanation": "The slide defines several distinct NoSQL families and stresses that NoSQL does not replace SQL.",
+      "source": {
+        "file": "DB9_MongoDB.pdf",
+        "pdfPages": [
+          7
+        ]
+      }
+    },
+    {
+      "id": "db-s9-q009",
+      "topic": "Why NoSQL?",
+      "question": "A developer claims, “NoSQL databases have no transactions.” Which response is supported by the slide?",
+      "options": [
+        {
+          "id": "A",
+          "text": "Correct; transactions are possible only with traditional tables."
+        },
+        {
+          "id": "B",
+          "text": "Incorrect; MongoDB can provide atomic single-document writes and multi-document transactions."
+        },
+        {
+          "id": "C",
+          "text": "Correct except when the database uses BSON instead of JSON."
+        },
+        {
+          "id": "D",
+          "text": "Incorrect only because BASE and ACID are identical guarantees."
+        }
+      ],
+      "answer": "B",
+      "explanation": "The slide labels this claim outdated, distinguishing single-document atomicity and slower multi-document transactions.",
+      "source": {
+        "file": "DB9_MongoDB.pdf",
+        "pdfPages": [
+          8
+        ]
+      }
+    },
+    {
+      "id": "db-s9-q010",
+      "topic": "Why NoSQL?",
+      "question": "Which option correctly names the family used for embedding vectors in the lecture table?",
+      "options": [
+        {
+          "id": "A",
+          "text": "Wide-column (Cassandra)"
+        },
+        {
+          "id": "B",
+          "text": "Graph (Neo4j)"
+        },
+        {
+          "id": "C",
+          "text": "Vector (Pinecone, Milvus, pgvector)"
+        },
+        {
+          "id": "D",
+          "text": "Key–value (Redis)"
+        }
+      ],
+      "answer": "C",
+      "explanation": "The NoSQL family table lists a vector family whose data unit is embedding vectors.",
+      "source": {
+        "file": "DB9_MongoDB.pdf",
+        "pdfPages": [
+          7
+        ]
+      }
+    },
+    {
+      "id": "db-s9-q011",
+      "topic": "The document model",
+      "question": "Which MongoDB concept corresponds most closely to a PostgreSQL table?",
+      "options": [
+        {
+          "id": "A",
+          "text": "Collection"
+        },
+        {
+          "id": "B",
+          "text": "Field"
+        },
+        {
+          "id": "C",
+          "text": "Document"
+        },
+        {
+          "id": "D",
+          "text": "ObjectId"
+        }
+      ],
+      "answer": "A",
+      "explanation": "The vocabulary table maps PostgreSQL table to MongoDB collection.",
+      "source": {
+        "file": "DB9_MongoDB.pdf",
+        "pdfPages": [
+          10
+        ]
+      }
+    },
+    {
+      "id": "db-s9-q012",
+      "topic": "The document model",
+      "question": "Which mapping best describes the PostgreSQL row and primary-key counterparts in MongoDB?",
+      "options": [
+        {
+          "id": "A",
+          "text": "Row → collection; primary key → $group."
+        },
+        {
+          "id": "B",
+          "text": "Row → field; primary key → schema validator."
+        },
+        {
+          "id": "C",
+          "text": "Row → index; primary key → $lookup."
+        },
+        {
+          "id": "D",
+          "text": "Row → document; primary key → _id."
+        }
+      ],
+      "answer": "D",
+      "explanation": "The SQL-to-MongoDB vocabulary comparison maps row to document and primary key to unique _id.",
+      "source": {
+        "file": "DB9_MongoDB.pdf",
+        "pdfPages": [
+          10
+        ]
+      }
+    },
+    {
+      "id": "db-s9-q013",
+      "topic": "The document model",
+      "question": "Which field in the example film document is an array of sub-documents rather than an array of scalars?",
+      "options": [
+        {
+          "id": "A",
+          "text": "rating"
+        },
+        {
+          "id": "B",
+          "text": "actors"
+        },
+        {
+          "id": "C",
+          "text": "special_features"
+        },
+        {
+          "id": "D",
+          "text": "rental_rate"
+        }
+      ],
+      "answer": "B",
+      "explanation": "actors contains objects with actor_id and name, whereas special_features contains strings.",
+      "source": {
+        "file": "DB9_MongoDB.pdf",
+        "pdfPages": [
+          11
+        ]
+      }
+    },
+    {
+      "id": "db-s9-q014",
+      "topic": "The document model",
+      "question": "Why does MongoDB use BSON instead of plain JSON for stored documents, according to the slide?",
+      "options": [
+        {
+          "id": "A",
+          "text": "It removes the need for any document identifier."
+        },
+        {
+          "id": "B",
+          "text": "It limits fields to strings and booleans."
+        },
+        {
+          "id": "C",
+          "text": "It uses a binary representation with extra types such as Date, ObjectId, and Decimal128."
+        },
+        {
+          "id": "D",
+          "text": "It enforces foreign keys between embedded sub-documents."
+        }
+      ],
+      "answer": "C",
+      "explanation": "BSON is described as Binary JSON with additional supported types including Date, ObjectId, Decimal128, and int32/int64.",
+      "source": {
+        "file": "DB9_MongoDB.pdf",
+        "pdfPages": [
+          11
+        ]
+      }
+    },
+    {
+      "id": "db-s9-q015",
+      "topic": "The document model",
+      "question": "Which proposed document violates the size limit specified in the lecture?",
+      "options": [
+        {
+          "id": "A",
+          "text": "A single BSON document of 18 MB."
+        },
+        {
+          "id": "B",
+          "text": "A collection containing 18 MB across thousands of documents."
+        },
+        {
+          "id": "C",
+          "text": "A BSON document of 4 MB with an embedded array."
+        },
+        {
+          "id": "D",
+          "text": "An individual BSON document of 12 MB."
+        }
+      ],
+      "answer": "A",
+      "explanation": "The slide states a maximum BSON document size of 16 MB; this is a per-document limit.",
+      "source": {
+        "file": "DB9_MongoDB.pdf",
+        "pdfPages": [
+          11
+        ]
+      }
+    },
+    {
+      "id": "db-s9-q016",
+      "topic": "The document model",
+      "question": "What is the main read-time advantage of the slide’s embedded film document over the five-table relational representation?",
+      "options": [
+        {
+          "id": "A",
+          "text": "It eliminates the need for indexes on title."
+        },
+        {
+          "id": "B",
+          "text": "It automatically synchronizes actors across every film."
+        },
+        {
+          "id": "C",
+          "text": "It guarantees that actors have unique names."
+        },
+        {
+          "id": "D",
+          "text": "A single findOne can return the complete object without four JOINs."
+        }
+      ],
+      "answer": "D",
+      "explanation": "The case study contrasts four SQL JOINs and regrouping with one MongoDB document already shaped for the app.",
+      "source": {
+        "file": "DB9_MongoDB.pdf",
+        "pdfPages": [
+          12
+        ]
+      }
+    },
+    {
+      "id": "db-s9-q017",
+      "topic": "The document model",
+      "question": "What write-time problem can appear when actor names are embedded in multiple film documents?",
+      "options": [
+        {
+          "id": "A",
+          "text": "Every actor must have a separate ObjectId collection."
+        },
+        {
+          "id": "B",
+          "text": "A name change may require updating many film documents."
+        },
+        {
+          "id": "C",
+          "text": "A single-document update cannot modify nested objects."
+        },
+        {
+          "id": "D",
+          "text": "Embedding turns every film query into a cross-shard JOIN."
+        }
+      ],
+      "answer": "B",
+      "explanation": "Embedding copies actor information into each film and introduces duplication/update maintenance.",
+      "source": {
+        "file": "DB9_MongoDB.pdf",
+        "pdfPages": [
+          12
+        ]
+      }
+    },
+    {
+      "id": "db-s9-q018",
+      "topic": "The document model",
+      "question": "Which conclusion about “schema-less” is most accurate?",
+      "options": [
+        {
+          "id": "A",
+          "text": "MongoDB rejects documents with different field sets by default."
+        },
+        {
+          "id": "B",
+          "text": "MongoDB never checks field types even when validators exist."
+        },
+        {
+          "id": "C",
+          "text": "Documents can have different shapes; application logic or optional validation still enforces expectations."
+        },
+        {
+          "id": "D",
+          "text": "The schema is always generated from the first inserted document."
+        }
+      ],
+      "answer": "C",
+      "explanation": "The slide distinguishes schema-on-read from absence of all schema and shows optional $jsonSchema validation.",
+      "source": {
+        "file": "DB9_MongoDB.pdf",
+        "pdfPages": [
+          13
+        ]
+      }
+    },
+    {
+      "id": "db-s9-q019",
+      "topic": "The document model",
+      "question": "A typo stores “titel” instead of “title” in one film document. Which approach shown in the slide would directly prevent such missing required title fields?",
+      "options": [
+        {
+          "id": "A",
+          "text": "Configure $jsonSchema to require the title field."
+        },
+        {
+          "id": "B",
+          "text": "Switch the _id type from integer to ObjectId."
+        },
+        {
+          "id": "C",
+          "text": "Add a compound index on length and rating."
+        },
+        {
+          "id": "D",
+          "text": "Use $lookup whenever a film is inserted."
+        }
+      ],
+      "answer": "A",
+      "explanation": "The sample validator uses required: [\"title\"] to enforce presence of the expected field.",
+      "source": {
+        "file": "DB9_MongoDB.pdf",
+        "pdfPages": [
+          13
+        ]
+      }
+    },
+    {
+      "id": "db-s9-q020",
+      "topic": "The document model",
+      "question": "Which statement correctly describes a MongoDB ObjectId?",
+      "options": [
+        {
+          "id": "A",
+          "text": "A 16-byte key supplied by a centralized serial counter."
+        },
+        {
+          "id": "B",
+          "text": "A random UUIDv4 with no timestamp component."
+        },
+        {
+          "id": "C",
+          "text": "A 12-byte server-assigned sequence requiring a round-trip."
+        },
+        {
+          "id": "D",
+          "text": "A 12-byte identifier with timestamp, process-random bytes, and a counter."
+        }
+      ],
+      "answer": "D",
+      "explanation": "ObjectId is 12 bytes: 4-byte timestamp, 5-byte random component, 3-byte counter; it can be generated client-side.",
+      "source": {
+        "file": "DB9_MongoDB.pdf",
+        "pdfPages": [
+          14
+        ]
+      }
+    },
+    {
+      "id": "db-s9-q021",
+      "topic": "The document model",
+      "question": "What is the approximate benefit of client-generated ObjectIds for distributed workloads?",
+      "options": [
+        {
+          "id": "A",
+          "text": "All documents on separate shards receive contiguous integer keys."
+        },
+        {
+          "id": "B",
+          "text": "Identifiers can be generated without contacting a central counter."
+        },
+        {
+          "id": "C",
+          "text": "Identifiers permanently encode their physical shard location."
+        },
+        {
+          "id": "D",
+          "text": "ObjectIds guarantee global chronological ordering across all clients."
+        }
+      ],
+      "answer": "B",
+      "explanation": "The slide emphasizes generating identifiers on the client, avoiding a central sequence, and only roughly sorting by creation time.",
+      "source": {
+        "file": "DB9_MongoDB.pdf",
+        "pdfPages": [
+          14
+        ]
+      }
+    },
+    {
+      "id": "db-s9-q022",
+      "topic": "The document model",
+      "question": "According to the slide’s rule of thumb, which architecture is favored for an application whose data is mostly relational with a few flexible attributes?",
+      "options": [
+        {
+          "id": "A",
+          "text": "Store every entity in MongoDB with a separate referenced collection."
+        },
+        {
+          "id": "B",
+          "text": "Store only plain SQL tables and reject JSON input."
+        },
+        {
+          "id": "C",
+          "text": "Keep PostgreSQL and use JSONB for the flexible fields."
+        },
+        {
+          "id": "D",
+          "text": "Replace SQL joins with MongoDB aggregation for every request."
+        }
+      ],
+      "answer": "C",
+      "explanation": "The lecture recommends PostgreSQL plus JSONB if roughly 90% of the data is relational.",
+      "source": {
+        "file": "DB9_MongoDB.pdf",
+        "pdfPages": [
+          15
+        ]
+      }
+    },
+    {
+      "id": "db-s9-q023",
+      "topic": "Schema design: embed or reference",
+      "question": "What should drive document schema design according to the lecture’s golden rule?",
+      "options": [
+        {
+          "id": "A",
+          "text": "The queries and screens that access data together."
+        },
+        {
+          "id": "B",
+          "text": "The largest possible number of normalized entity tables."
+        },
+        {
+          "id": "C",
+          "text": "The current number of database replicas."
+        },
+        {
+          "id": "D",
+          "text": "The alphabetical order of document field names."
+        }
+      ],
+      "answer": "A",
+      "explanation": "The golden rule is to store data together when accessed together and design around access patterns.",
+      "source": {
+        "file": "DB9_MongoDB.pdf",
+        "pdfPages": [
+          17
+        ]
+      }
+    },
+    {
+      "id": "db-s9-q024",
+      "topic": "Schema design: embed or reference",
+      "question": "Which relationship is the clearest candidate for embedding?",
+      "options": [
+        {
+          "id": "A",
+          "text": "One customer with millions of historical rentals."
+        },
+        {
+          "id": "B",
+          "text": "One sensor with readings recorded each second indefinitely."
+        },
+        {
+          "id": "C",
+          "text": "One actor reused in thousands of frequently updated catalogs."
+        },
+        {
+          "id": "D",
+          "text": "One customer with one address routinely read with the profile."
+        }
+      ],
+      "answer": "D",
+      "explanation": "Embedding is appropriate for bounded, dependent information read with its parent, such as a customer address.",
+      "source": {
+        "file": "DB9_MongoDB.pdf",
+        "pdfPages": [
+          18
+        ]
+      }
+    },
+    {
+      "id": "db-s9-q025",
+      "topic": "Schema design: embed or reference",
+      "question": "Which relationship is best handled by referencing?",
+      "options": [
+        {
+          "id": "A",
+          "text": "A film with five special features read with every film page."
+        },
+        {
+          "id": "B",
+          "text": "A customer with an unbounded history of rentals queried independently."
+        },
+        {
+          "id": "C",
+          "text": "An order containing one fixed shipping address."
+        },
+        {
+          "id": "D",
+          "text": "A profile containing three shipping addresses."
+        }
+      ],
+      "answer": "B",
+      "explanation": "Referencing suits independently accessed or unbounded child records, including customer rentals.",
+      "source": {
+        "file": "DB9_MongoDB.pdf",
+        "pdfPages": [
+          19
+        ]
+      }
+    },
+    {
+      "id": "db-s9-q026",
+      "topic": "Schema design: embed or reference",
+      "question": "What integrity drawback of a simple MongoDB reference is identified in the lecture?",
+      "options": [
+        {
+          "id": "A",
+          "text": "Each referenced child is automatically copied into the parent."
+        },
+        {
+          "id": "B",
+          "text": "References force synchronous cross-shard transactions."
+        },
+        {
+          "id": "C",
+          "text": "A reference can point to a non-existent _id because there is no built-in foreign-key check."
+        },
+        {
+          "id": "D",
+          "text": "All references must be strings rather than numbers."
+        }
+      ],
+      "answer": "C",
+      "explanation": "The example permits a customer_id that has no corresponding customer; it does not enforce relational foreign keys.",
+      "source": {
+        "file": "DB9_MongoDB.pdf",
+        "pdfPages": [
+          19
+        ]
+      }
+    },
+    {
+      "id": "db-s9-q027",
+      "topic": "Schema design: embed or reference",
+      "question": "A product has 50,000 reviews, but its page displays only the newest three. Which pattern from the slide fits best?",
+      "options": [
+        {
+          "id": "A",
+          "text": "Keep full reviews in a separate collection and embed the newest three in the product."
+        },
+        {
+          "id": "B",
+          "text": "Embed every review in the product to maximize single-document atomicity."
+        },
+        {
+          "id": "C",
+          "text": "Save the reviews as comma-separated strings in product metadata."
+        },
+        {
+          "id": "D",
+          "text": "Put each product in its own database to avoid all lookups."
+        }
+      ],
+      "answer": "A",
+      "explanation": "The decision guide and suggested lab answers recommend the Subset pattern: reference all reviews and embed a bounded recent subset.",
+      "source": {
+        "file": "DB9_MongoDB.pdf",
+        "pdfPages": [
+          20
+        ]
+      }
+    },
+    {
+      "id": "db-s9-q028",
+      "topic": "Schema design: embed or reference",
+      "question": "Students enroll in multiple courses, and each course has many students. Which representation does the decision guide suggest?",
+      "options": [
+        {
+          "id": "A",
+          "text": "A single enormous student document for the entire university."
+        },
+        {
+          "id": "B",
+          "text": "Every course as an embedded object in a central singleton document."
+        },
+        {
+          "id": "C",
+          "text": "Automatic SQL foreign keys in both collections."
+        },
+        {
+          "id": "D",
+          "text": "Arrays of related _ids on one or both sides."
+        }
+      ],
+      "answer": "D",
+      "explanation": "The many-to-many row recommends storing arrays of identifiers on one or both sides.",
+      "source": {
+        "file": "DB9_MongoDB.pdf",
+        "pdfPages": [
+          20
+        ]
+      }
+    },
+    {
+      "id": "db-s9-q029",
+      "topic": "Schema design: embed or reference",
+      "question": "In the dvdrental redesign, which three collections remain after reducing fifteen SQL tables?",
+      "options": [
+        {
+          "id": "A",
+          "text": "actors, categories, payments"
+        },
+        {
+          "id": "B",
+          "text": "films, rentals, customers"
+        },
+        {
+          "id": "C",
+          "text": "films, film_actor, addresses"
+        },
+        {
+          "id": "D",
+          "text": "customers, stores, categories"
+        }
+      ],
+      "answer": "B",
+      "explanation": "The case study retains films, rentals and customers; related low-cardinality data is embedded.",
+      "source": {
+        "file": "DB9_MongoDB.pdf",
+        "pdfPages": [
+          21
+        ]
+      }
+    },
+    {
+      "id": "db-s9-q030",
+      "topic": "Schema design: embed or reference",
+      "question": "Why are film and customer links retained inside rental documents rather than embedding all rentals in customers?",
+      "options": [
+        {
+          "id": "A",
+          "text": "The rental_date field cannot be stored in an embedded object."
+        },
+        {
+          "id": "B",
+          "text": "Every rental belongs to multiple customers at once."
+        },
+        {
+          "id": "C",
+          "text": "Customer rental histories can grow without bound."
+        },
+        {
+          "id": "D",
+          "text": "MongoDB has a restriction against nesting arrays inside customers."
+        }
+      ],
+      "answer": "C",
+      "explanation": "The slide states that customers can have unbounded rental histories, so rental records reference films and customers.",
+      "source": {
+        "file": "DB9_MongoDB.pdf",
+        "pdfPages": [
+          21
+        ]
+      }
+    },
+    {
+      "id": "db-s9-q031",
+      "topic": "Schema design: embed or reference",
+      "question": "Why is an ever-growing rentals array inside a customer considered an anti-pattern?",
+      "options": [
+        {
+          "id": "A",
+          "text": "The parent continually grows, increasing update cost and risking the 16 MB limit."
+        },
+        {
+          "id": "B",
+          "text": "MongoDB cannot query any nested arrays by field name."
+        },
+        {
+          "id": "C",
+          "text": "An array prevents use of a unique _id on the parent."
+        },
+        {
+          "id": "D",
+          "text": "An array automatically becomes a separate collection."
+        }
+      ],
+      "answer": "A",
+      "explanation": "The anti-pattern slide warns that unbounded arrays enlarge documents and eventually hit the size cap.",
+      "source": {
+        "file": "DB9_MongoDB.pdf",
+        "pdfPages": [
+          22
+        ]
+      }
+    },
+    {
+      "id": "db-s9-q032",
+      "topic": "Schema design: embed or reference",
+      "question": "A widely shared product price changes daily. Why may duplicating it across one million documents be harmful?",
+      "options": [
+        {
+          "id": "A",
+          "text": "MongoDB indexes cannot include numeric prices."
+        },
+        {
+          "id": "B",
+          "text": "Frequent price changes always force a schema migration."
+        },
+        {
+          "id": "C",
+          "text": "It guarantees that all copies update atomically without a transaction."
+        },
+        {
+          "id": "D",
+          "text": "Keeping many copies synchronized creates an expensive update burden."
+        }
+      ],
+      "answer": "D",
+      "explanation": "The slide calls embedding hot, shared data an anti-pattern due to widespread updates.",
+      "source": {
+        "file": "DB9_MongoDB.pdf",
+        "pdfPages": [
+          22
+        ]
+      }
+    },
+    {
+      "id": "db-s9-q033",
+      "topic": "Schema design: embed or reference",
+      "question": "An LLM conversation usually contains 20 messages and the application always loads the whole thread. What does the suggested answer recommend?",
+      "options": [
+        {
+          "id": "A",
+          "text": "Store every message as a distinct document no matter how short the conversation."
+        },
+        {
+          "id": "B",
+          "text": "Embed messages in the conversation; bucket very long threads."
+        },
+        {
+          "id": "C",
+          "text": "Create a relational junction table between each token and the conversation."
+        },
+        {
+          "id": "D",
+          "text": "Store all users’ conversations in a single shared document."
+        }
+      ],
+      "answer": "B",
+      "explanation": "The suggested answers embed a bounded group of messages read together, with bucketing for very long chats.",
+      "source": {
+        "file": "DB9_MongoDB.pdf",
+        "pdfPages": [
+          24
+        ]
+      }
+    },
+    {
+      "id": "db-s9-q034",
+      "topic": "Schema design: embed or reference",
+      "question": "An IoT sensor produces one reading per second for years. Which design best matches the suggested answer?",
+      "options": [
+        {
+          "id": "A",
+          "text": "Embed every reading in the sensor document indefinitely."
+        },
+        {
+          "id": "B",
+          "text": "Overwrite the most recent sensor value and discard historical data."
+        },
+        {
+          "id": "C",
+          "text": "Keep readings as children in separate documents or time buckets."
+        },
+        {
+          "id": "D",
+          "text": "Use a MongoDB validator to raise the document size limit."
+        }
+      ],
+      "answer": "C",
+      "explanation": "The lab recommends references from child readings or hourly buckets, never an unbounded parent array.",
+      "source": {
+        "file": "DB9_MongoDB.pdf",
+        "pdfPages": [
+          24
+        ]
+      }
+    },
+    {
+      "id": "db-s9-q035",
+      "topic": "Schema design: embed or reference",
+      "question": "An application’s most frequent request needs $lookup across two collections. What does the anti-pattern slide suggest reviewing?",
+      "options": [
+        {
+          "id": "A",
+          "text": "Whether the model should embed more data for that common access path."
+        },
+        {
+          "id": "B",
+          "text": "Whether an ObjectId should be replaced with a UUIDv4 everywhere."
+        },
+        {
+          "id": "C",
+          "text": "Whether each user should receive a new database instance."
+        },
+        {
+          "id": "D",
+          "text": "Whether to disable every index on foreign fields."
+        }
+      ],
+      "answer": "A",
+      "explanation": "The slide explicitly says to reconsider document design when the hottest query frequently needs $lookup.",
+      "source": {
+        "file": "DB9_MongoDB.pdf",
+        "pdfPages": [
+          22
+        ]
+      }
+    },
+    {
+      "id": "db-s9-q036",
+      "topic": "MongoDB querying and aggregation",
+      "question": "Which MongoDB expression is equivalent to filtering films where rating equals \"PG\"?",
+      "options": [
+        {
+          "id": "A",
+          "text": "db.films.aggregate({ rating: \"PG\" })"
+        },
+        {
+          "id": "B",
+          "text": "db.films.find({ rating: \"PG\" })"
+        },
+        {
+          "id": "C",
+          "text": "db.films.find({ $group: \"PG\" })"
+        },
+        {
+          "id": "D",
+          "text": "db.films.updateOne({ rating: \"PG\" })"
+        }
+      ],
+      "answer": "B",
+      "explanation": "The CRUD comparison maps SELECT ... WHERE rating=PG to find({ rating: \"PG\" }).",
+      "source": {
+        "file": "DB9_MongoDB.pdf",
+        "pdfPages": [
+          26
+        ]
+      }
+    },
+    {
+      "id": "db-s9-q037",
+      "topic": "MongoDB querying and aggregation",
+      "question": "How should the query return film titles without returning _id?",
+      "options": [
+        {
+          "id": "A",
+          "text": "{ title: -1, _id: 1 }"
+        },
+        {
+          "id": "B",
+          "text": "{ title: true, _id: true }"
+        },
+        {
+          "id": "C",
+          "text": "{ title: 0, _id: 0 }"
+        },
+        {
+          "id": "D",
+          "text": "{ title: 1, _id: 0 }"
+        }
+      ],
+      "answer": "D",
+      "explanation": "The projection example includes title with 1 and excludes _id with 0.",
+      "source": {
+        "file": "DB9_MongoDB.pdf",
+        "pdfPages": [
+          26
+        ]
+      }
+    },
+    {
+      "id": "db-s9-q038",
+      "topic": "MongoDB querying and aggregation",
+      "question": "Which find filter selects PG-13 films longer than 120 minutes?",
+      "options": [
+        {
+          "id": "A",
+          "text": "{ rating: \"PG-13\", length: { $gt: 120 } }"
+        },
+        {
+          "id": "B",
+          "text": "{ rating: \"PG-13\", length: { $lt: 120 } }"
+        },
+        {
+          "id": "C",
+          "text": "{ rating: [\"PG-13\"], length: { $gte: 0 } }"
+        },
+        {
+          "id": "D",
+          "text": "{ $or: [{ rating: \"PG-13\" }, { length: { $gt: 120 } }] }"
+        }
+      ],
+      "answer": "A",
+      "explanation": "Separate filter fields are ANDed; $gt selects lengths strictly greater than 120.",
+      "source": {
+        "file": "DB9_MongoDB.pdf",
+        "pdfPages": [
+          27
+        ]
+      }
+    },
+    {
+      "id": "db-s9-q039",
+      "topic": "MongoDB querying and aggregation",
+      "question": "Which filter correctly selects customers whose embedded address has country equal to Japan?",
+      "options": [
+        {
+          "id": "A",
+          "text": "{ address: \"Japan\" }"
+        },
+        {
+          "id": "B",
+          "text": "{ country: { address: \"Japan\" } }"
+        },
+        {
+          "id": "C",
+          "text": "{ \"address.country\": \"Japan\" }"
+        },
+        {
+          "id": "D",
+          "text": "{ $lookup: { country: \"Japan\" } }"
+        }
+      ],
+      "answer": "C",
+      "explanation": "Dot notation targets nested fields, and the dotted key is quoted in the slide.",
+      "source": {
+        "file": "DB9_MongoDB.pdf",
+        "pdfPages": [
+          27
+        ]
+      }
+    },
+    {
+      "id": "db-s9-q040",
+      "topic": "MongoDB querying and aggregation",
+      "question": "What does db.films.find({ \"actors.name\": \"Jayne Nolte\" }) match?",
+      "options": [
+        {
+          "id": "A",
+          "text": "Only films with exactly one actor and no other actor fields."
+        },
+        {
+          "id": "B",
+          "text": "Films where at least one embedded actor has that name."
+        },
+        {
+          "id": "C",
+          "text": "Documents whose entire actors array equals the string."
+        },
+        {
+          "id": "D",
+          "text": "Actor documents from a separate actors collection only."
+        }
+      ],
+      "answer": "B",
+      "explanation": "MongoDB can match a field within an array of embedded sub-documents without $unwind or a JOIN.",
+      "source": {
+        "file": "DB9_MongoDB.pdf",
+        "pdfPages": [
+          27
+        ]
+      }
+    },
+    {
+      "id": "db-s9-q041",
+      "topic": "MongoDB querying and aggregation",
+      "question": "Which operator expresses rating being either G or PG?",
+      "options": [
+        {
+          "id": "A",
+          "text": "{ rating: { $gt: [\"G\", \"PG\"] } }"
+        },
+        {
+          "id": "B",
+          "text": "{ rating: { $and: [\"G\", \"PG\"] } }"
+        },
+        {
+          "id": "C",
+          "text": "{ rating: { $exists: [\"G\", \"PG\"] } }"
+        },
+        {
+          "id": "D",
+          "text": "{ rating: { $in: [\"G\", \"PG\"] } }"
+        }
+      ],
+      "answer": "D",
+      "explanation": "The slide uses $in to test membership in a given list of rating values.",
+      "source": {
+        "file": "DB9_MongoDB.pdf",
+        "pdfPages": [
+          27
+        ]
+      }
+    },
+    {
+      "id": "db-s9-q042",
+      "topic": "MongoDB querying and aggregation",
+      "question": "What happens when updateOne applies $set, $push, and $inc to one matching document?",
+      "options": [
+        {
+          "id": "A",
+          "text": "Those modifications to the document are applied atomically together."
+        },
+        {
+          "id": "B",
+          "text": "Each operator always creates an independent multi-document transaction."
+        },
+        {
+          "id": "C",
+          "text": "Only the first modifier runs; the remaining modifiers are ignored."
+        },
+        {
+          "id": "D",
+          "text": "The document is replaced completely with only modified fields."
+        }
+      ],
+      "answer": "A",
+      "explanation": "MongoDB provides all-or-nothing atomicity for updates to a single document.",
+      "source": {
+        "file": "DB9_MongoDB.pdf",
+        "pdfPages": [
+          28
+        ]
+      }
+    },
+    {
+      "id": "db-s9-q043",
+      "topic": "MongoDB querying and aggregation",
+      "question": "Which update operator removes a matching element from an existing array?",
+      "options": [
+        {
+          "id": "A",
+          "text": "$inc"
+        },
+        {
+          "id": "B",
+          "text": "$set"
+        },
+        {
+          "id": "C",
+          "text": "$pull"
+        },
+        {
+          "id": "D",
+          "text": "$project"
+        }
+      ],
+      "answer": "C",
+      "explanation": "The update slide states that $pull removes array elements; $push appends them.",
+      "source": {
+        "file": "DB9_MongoDB.pdf",
+        "pdfPages": [
+          28
+        ]
+      }
+    },
+    {
+      "id": "db-s9-q044",
+      "topic": "MongoDB querying and aggregation",
+      "question": "Which sequence correctly filters, aggregates, orders, and limits documents in a pipeline?",
+      "options": [
+        {
+          "id": "A",
+          "text": "$project → $lookup → $unwind → $match"
+        },
+        {
+          "id": "B",
+          "text": "$match → $group → $sort → $limit"
+        },
+        {
+          "id": "C",
+          "text": "$group → $limit → $match → $lookup"
+        },
+        {
+          "id": "D",
+          "text": "$limit → $sort → $match → $group"
+        }
+      ],
+      "answer": "B",
+      "explanation": "The basic pipeline depicts collection → $match → $group → $sort → $limit, with filtering before heavy stages.",
+      "source": {
+        "file": "DB9_MongoDB.pdf",
+        "pdfPages": [
+          29
+        ]
+      }
+    },
+    {
+      "id": "db-s9-q045",
+      "topic": "MongoDB querying and aggregation",
+      "question": "Which stage is the closest analogue to SQL GROUP BY?",
+      "options": [
+        {
+          "id": "A",
+          "text": "$unwind"
+        },
+        {
+          "id": "B",
+          "text": "$lookup"
+        },
+        {
+          "id": "C",
+          "text": "$project"
+        },
+        {
+          "id": "D",
+          "text": "$group"
+        }
+      ],
+      "answer": "D",
+      "explanation": "$group groups documents and computes aggregates such as $sum, $avg and $max.",
+      "source": {
+        "file": "DB9_MongoDB.pdf",
+        "pdfPages": [
+          29
+        ]
+      }
+    },
+    {
+      "id": "db-s9-q046",
+      "topic": "MongoDB querying and aggregation",
+      "question": "In an aggregation expression, what is the difference between \"$amount\" and \"amount\"?",
+      "options": [
+        {
+          "id": "A",
+          "text": "\"$amount\" reads the amount field; \"amount\" is a literal string."
+        },
+        {
+          "id": "B",
+          "text": "Both always refer to the amount field."
+        },
+        {
+          "id": "C",
+          "text": "\"amount\" reads the field; \"$amount\" is a literal string."
+        },
+        {
+          "id": "D",
+          "text": "Both are invalid inside $sum."
+        }
+      ],
+      "answer": "A",
+      "explanation": "The top-spenders example explicitly distinguishes field-path expressions using $ from string literals.",
+      "source": {
+        "file": "DB9_MongoDB.pdf",
+        "pdfPages": [
+          30
+        ]
+      }
+    },
+    {
+      "id": "db-s9-q047",
+      "topic": "MongoDB querying and aggregation",
+      "question": "What role does $match play when it follows a $group and filters an aggregate count?",
+      "options": [
+        {
+          "id": "A",
+          "text": "It changes each grouped document back into its original rows."
+        },
+        {
+          "id": "B",
+          "text": "It generates a new grouping key."
+        },
+        {
+          "id": "C",
+          "text": "It acts like HAVING on grouped results."
+        },
+        {
+          "id": "D",
+          "text": "It automatically joins the grouped output to customers."
+        }
+      ],
+      "answer": "C",
+      "explanation": "The pipeline example uses $match after $group to implement HAVING COUNT(*) >= 5.",
+      "source": {
+        "file": "DB9_MongoDB.pdf",
+        "pdfPages": [
+          30
+        ]
+      }
+    },
+    {
+      "id": "db-s9-q048",
+      "topic": "MongoDB querying and aggregation",
+      "question": "A $lookup stage does not find a matching film for one rental. What happens to its output field?",
+      "options": [
+        {
+          "id": "A",
+          "text": "The input rental is always removed automatically."
+        },
+        {
+          "id": "B",
+          "text": "The output field contains an empty array."
+        },
+        {
+          "id": "C",
+          "text": "The output field contains a SQL NULL instead of an array."
+        },
+        {
+          "id": "D",
+          "text": "The stage raises a foreign-key violation."
+        }
+      ],
+      "answer": "B",
+      "explanation": "$lookup behaves like a left outer join and emits an array, which is empty when nothing matches.",
+      "source": {
+        "file": "DB9_MongoDB.pdf",
+        "pdfPages": [
+          31
+        ]
+      }
+    },
+    {
+      "id": "db-s9-q049",
+      "topic": "MongoDB querying and aggregation",
+      "question": "Which $lookup attribute denotes the matching field in the other collection?",
+      "options": [
+        {
+          "id": "A",
+          "text": "as"
+        },
+        {
+          "id": "B",
+          "text": "localField"
+        },
+        {
+          "id": "C",
+          "text": "from"
+        },
+        {
+          "id": "D",
+          "text": "foreignField"
+        }
+      ],
+      "answer": "D",
+      "explanation": "foreignField identifies the match key in the foreign collection; localField names the input key.",
+      "source": {
+        "file": "DB9_MongoDB.pdf",
+        "pdfPages": [
+          31
+        ]
+      }
+    },
+    {
+      "id": "db-s9-q050",
+      "topic": "MongoDB querying and aggregation",
+      "question": "An explain plan changes from COLLSCAN to FETCH with an IXSCAN input after creating an index. What does this indicate?",
+      "options": [
+        {
+          "id": "A",
+          "text": "The query now uses an index to find candidates and fetches matching documents."
+        },
+        {
+          "id": "B",
+          "text": "The collection is permanently sorted in memory."
+        },
+        {
+          "id": "C",
+          "text": "The query has stopped reading documents and returns only index definitions."
+        },
+        {
+          "id": "D",
+          "text": "The optimizer has disabled all document filtering."
+        }
+      ],
+      "answer": "A",
+      "explanation": "The indexing slide compares COLLSCAN with IXSCAN plus FETCH after createIndex on customer_id.",
+      "source": {
+        "file": "DB9_MongoDB.pdf",
+        "pdfPages": [
+          32
+        ]
+      }
+    },
+    {
+      "id": "db-s9-q051",
+      "topic": "MongoDB querying and aggregation",
+      "question": "Why does an index on an array field become a multikey index?",
+      "options": [
+        {
+          "id": "A",
+          "text": "It creates a separate collection for each array element."
+        },
+        {
+          "id": "B",
+          "text": "It only supports single values, forcing arrays to be rejected."
+        },
+        {
+          "id": "C",
+          "text": "It can add an index entry for each array element."
+        },
+        {
+          "id": "D",
+          "text": "It compresses every array into one unsearchable binary value."
+        }
+      ],
+      "answer": "C",
+      "explanation": "The slide explains that a multikey index on arrays has entries for individual elements.",
+      "source": {
+        "file": "DB9_MongoDB.pdf",
+        "pdfPages": [
+          32
+        ]
+      }
+    },
+    {
+      "id": "db-s9-q052",
+      "topic": "MongoDB querying and aggregation",
+      "question": "Which workload does the lecture present as a relatively poor fit for MongoDB?",
+      "options": [
+        {
+          "id": "A",
+          "text": "Product catalogs with varying attributes."
+        },
+        {
+          "id": "B",
+          "text": "Banking ledgers requiring multi-entity transactions and strict integrity."
+        },
+        {
+          "id": "C",
+          "text": "LLM conversations stored as bounded documents."
+        },
+        {
+          "id": "D",
+          "text": "ML experiment metadata with variable fields."
+        }
+      ],
+      "answer": "B",
+      "explanation": "The good-fit/poor-fit table lists banking ledgers with multi-entity transactions and strict integrity as poor fits.",
+      "source": {
+        "file": "DB9_MongoDB.pdf",
+        "pdfPages": [
+          33
+        ]
+      }
+    },
+    {
+      "id": "db-s9-q053",
+      "topic": "Hands-on lab and applied MQL",
+      "question": "Which restriction applies specifically to the Mongo Playground environment described in the lab?",
+      "options": [
+        {
+          "id": "A",
+          "text": "It supports unlimited documents and persists all updates between runs."
+        },
+        {
+          "id": "B",
+          "text": "It requires MongoDB Atlas credentials for every query."
+        },
+        {
+          "id": "C",
+          "text": "It only supports SQL SELECT statements."
+        },
+        {
+          "id": "D",
+          "text": "It does not support chaining .sort() or .limit() after find(); use aggregate stages."
+        }
+      ],
+      "answer": "D",
+      "explanation": "The Playground lab notes supported operations and says to replace chained find sorting/limits with aggregate stages.",
+      "source": {
+        "file": "DB9_MongoDB.pdf",
+        "pdfPages": [
+          35
+        ]
+      }
+    },
+    {
+      "id": "db-s9-q054",
+      "topic": "Hands-on lab and applied MQL",
+      "question": "What is the document count of the rentals collection in the provided lab slice?",
+      "options": [
+        {
+          "id": "A",
+          "text": "48"
+        },
+        {
+          "id": "B",
+          "text": "52"
+        },
+        {
+          "id": "C",
+          "text": "599"
+        },
+        {
+          "id": "D",
+          "text": "16,044"
+        }
+      ],
+      "answer": "A",
+      "explanation": "The sample dataset table lists 48 rentals, 52 films, and 8 customers. 16,044 is the full dataset rental count.",
+      "source": {
+        "file": "DB9_MongoDB.pdf",
+        "pdfPages": [
+          36
+        ]
+      }
+    },
+    {
+      "id": "db-s9-q055",
+      "topic": "Hands-on lab and applied MQL",
+      "question": "According to the lab solution, which pair of customers lives in the United States?",
+      "options": [
+        {
+          "id": "A",
+          "text": "Mary Smith and Linda Williams"
+        },
+        {
+          "id": "B",
+          "text": "Jennifer Davis and Mary Smith"
+        },
+        {
+          "id": "C",
+          "text": "Patricia Johnson and Jennifer Davis"
+        },
+        {
+          "id": "D",
+          "text": "Linda Williams and Patricia Johnson"
+        }
+      ],
+      "answer": "C",
+      "explanation": "The worked solution identifies Patricia Johnson (San Bernardino) and Jennifer Davis (Laredo).",
+      "source": {
+        "file": "DB9_MongoDB.pdf",
+        "pdfPages": [
+          38
+        ]
+      }
+    },
+    {
+      "id": "db-s9-q056",
+      "topic": "Hands-on lab and applied MQL",
+      "question": "Why does the lab sort category counts with { n: -1, _id: 1 } instead of only { n: -1 }?",
+      "options": [
+        {
+          "id": "A",
+          "text": "To combine every category into one total."
+        },
+        {
+          "id": "B",
+          "text": "To break count ties consistently using the category key."
+        },
+        {
+          "id": "C",
+          "text": "To sort counts ascending and names descending."
+        },
+        {
+          "id": "D",
+          "text": "To preserve the physical insertion order of all films."
+        }
+      ],
+      "answer": "B",
+      "explanation": "L4 sorts descending by count and ascending by category _id; the slide notes tied categories at five films.",
+      "source": {
+        "file": "DB9_MongoDB.pdf",
+        "pdfPages": [
+          40
+        ]
+      }
+    },
+    {
+      "id": "db-s9-q057",
+      "topic": "Hands-on lab and applied MQL",
+      "question": "Which three customers have the highest totals in the provided lab results?",
+      "options": [
+        {
+          "id": "A",
+          "text": "Customers 1, 2, 3 in that order."
+        },
+        {
+          "id": "B",
+          "text": "Customers 6, 2, 1 in that order."
+        },
+        {
+          "id": "C",
+          "text": "Customers 3, 1, 2 in that order."
+        },
+        {
+          "id": "D",
+          "text": "Customers 3, 2, 1 in that order."
+        }
+      ],
+      "answer": "D",
+      "explanation": "The L5 solution gives customer 3 = 35.94, customer 2 = 29.94, and customer 1 = 27.94.",
+      "source": {
+        "file": "DB9_MongoDB.pdf",
+        "pdfPages": [
+          40
+        ]
+      }
+    },
+    {
+      "id": "db-s9-q058",
+      "topic": "Hands-on lab and applied MQL",
+      "question": "Why does the lab use $round on total rental payments?",
+      "options": [
+        {
+          "id": "A",
+          "text": "Binary floating-point values can display small representation errors, so totals are rounded to two decimals."
+        },
+        {
+          "id": "B",
+          "text": "MongoDB aggregation cannot add decimal values without rounding each input."
+        },
+        {
+          "id": "C",
+          "text": "Rounding is needed to satisfy a required document _id type."
+        },
+        {
+          "id": "D",
+          "text": "Rounding automatically turns each result into a Decimal128 value."
+        }
+      ],
+      "answer": "A",
+      "explanation": "The slide shows a binary-double artifact such as 12.940000000000001 and separately recommends Decimal128 for money.",
+      "source": {
+        "file": "DB9_MongoDB.pdf",
+        "pdfPages": [
+          40
+        ]
+      }
+    },
+    {
+      "id": "db-s9-q059",
+      "topic": "Hands-on lab and applied MQL",
+      "question": "Why is $lookup placed after $limit in the customer top-spenders solution?",
+      "options": [
+        {
+          "id": "A",
+          "text": "To avoid computing $sum across all 48 rentals."
+        },
+        {
+          "id": "B",
+          "text": "Because $lookup cannot operate before $sort in MongoDB."
+        },
+        {
+          "id": "C",
+          "text": "To join only the top three grouped customers instead of all grouped entries."
+        },
+        {
+          "id": "D",
+          "text": "Because $unwind must always be the first aggregation stage."
+        }
+      ],
+      "answer": "C",
+      "explanation": "The worked solution reduces the input to three top customers before $lookup, lowering join work.",
+      "source": {
+        "file": "DB9_MongoDB.pdf",
+        "pdfPages": [
+          41
+        ]
+      }
+    },
+    {
+      "id": "db-s9-q060",
+      "topic": "Hands-on lab and applied MQL",
+      "question": "In the lab update, which combination changes film 1’s rental_rate and appends \"Commentaries\" to special_features?",
+      "options": [
+        {
+          "id": "A",
+          "text": "{ $inc: { rental_rate: 1.99 }, $pull: { special_features: \"Commentaries\" } }"
+        },
+        {
+          "id": "B",
+          "text": "{ $set: { rental_rate: 1.99 }, $push: { special_features: \"Commentaries\" } }"
+        },
+        {
+          "id": "C",
+          "text": "{ $push: { rental_rate: 1.99 }, $set: { special_features: \"Commentaries\" } }"
+        },
+        {
+          "id": "D",
+          "text": "{ $unset: { rental_rate: 1.99 }, $add: { special_features: \"Commentaries\" } }"
+        }
+      ],
+      "answer": "B",
+      "explanation": "$set assigns the new rental_rate; $push appends the feature to the array in one update.",
+      "source": {
+        "file": "DB9_MongoDB.pdf",
+        "pdfPages": [
+          41
+        ]
+      }
+    },
+    {
+      "id": "db-s9-q061",
+      "topic": "Hands-on lab and applied MQL",
+      "question": "Two actors share the name “Susan Davis.” What should an aggregation use to distinguish their film counts?",
+      "options": [
+        {
+          "id": "A",
+          "text": "Group by the literal string \"Susan Davis\"."
+        },
+        {
+          "id": "B",
+          "text": "Group by the film category rather than actor."
+        },
+        {
+          "id": "C",
+          "text": "Group by actors.name only, then count all films together."
+        },
+        {
+          "id": "D",
+          "text": "Group by each actor’s actor_id rather than their shared name."
+        }
+      ],
+      "answer": "D",
+      "explanation": "Self-practice E3 asks students to compare grouping by actors.name versus actors.actor_id; identifiers distinguish people with the same name.",
+      "source": {
+        "file": "DB9_MongoDB.pdf",
+        "pdfPages": [
+          42
+        ]
+      }
+    },
+    {
+      "id": "db-s9-q062",
+      "topic": "Hands-on lab and applied MQL",
+      "question": "To list films that were never rented, which pattern does the self-practice hint suggest?",
+      "options": [
+        {
+          "id": "A",
+          "text": "Start from films, $lookup rentals, then test the matches with $size."
+        },
+        {
+          "id": "B",
+          "text": "Start from rentals and use $inc to reconstruct unseen films."
+        },
+        {
+          "id": "C",
+          "text": "Search customers for films with missing address fields."
+        },
+        {
+          "id": "D",
+          "text": "Update each film with a rental count and delete zero-count records."
+        }
+      ],
+      "answer": "A",
+      "explanation": "E2 explicitly suggests a lookup from films to rentals followed by a $size test for no matches.",
+      "source": {
+        "file": "DB9_MongoDB.pdf",
+        "pdfPages": [
+          42
+        ]
+      }
+    }
+  ]
+}
